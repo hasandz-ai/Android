@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#4f46e5">
-  <meta name="description" content="Aplikasi Personal Habit Tracker & Task Scheduler PWA terintegrasi Google Sheets">
+  <meta name="description" content="Aplikasi Personal Habit Tracker & Task Scheduler PWA terintegrasi Google Sheets (Flat Material UI)">
   <title>HabitPulse - Habit Tracker & Task Scheduler</title>
   
   <link rel="manifest" href="manifest.json">
@@ -14,21 +14,21 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   
   <!-- Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="dark-theme">
+<body class="flat-material">
   <div class="app-container">
     
     <!-- Sidebar Navigation (Desktop) -->
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-logo">
-          <img src="icon.svg" alt="HabitPulse Logo" width="36" height="36">
+          <img src="icon.svg" alt="HabitPulse Logo" width="32" height="32">
         </div>
         <div class="brand-text">
           <h1>HabitPulse</h1>
@@ -200,7 +200,7 @@
           <!-- Sholat Sunnah & Al-Qur'an -->
           <div class="flex-column gap-4">
             <!-- Sholat Sunnah -->
-            <div class="card card-glass">
+            <div class="card card-glass mb-4">
               <div class="card-header border-bottom">
                 <h3><i class="fa-solid fa-star-and-crescent text-amber"></i> Sholat Sunnah</h3>
                 <span class="badge badge-amber">Sunnah</span>
@@ -209,7 +209,7 @@
                 <div class="sunnah-item">
                   <div class="sunnah-info">
                     <strong>Sholat Dhuha</strong>
-                    <small class="text-muted">Pagi hari (07:00 - 11:00)</small>
+                    <small class="text-muted block">Pagi hari (07:00 - 11:00)</small>
                   </div>
                   <label class="switch">
                     <input type="checkbox" id="chkDhuha">
@@ -219,7 +219,7 @@
                 <div class="sunnah-item mt-3">
                   <div class="sunnah-info">
                     <strong>Sholat Tahajud</strong>
-                    <small class="text-muted">Sepertiga malam (02:00 - 04:30)</small>
+                    <small class="text-muted block">Sepertiga malam (02:00 - 04:30)</small>
                   </div>
                   <label class="switch">
                     <input type="checkbox" id="chkTahajud">
@@ -297,7 +297,7 @@
           </div>
 
           <!-- NoFap Counter & Streak Tracker -->
-          <div class="card card-glass card-streak-glow">
+          <div class="card card-streak-glow">
             <div class="card-header border-bottom">
               <h3><i class="fa-solid fa-fire text-flame"></i> NoFap Streak Counter</h3>
               <span class="badge badge-flame" id="streakBadge">Active Streak</span>
@@ -359,7 +359,7 @@
       <section class="tab-pane" id="tab-exercise">
         
         <!-- Scheduled Exercise Plan Header Banner -->
-        <div class="card card-glass card-exercise-hero mb-4">
+        <div class="card card-exercise-hero mb-4">
           <div class="card-body flex-between flex-wrap gap-4">
             <div class="exercise-target-info">
               <span class="badge badge-amber mb-2"><i class="fa-solid fa-trophy"></i> Scheduled Exercise Plan Target</span>
