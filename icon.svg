@@ -1,36 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="50%" stop-color="#1e1b4b" />
-      <stop offset="100%" stop-color="#311042" />
-    </linearGradient>
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1" />
-      <stop offset="50%" stop-color="#8b5cf6" />
-      <stop offset="100%" stop-color="#ec4899" />
-    </linearGradient>
-    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#10b981" />
-      <stop offset="100%" stop-color="#06b6d4" />
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.3"/>
     </filter>
   </defs>
-
-  <!-- Background Layer -->
-  <rect width="512" height="512" rx="110" fill="url(#bgGrad)" />
-
-  <!-- Outer Ring Accent -->
-  <rect x="24" y="24" width="464" height="464" rx="90" fill="none" stroke="url(#accentGrad)" stroke-width="4" opacity="0.3" />
-
-  <!-- Target / Habit Circle -->
-  <circle cx="256" cy="256" r="170" fill="none" stroke="url(#accentGrad)" stroke-width="24" stroke-linecap="round" stroke-dasharray="800" stroke-dashoffset="160" filter="url(#shadow)" />
-
-  <!-- Inner Dynamic Checkmark -->
-  <path d="M170 260 L230 320 L345 190" fill="none" stroke="url(#glowGrad)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)" />
-
-  <!-- Flame / Streak Spark Accent -->
-  <path d="M370 120 C370 120, 390 140, 390 160 C390 175, 378 185, 365 185 C350 185, 340 170, 345 150 C335 165, 330 180, 340 200 C325 190, 320 170, 330 150 C315 170, 310 195, 325 215 C335 228, 350 235, 365 235 C395 235, 415 210, 410 185 C405 160, 370 120, 370 120 Z" fill="url(#accentGrad)" opacity="0.85" />
+  <rect width="512" height="512" rx="128" fill="url(#grad)"/>
+  <circle cx="256" cy="256" r="180" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="24"/>
+  <path d="M160 260l64 64 128-128" stroke="#ffffff" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#shadow)"/>
 </svg>

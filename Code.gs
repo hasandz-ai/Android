@@ -1,204 +1,134 @@
 /**
- * HabitPulse - Google Apps Script Backend (Code.gs)
- * Web App API for PWA Personal Habit Tracker & Task Scheduler
- * 
- * Instructions:
- * 1. Create a new Google Spreadsheet.
- * 2. Go to Extensions > Apps Script.
- * 3. Replace all code in Code.gs with this script.
- * 4. Click Deploy > New deployment.
- * 5. Select type: Web app.
- * 6. Set "Execute as": Me.
- * 7. Set "Who has access": Anyone.
- * 8. Copy the Web App URL and paste it into the HabitPulse PWA Settings.
+ * Google Apps Script Web App Backend for Personal Habit Tracker & Task Scheduler
+ * Deploy Instructions:
+ * 1. Open Google Sheet -> Extensions -> Apps Script
+ * 2. Paste this Code.gs script
+ * 3. Click "Deploy" -> "New deployment" -> Select "Web app"
+ * 4. Execute as: "Me"
+ * 5. Who has access: "Anyone"
+ * 6. Copy Web App URL into PWA Settings
  */
 
-const SCRIPT_PROP_KEY = 'HABITPULSE_JSON_STATE';
+const SHEET_NAME_DAILY_TASKS = 'DailyTasks';
 
-/**
- * Handle GET Requests (Download / Pull Data)
- */
 function doGet(e) {
   try {
-    const props = PropertiesService.getScriptProperties();
-    const jsonStr = props.getProperty(SCRIPT_PROP_KEY);
-    
-    let state = null;
-    if (jsonStr) {
-      state = JSON.parse(jsonStr);
-    } else {
-      // Build state from spreadsheet tabs if available
-      state = readStateFromSheets();
+    const action = e.parameter.action || 'get_tasks';
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_NAME_DAILY_TASKS);
+
+    if (!sheet) {
+      sheet = initDailyTasksSheet(ss);
     }
 
-    return createJsonResponse({
-      status: 'success',
-      message: 'Data pulled successfully',
-      timestamp: new Date().toISOString(),
-      state: state
-    });
+    if (action === 'get_tasks' || action === 'get_all') {
+      const data = sheet.getDataRange().getValues();
+      const headers = data[0];
+      const tasks = [];
 
-  } catch (error) {
-    return createJsonResponse({
-      status: 'error',
-      message: error.toString()
-    });
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        if (!row[0]) continue; // Skip empty rows
+
+        tasks.push({
+          id: String(row[0]),
+          date: formatDateValue(row[1]),
+          name: String(row[2]),
+          category: String(row[3]),
+          startTime: String(row[4]),
+          endTime: String(row[5]),
+          status: String(row[6]),
+          notes: String(row[7] || '')
+        });
+      }
+
+      return createJsonResponse({
+        status: 'success',
+        tasks: tasks,
+        count: tasks.length
+      });
+    }
+
+    return createJsonResponse({ status: 'error', message: 'Invalid action parameter' });
+
+  } catch (err) {
+    return createJsonResponse({ status: 'error', message: err.toString() });
   }
 }
 
-/**
- * Handle POST Requests (Upload / Push Data)
- */
 function doPost(e) {
   try {
-    let postData = null;
-    if (e && e.postData && e.postData.contents) {
-      postData = JSON.parse(e.postData.contents);
+    const postData = JSON.parse(e.postData.contents);
+    const action = postData.action || 'upload_all';
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_NAME_DAILY_TASKS);
+
+    if (!sheet) {
+      sheet = initDailyTasksSheet(ss);
     }
 
-    if (!postData || !postData.state) {
-      return createJsonResponse({
-        status: 'error',
-        message: 'Invalid payload: missing state'
-      });
-    }
+    if (action === 'upload_all' || action === 'sync_tasks') {
+      const tasks = postData.tasks || [];
 
-    const state = postData.state;
-
-    // 1. Store complete JSON in ScriptProperties (Fastest & most robust)
-    const props = PropertiesService.getScriptProperties();
-    props.setProperty(SCRIPT_PROP_KEY, JSON.stringify(state));
-
-    // 2. Sync to Spreadsheet Tabs for visual reporting
-    writeStateToSheets(state);
-
-    return createJsonResponse({
-      status: 'success',
-      message: 'Data uploaded & saved successfully to Google Sheets',
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    return createJsonResponse({
-      status: 'error',
-      message: error.toString()
-    });
-  }
-}
-
-/**
- * Helper to build JSON Output with CORS Support
- */
-function createJsonResponse(data) {
-  const output = ContentService.createTextOutput(JSON.stringify(data));
-  output.setMimeType(ContentService.MimeType.JSON);
-  return output;
-}
-
-/**
- * Write state to individual Sheets tabs (DailyTasks, Ibadah, Goals, ExercisePlans, Streaks)
- */
-function writeStateToSheets(state) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (!ss) return; // Running outside spreadsheet context
-
-  // 1. Daily Tasks Tab
-  if (state.dailyTasks && Array.isArray(state.dailyTasks)) {
-    const sheet = getOrCreateSheet(ss, 'DailyTasks', ['ID', 'Date', 'Task Name', 'Category', 'Time Start', 'Time End', 'Status', 'Is Auto']);
-    const rows = state.dailyTasks.map(t => [
-      t.id, t.date, t.taskName, t.category, t.timeStart, t.timeEnd, t.status, t.isAutoGenerated ? 'Yes' : 'No'
-    ]);
-    replaceSheetData(sheet, rows);
-  }
-
-  // 2. Ibadah Tab
-  if (state.ibadahLogs) {
-    const sheet = getOrCreateSheet(ss, 'Ibadah', ['Date', 'Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya', 'Dhuha', 'Tahajud', 'Quran (Mins)']);
-    const rows = [];
-    Object.keys(state.ibadahLogs).forEach(dateStr => {
-      const log = state.ibadahLogs[dateStr];
-      if (log) {
-        rows.push([
-          dateStr,
-          log.prayers ? log.prayers.Subuh || '' : '',
-          log.prayers ? log.prayers.Dzuhur || '' : '',
-          log.prayers ? log.prayers.Ashar || '' : '',
-          log.prayers ? log.prayers.Maghrib || '' : '',
-          log.prayers ? log.prayers.Isya || '' : '',
-          log.sunnah ? (log.sunnah.Dhuha ? 'Yes' : 'No') : 'No',
-          log.sunnah ? (log.sunnah.Tahajud ? 'Yes' : 'No') : 'No',
-          log.quranMinutes || 0
-        ]);
+      // Clear existing data rows (keep header)
+      const lastRow = sheet.getLastRow();
+      if (lastRow > 1) {
+        sheet.getRange(2, 1, lastRow - 1, 9).clearContent();
       }
-    });
-    replaceSheetData(sheet, rows);
-  }
 
-  // 3. Goals & Streaks Tab
-  if (state.nofap || state.goalLogs) {
-    const sheet = getOrCreateSheet(ss, 'Goals_and_Streaks', ['Metric / Date', 'Value / Status', 'Best Record']);
-    const rows = [];
-    if (state.nofap) {
-      rows.push(['NoFap Active Streak', `${state.nofap.streak} Days`, `${state.nofap.bestStreak} Days`]);
-      rows.push(['NoFap Start Date', state.nofap.startDate, '']);
-      rows.push(['NoFap Last Check-in', state.nofap.lastCheckInDate, '']);
-    }
-    if (state.goalLogs) {
-      Object.keys(state.goalLogs).forEach(dateStr => {
-        rows.push([`English Learning (${dateStr})`, `${state.goalLogs[dateStr].englishMinutes || 0} Mins`, '']);
+      if (tasks.length > 0) {
+        const rows = tasks.map(t => [
+          t.id,
+          t.date,
+          t.name,
+          t.category,
+          t.startTime,
+          t.endTime,
+          t.status,
+          t.notes || '',
+          new Date().toISOString()
+        ]);
+
+        sheet.getRange(2, 1, rows.length, 9).setValues(rows);
+      }
+
+      return createJsonResponse({
+        status: 'success',
+        message: `Successfully synchronized ${tasks.length} tasks to Google Sheets`,
+        timestamp: new Date().toISOString()
       });
     }
-    replaceSheetData(sheet, rows);
-  }
 
-  // 4. Exercise Plan Tab
-  if (state.exercisePlan) {
-    const sheet = getOrCreateSheet(ss, 'ExercisePlan', ['Title', 'Target Date', 'Time Est', 'Menus']);
-    const rows = [
-      [
-        state.exercisePlan.title || '',
-        state.exercisePlan.targetDate || '',
-        state.exercisePlan.timeEst || '',
-        (state.exercisePlan.menus || []).join(' | ')
-      ]
-    ];
-    replaceSheetData(sheet, rows);
+    return createJsonResponse({ status: 'error', message: 'Unknown post action' });
+
+  } catch (err) {
+    return createJsonResponse({ status: 'error', message: err.toString() });
   }
 }
 
-/**
- * Read fallback state if ScriptProperties empty
- */
-function readStateFromSheets() {
-  // Returns basic fallback structure
-  return null;
-}
-
-/**
- * Helper to get or create tab
- */
-function getOrCreateSheet(ss, name, headers) {
-  let sheet = ss.getSheetByName(name);
-  if (!sheet) {
-    sheet = ss.insertSheet(name);
-    if (headers && headers.length > 0) {
-      sheet.appendRow(headers);
-      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#e2e8f0');
-      sheet.setFrozenRows(1);
-    }
-  }
+// Helper: Initialize Sheet Tab & Headers
+function initDailyTasksSheet(ss) {
+  const sheet = ss.insertSheet(SHEET_NAME_DAILY_TASKS);
+  const headers = ['ID', 'Date', 'Task Name', 'Category', 'Start Time', 'End Time', 'Status', 'Notes', 'Updated At'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#4f46e5').setFontColor('#ffffff');
+  sheet.setFrozenRows(1);
   return sheet;
 }
 
-/**
- * Helper to clear data rows and insert fresh rows
- */
-function replaceSheetData(sheet, rows) {
-  const lastRow = sheet.getLastRow();
-  if (lastRow > 1) {
-    sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).clearContent();
+// Helper: Format Date from Sheet
+function formatDateValue(val) {
+  if (val instanceof Date) {
+    const year = val.getFullYear();
+    const month = String(val.getMonth() + 1).padStart(2, '0');
+    const day = String(val.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
-  if (rows.length > 0) {
-    sheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
-  }
+  return String(val);
+}
+
+// Helper: Create JSON HTTP Response
+function createJsonResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
 }

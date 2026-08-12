@@ -1,17 +1,23 @@
 {
-  "name": "HabitPulse - Personal Habit & Task Scheduler",
-  "short_name": "HabitPulse",
-  "description": "Progressive Web App Personal Habit Tracker, Prayer Log, Goal & Exercise Scheduler integrated with Google Sheets",
+  "name": "Habit & Task Scheduler",
+  "short_name": "TaskScheduler",
+  "description": "Personal Habit Tracker & Daily Task Scheduler PWA with Google Sheets Backend",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
-  "theme_color": "#4f46e5",
+  "theme_color": "#6366f1",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "./icon.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

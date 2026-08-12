@@ -3,639 +3,391 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#4f46e5">
-  <meta name="description" content="Aplikasi Personal Habit Tracker & Task Scheduler PWA terintegrasi Google Sheets (Flat Material UI)">
-  <title>HabitPulse - Habit Tracker & Task Scheduler</title>
-  
+  <title>Personal Habit Tracker & Task Scheduler</title>
+
+  <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TaskScheduler">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <link rel="apple-touch-icon" href="icon.svg">
-  
-  <!-- Fonts -->
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  
-  <!-- Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="flat-material">
+<body class="dark-mode">
   <div class="app-container">
     
-    <!-- Sidebar Navigation (Desktop) -->
+    <!-- Desktop Sidebar -->
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-logo">
-          <img src="icon.svg" alt="HabitPulse Logo" width="32" height="32">
+          <i class="fa-solid fa-list-check"></i>
         </div>
-        <div class="brand-text">
-          <h1>HabitPulse</h1>
-          <span class="badge badge-pwa"><i class="fa-solid fa-bolt"></i> PWA Sync</span>
+        <div class="brand-info">
+          <h2>TaskTracker</h2>
+          <span class="version-tag">PWA v1.0</span>
         </div>
       </div>
 
-      <nav class="nav-menu">
+      <nav class="sidebar-nav">
         <a href="#daily-tasks" class="nav-item active" data-tab="daily-tasks">
-          <i class="fa-solid fa-list-check"></i>
+          <i class="fa-solid fa-calendar-day"></i>
           <span>Daily Tasks</span>
         </a>
-        <a href="#ibadah" class="nav-item" data-tab="ibadah">
+        <a href="#ibadah" class="nav-item disabled" title="Segera hadir pada modul Ibadah">
           <i class="fa-solid fa-mosque"></i>
-          <span>Modul Ibadah</span>
+          <span>Ibadah</span>
+          <span class="badge-soon">Soon</span>
         </a>
-        <a href="#goals" class="nav-item" data-tab="goals">
+        <a href="#goals" class="nav-item disabled" title="Segera hadir pada modul Personal Goals">
           <i class="fa-solid fa-bullseye"></i>
           <span>Goals & Streak</span>
+          <span class="badge-soon">Soon</span>
         </a>
-        <a href="#exercise" class="nav-item" data-tab="exercise">
+        <a href="#exercise" class="nav-item disabled" title="Segera hadir pada modul Olahraga">
           <i class="fa-solid fa-dumbbell"></i>
-          <span>Modul Olahraga</span>
-        </a>
-        <a href="#sync-settings" class="nav-item" data-tab="sync-settings">
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-          <span>Sync & Settings</span>
+          <span>Olahraga</span>
+          <span class="badge-soon">Soon</span>
         </a>
       </nav>
 
       <div class="sidebar-footer">
-        <div class="sync-quick-status" id="sidebarSyncStatus">
-          <i class="fa-solid fa-circle-dot status-offline"></i>
-          <span>Lokal (Offline)</span>
-        </div>
-        <button class="btn btn-outline btn-block btn-sm" id="btnInstallPwaSidebar" style="display: none;">
+        <button id="sidebar-install-btn" class="sidebar-btn install-btn hidden">
           <i class="fa-solid fa-download"></i> Install App
+        </button>
+        <button id="sidebar-sync-btn" class="sidebar-btn">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Google Sync
+        </button>
+        <button id="sidebar-settings-btn" class="sidebar-btn text-btn">
+          <i class="fa-solid fa-gear"></i> Settings
         </button>
       </div>
     </aside>
 
-    <!-- Main Content Container -->
+    <!-- Main Content Area -->
     <main class="main-content">
-      
-      <!-- Top Real-Time Active Task Banner (Requirements 2.A) -->
-      <section class="banner-active-task" id="activeTaskBanner">
-        <div class="banner-glass">
-          <div class="banner-badge-container">
-            <span class="live-pulse"></span>
-            <span class="banner-label">AKTIVITAS SEHARUSNYA SAAT INI</span>
-            <span class="banner-clock" id="liveClockDisplay">00:00:00</span>
-          </div>
 
-          <div class="banner-body">
-            <div class="banner-task-info">
-              <span class="banner-category" id="activeTaskCategory"><i class="fa-solid fa-clock"></i> Checking...</span>
-              <h2 class="banner-task-name" id="activeTaskName">Memuat Tugas Aktif...</h2>
-              <div class="banner-time-range" id="activeTaskTime">
-                <i class="fa-regular fa-clock"></i> <span>--:-- - --:--</span>
-              </div>
-            </div>
-
-            <div class="banner-actions">
-              <div class="banner-status-tag" id="activeTaskStatusTag">
-                <i class="fa-solid fa-spinner fa-spin"></i> Idle
-              </div>
-              <button class="btn btn-emerald btn-sm" id="btnQuickCompleteActive">
-                <i class="fa-solid fa-check-double"></i> Tandai Done
-              </button>
-            </div>
+      <!-- Top Header Navigation (Mobile Header + Global Actions) -->
+      <header class="top-header">
+        <div class="header-brand mobile-only">
+          <div class="brand-logo-sm">
+            <i class="fa-solid fa-list-check"></i>
           </div>
-
-          <div class="banner-footer" id="bannerFooterNext">
-            <i class="fa-solid fa-forward"></i>
-            <span>Selanjutnya: <strong id="nextTaskName">Tidak ada tugas berikutnya hari ini</strong></span>
-            <span class="next-time" id="nextTaskTime"></span>
-          </div>
+          <h1>TaskTracker</h1>
         </div>
-      </section>
 
-      <!-- App Header / Toolbar -->
-      <header class="content-header">
-        <div class="header-title">
-          <h2 id="currentTabTitle">Daily Tasks</h2>
-          <p id="currentTabSubtitle" class="text-muted">Kelola tugas & rutinitas harian terintegrasi</p>
+        <div class="header-clock-date">
+          <div class="live-clock" id="live-clock">00:00:00</div>
+          <div class="live-date" id="live-date">Selasa, 12 Agustus 2026</div>
         </div>
-        
+
         <div class="header-actions">
-          <div class="date-picker-wrap">
-            <i class="fa-regular fa-calendar"></i>
-            <input type="date" id="globalDatePicker" class="input-date">
-          </div>
+          <!-- Install Button Mobile -->
+          <button id="mobile-install-btn" class="btn btn-primary btn-sm hidden">
+            <i class="fa-solid fa-download"></i> Install
+          </button>
 
-          <button class="btn btn-primary" id="btnHeaderAction">
-            <i class="fa-solid fa-plus"></i> <span>Tambah Tugas</span>
+          <!-- Fast Sync Buttons -->
+          <button id="quick-push-btn" class="btn btn-outline btn-icon" title="Upload ke Google Sheets">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span class="desktop-only">Upload</span>
+          </button>
+          <button id="quick-pull-btn" class="btn btn-outline btn-icon" title="Download dari Google Sheets">
+            <i class="fa-solid fa-cloud-arrow-down"></i>
+            <span class="desktop-only">Download</span>
+          </button>
+          <button id="open-settings-btn" class="btn btn-icon btn-ghost" title="Pengaturan App & Sync">
+            <i class="fa-solid fa-gear"></i>
           </button>
         </div>
       </header>
 
-      <!-- TAB 1: DAILY TASK MODULE (Requirements 2.B) -->
-      <section class="tab-pane active" id="tab-daily-tasks">
-        <!-- Daily Task Toolbar -->
-        <div class="card card-glass mb-4">
-          <div class="card-body py-3 flex-between flex-wrap gap-3">
-            <div class="filters flex-gap">
-              <button class="chip active" data-filter="all">Semua</button>
-              <button class="chip" data-filter="Ibadah"><i class="fa-solid fa-mosque text-emerald"></i> Ibadah</button>
-              <button class="chip" data-filter="Olahraga"><i class="fa-solid fa-dumbbell text-amber"></i> Olahraga</button>
-              <button class="chip" data-filter="Kewajiban"><i class="fa-solid fa-briefcase text-indigo"></i> Kewajiban</button>
-              <button class="chip" data-filter="Bermain"><i class="fa-solid fa-gamepad text-pink"></i> Bermain</button>
-              <button class="chip" data-filter="Kebutuhan"><i class="fa-solid fa-heart text-cyan"></i> Kebutuhan</button>
+      <!-- REAL-TIME ACTIVE TASK BANNER (FITUR A) -->
+      <section class="active-banner-container">
+        <div class="active-task-banner" id="active-task-banner">
+          <div class="banner-status-pulse" id="banner-pulse">
+            <span class="pulse-ring"></span>
+            <span class="pulse-dot"></span>
+          </div>
+          <div class="banner-content">
+            <div class="banner-header-row">
+              <span class="banner-tag" id="banner-tag">ACTIVE TASK NOW</span>
+              <span class="banner-category" id="banner-category">Kewajiban</span>
             </div>
-
-            <div class="quick-auto-sync">
-              <button class="btn btn-outline btn-sm" id="btnAutoSyncDaily" title="Integrasikan jadwal Sholat & Olahraga hari ini secara otomatis">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Sync Routines
-              </button>
+            <h2 class="banner-title" id="banner-title">Loading tugas aktif saat ini...</h2>
+            <div class="banner-time-row">
+              <span class="banner-time" id="banner-time"><i class="fa-regular fa-clock"></i> --:-- - --:--</span>
+              <span class="banner-countdown" id="banner-countdown">Menghitung waktu...</span>
             </div>
           </div>
-        </div>
-
-        <!-- Task List / Table -->
-        <div class="card card-glass">
-          <div class="table-responsive">
-            <table class="table" id="dailyTasksTable">
-              <thead>
-                <tr>
-                  <th style="width: 40px;">#</th>
-                  <th>Task Name</th>
-                  <th>Kategori</th>
-                  <th>Time Estimate</th>
-                  <th>Status</th>
-                  <th style="text-align: right;">Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="dailyTasksTableBody">
-                <!-- Dynamic rows populated via JS -->
-              </tbody>
-            </table>
-          </div>
-          <div class="empty-state" id="emptyTasksState" style="display: none;">
-            <i class="fa-solid fa-clipboard-list empty-icon"></i>
-            <h3>Belum Ada Tugas Hari Ini</h3>
-            <p>Klik "Auto-Sync Routines" untuk memasukkan Ibadah & Olahraga, atau buat tugas baru.</p>
-            <button class="btn btn-primary btn-sm mt-3" id="btnEmptyAddTask">
-              <i class="fa-solid fa-plus"></i> Buat Tugas Baru
+          <div class="banner-action" id="banner-action-box">
+            <button class="btn btn-success" id="banner-quick-done">
+              <i class="fa-solid fa-check"></i> Selesai
             </button>
           </div>
         </div>
       </section>
 
-      <!-- TAB 2: MODUL IBADAH (Requirements 2.C) -->
-      <section class="tab-pane" id="tab-ibadah">
-        <div class="grid grid-2 gap-4 mb-4">
-          
-          <!-- Sholat 5 Waktu -->
-          <div class="card card-glass">
-            <div class="card-header border-bottom">
-              <h3><i class="fa-solid fa-kaaba text-emerald"></i> Sholat 5 Waktu</h3>
-              <span class="badge badge-emerald">Wajib</span>
-            </div>
-            <div class="card-body">
-              <div class="prayer-list" id="prayerListContainer">
-                <!-- Dynamic Sholat Items: Subuh, Dzuhur, Ashar, Maghrib, Isya -->
-              </div>
-            </div>
-          </div>
-
-          <!-- Sholat Sunnah & Al-Qur'an -->
-          <div class="flex-column gap-4">
-            <!-- Sholat Sunnah -->
-            <div class="card card-glass mb-4">
-              <div class="card-header border-bottom">
-                <h3><i class="fa-solid fa-star-and-crescent text-amber"></i> Sholat Sunnah</h3>
-                <span class="badge badge-amber">Sunnah</span>
-              </div>
-              <div class="card-body">
-                <div class="sunnah-item">
-                  <div class="sunnah-info">
-                    <strong>Sholat Dhuha</strong>
-                    <small class="text-muted block">Pagi hari (07:00 - 11:00)</small>
-                  </div>
-                  <label class="switch">
-                    <input type="checkbox" id="chkDhuha">
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-                <div class="sunnah-item mt-3">
-                  <div class="sunnah-info">
-                    <strong>Sholat Tahajud</strong>
-                    <small class="text-muted block">Sepertiga malam (02:00 - 04:30)</small>
-                  </div>
-                  <label class="switch">
-                    <input type="checkbox" id="chkTahajud">
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Reading Al-Qur'an -->
-            <div class="card card-glass">
-              <div class="card-header border-bottom">
-                <h3><i class="fa-solid fa-book-quran text-cyan"></i> Membaca Al-Qur'an</h3>
-                <span class="badge badge-cyan">Durasi Harian</span>
-              </div>
-              <div class="card-body">
-                <div class="quran-input-group">
-                  <div class="input-with-unit">
-                    <input type="number" id="inputQuranMinutes" class="form-control" min="0" placeholder="0">
-                    <span class="unit">Menit</span>
-                  </div>
-                  <button class="btn btn-emerald" id="btnSaveQuranMinutes">
-                    <i class="fa-solid fa-floppy-disk"></i> Simpan
-                  </button>
-                </div>
-                <div class="stat-progress mt-3">
-                  <div class="flex-between text-sm mb-1">
-                    <span>Pencapaian hari ini</span>
-                    <strong id="quranMinutesDisplay">0 Menit</strong>
-                  </div>
-                  <div class="progress-bar-wrap">
-                    <div class="progress-bar bg-cyan" id="quranProgressBar" style="width: 0%;"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: PERSONAL GOALS & STREAK (Requirements 2.D) -->
-      <section class="tab-pane" id="tab-goals">
+      <!-- MAIN TAB: DAILY TASK SCHEDULER (FITUR B) -->
+      <section class="tab-content active" id="tab-daily-tasks">
         
-        <!-- English & NoFap Main Cards Grid -->
-        <div class="grid grid-2 gap-4 mb-4">
-          
-          <!-- English Learning Module -->
-          <div class="card card-glass">
-            <div class="card-header border-bottom">
-              <h3><i class="fa-solid fa-language text-indigo"></i> Belajar Bahasa Inggris</h3>
-              <span class="badge badge-indigo">Daily Skill</span>
+        <!-- Controls & Date Selector Toolbar -->
+        <div class="toolbar">
+          <div class="date-navigator">
+            <button class="btn btn-icon btn-ghost" id="prev-day-btn" title="Hari Sebelumnya">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="current-selected-date" id="selected-date-display">
+              <i class="fa-regular fa-calendar"></i>
+              <span id="date-label">Hari Ini</span>
+              <input type="date" id="date-picker-input" class="hidden-date-input">
             </div>
-            <div class="card-body">
-              <p class="text-muted text-sm mb-3">Catat durasi belajar Bahasa Inggris (Listening, Speaking, Vocabulary, Reading) hari ini.</p>
-              <div class="quran-input-group">
-                <div class="input-with-unit">
-                  <input type="number" id="inputEnglishMinutes" class="form-control" min="0" placeholder="0">
-                  <span class="unit">Menit</span>
-                </div>
-                <button class="btn btn-indigo" id="btnSaveEnglishMinutes">
-                  <i class="fa-solid fa-floppy-disk"></i> Simpan
-                </button>
-              </div>
-              <div class="stat-progress mt-3">
-                <div class="flex-between text-sm mb-1">
-                  <span>Waktu Belajar Hari Ini</span>
-                  <strong id="englishMinutesDisplay">0 Menit</strong>
-                </div>
-                <div class="progress-bar-wrap">
-                  <div class="progress-bar bg-indigo" id="englishProgressBar" style="width: 0%;"></div>
-                </div>
-              </div>
-            </div>
+            <button class="btn btn-icon btn-ghost" id="next-day-btn" title="Hari Berikutnya">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <button class="btn btn-outline btn-sm" id="today-btn">Hari Ini</button>
           </div>
 
-          <!-- NoFap Counter & Streak Tracker -->
-          <div class="card card-streak-glow">
-            <div class="card-header border-bottom">
-              <h3><i class="fa-solid fa-fire text-flame"></i> NoFap Streak Counter</h3>
-              <span class="badge badge-flame" id="streakBadge">Active Streak</span>
-            </div>
-            <div class="card-body text-center">
-              <div class="streak-counter-display">
-                <span class="streak-number" id="nofapStreakDays">0</span>
-                <span class="streak-unit">HARI</span>
-              </div>
-              
-              <div class="streak-stats grid grid-2 gap-2 my-3">
-                <div class="stat-box">
-                  <small class="text-muted">Streak Tertinggi</small>
-                  <strong id="bestNoFapStreak">0 Hari</strong>
-                </div>
-                <div class="stat-box">
-                  <small class="text-muted">Tanggal Mulai</small>
-                  <strong id="nofapStartDate">--/--/----</strong>
-                </div>
-              </div>
+          <div class="toolbar-actions">
+            <!-- Filter Category -->
+            <select id="filter-category" class="form-select">
+              <option value="ALL">Semua Kategori</option>
+              <option value="Ibadah">Ibadah</option>
+              <option value="Olahraga">Olahraga</option>
+              <option value="Kewajiban">Kewajiban</option>
+              <option value="Bermain">Bermain</option>
+              <option value="Kebutuhan">Kebutuhan</option>
+            </select>
 
-              <div class="streak-actions flex-gap flex-center">
-                <button class="btn btn-emerald btn-sm" id="btnCheckInStreak">
-                  <i class="fa-solid fa-calendar-check"></i> Daily Check-in
-                </button>
-                <button class="btn btn-danger btn-sm" id="btnResetNoFap">
-                  <i class="fa-solid fa-rotate-left"></i> Relapse (Reset)
-                </button>
-              </div>
-            </div>
-          </div>
+            <!-- Filter Status -->
+            <select id="filter-status" class="form-select">
+              <option value="ALL">Semua Status</option>
+              <option value="Pending">Pending / Active</option>
+              <option value="Done">Done</option>
+              <option value="Overdue">Overdue</option>
+              <option value="Pass">Pass</option>
+            </select>
 
-        </div>
-
-        <!-- Custom Extensible Goals Section -->
-        <div class="card card-glass">
-          <div class="card-header border-bottom flex-between">
-            <div>
-              <h3><i class="fa-solid fa-cubes text-pink"></i> Custom Personal Goals</h3>
-              <p class="text-muted text-sm">Tambahkan target habit kustom secara fleksibel</p>
-            </div>
-            <button class="btn btn-outline btn-sm" id="btnAddCustomGoalModal">
-              <i class="fa-solid fa-plus"></i> Tambah Goal Baru
+            <!-- Add Task Button -->
+            <button class="btn btn-primary" id="add-task-btn">
+              <i class="fa-solid fa-plus"></i> Tambah Tugas
             </button>
           </div>
-          <div class="card-body">
-            <div class="grid grid-3 gap-3" id="customGoalsGrid">
-              <!-- Dynamic custom goal items populated by JS -->
+        </div>
+
+        <!-- Progress Summary Cards -->
+        <div class="progress-cards-grid">
+          <div class="progress-card">
+            <div class="card-icon icon-primary">
+              <i class="fa-solid fa-list-check"></i>
             </div>
-            <div class="empty-state" id="emptyGoalsState" style="display: none;">
-              <i class="fa-solid fa-bullseye empty-icon"></i>
-              <p>Belum ada Custom Personal Goal. Klik tombol "Tambah Goal Baru" di atas.</p>
+            <div class="card-data">
+              <span class="card-label">Total Tugas</span>
+              <h3 id="stat-total">0</h3>
             </div>
+          </div>
+          <div class="progress-card">
+            <div class="card-icon icon-success">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="card-data">
+              <span class="card-label">Selesai (Done)</span>
+              <h3 id="stat-done">0</h3>
+            </div>
+          </div>
+          <div class="progress-card">
+            <div class="card-icon icon-danger">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="card-data">
+              <span class="card-label">Terlewat (Overdue)</span>
+              <h3 id="stat-overdue">0</h3>
+            </div>
+          </div>
+          <div class="progress-card">
+            <div class="card-icon icon-info">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="card-data">
+              <span class="card-label">Pencapaian</span>
+              <h3 id="stat-progress">0%</h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tasks List Section -->
+        <div class="task-list-container">
+          <div class="task-list-header">
+            <h3>Daftar Tugas Harian</h3>
+            <span class="task-count-badge" id="task-count-text">0 tugas</span>
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state hidden" id="empty-state">
+            <i class="fa-solid fa-clipboard-list"></i>
+            <h4>Belum ada tugas untuk tanggal ini</h4>
+            <p>Klik tombol <strong>"Tambah Tugas"</strong> untuk memasukkan aktivitas harian Anda.</p>
+            <button class="btn btn-primary btn-sm margin-top" id="empty-add-btn">
+              <i class="fa-solid fa-plus"></i> Tambah Tugas Baru
+            </button>
+          </div>
+
+          <!-- Task Items Container -->
+          <div class="task-items-wrapper" id="task-items-wrapper">
+            <!-- Dynamic task item cards will be inserted here via JS -->
           </div>
         </div>
       </section>
-
-      <!-- TAB 4: MODUL OLAHRAGA (Requirements 2.E) -->
-      <section class="tab-pane" id="tab-exercise">
-        
-        <!-- Scheduled Exercise Plan Header Banner -->
-        <div class="card card-exercise-hero mb-4">
-          <div class="card-body flex-between flex-wrap gap-4">
-            <div class="exercise-target-info">
-              <span class="badge badge-amber mb-2"><i class="fa-solid fa-trophy"></i> Scheduled Exercise Plan Target</span>
-              <h2 id="exerciseTargetTitle">Belum Ada Target Program Latihan</h2>
-              <p class="text-muted" id="exerciseTargetDesc">Susun rencana latihan bertahap menuju target spesifik (misal: "Lari 25km di Hari Ulang Tahun").</p>
-              <div class="exercise-target-meta mt-2" id="exerciseTargetMeta" style="display: none;">
-                <span><i class="fa-regular fa-calendar"></i> Target Date: <strong id="exerciseTargetDate">--</strong></span>
-                <span class="ml-3"><i class="fa-solid fa-list-ol"></i> Total Phase: <strong id="exerciseTotalDays">0</strong> Hari</span>
-              </div>
-            </div>
-            <div class="exercise-hero-actions">
-              <button class="btn btn-amber" id="btnEditExercisePlan">
-                <i class="fa-solid fa-pen-to-square"></i> Atur Plan Latihan
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Today's Exercise Daily View -->
-        <div class="card card-glass mb-4">
-          <div class="card-header border-bottom flex-between">
-            <div>
-              <h3><i class="fa-solid fa-dumbbell text-amber"></i> Daily Plan View (Hari Ini)</h3>
-              <p class="text-muted text-sm">Menu latihan spesifik yang dijadwalkan untuk hari ini</p>
-            </div>
-            <span class="badge badge-outline" id="todayExerciseDayBadge">Hari ke-1</span>
-          </div>
-          <div class="card-body">
-            <div class="exercise-routine-list" id="todayExerciseContainer">
-              <!-- Populated via JS -->
-            </div>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- TAB 5: SYNC & SETTINGS (Requirements 1 & 3) -->
-      <section class="tab-pane" id="tab-sync-settings">
-        
-        <div class="grid grid-2 gap-4">
-          
-          <!-- Google Sheets API Configuration -->
-          <div class="card card-glass">
-            <div class="card-header border-bottom">
-              <h3><i class="fa-solid fa-cloud-nodes text-indigo"></i> Google Sheets Backend Connection</h3>
-            </div>
-            <div class="card-body">
-              <p class="text-muted text-sm mb-4">
-                Masukkan URL Web App dari Google Apps Script (`Code.gs`) yang telah di-deploy untuk mengaktifkan fitur Push/Pull data otomatis.
-              </p>
-
-              <div class="form-group mb-4">
-                <label for="gasWebAppUrl" class="form-label">Google Apps Script Web App URL:</label>
-                <input type="url" id="gasWebAppUrl" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
-                <small class="text-muted mt-1 block">URL ini didapat setelah melakukan Deploy as Web App di Google Sheets Apps Script.</small>
-              </div>
-
-              <div class="sync-action-buttons grid grid-2 gap-3 mb-4">
-                <button class="btn btn-emerald btn-block" id="btnPushToGas">
-                  <i class="fa-solid fa-cloud-arrow-up"></i> Upload Data (Push)
-                </button>
-                <button class="btn btn-indigo btn-block" id="btnPullFromGas">
-                  <i class="fa-solid fa-cloud-arrow-down"></i> Download Data (Pull)
-                </button>
-              </div>
-
-              <div class="sync-status-box" id="gasSyncLogBox">
-                <div class="flex-between mb-1">
-                  <strong>Status Sinkronisasi:</strong>
-                  <span id="gasSyncTimeText">Belum Pernah Sync</span>
-                </div>
-                <div class="text-sm text-muted" id="gasSyncDetails">
-                  Penyimpanan aktif: Local Storage (PWA Offline-First)
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Apps Script Setup Guide & App Status -->
-          <div class="card card-glass">
-            <div class="card-header border-bottom">
-              <h3><i class="fa-solid fa-circle-info text-cyan"></i> Panduan Setup Google Sheets Backend</h3>
-            </div>
-            <div class="card-body text-sm">
-              <ol class="setup-steps-list">
-                <li>Buat Google Spreadsheet baru di Google Drive Anda.</li>
-                <li>Buka menu <strong>Extensions > Apps Script</strong>.</li>
-                <li>Salin seluruh kode dari file <code>Code.gs</code> ke dalam editor Apps Script.</li>
-                <li>Klik tombol <strong>Deploy > New deployment</strong>.</li>
-                <li>Pilih type <strong>Web app</strong>, atur access ke <strong>"Anyone"</strong>.</li>
-                <li>Salin <strong>Web App URL</strong> yang dihasilkan dan tempelkan pada kolom di samping.</li>
-              </ol>
-
-              <div class="pwa-install-card mt-4 p-3 border-radius-lg bg-dark-subtle">
-                <h4 class="mb-2"><i class="fa-solid fa-mobile-screen-button"></i> PWA App Installation</h4>
-                <p class="text-muted mb-3">Install HabitPulse ke Smartphone atau Desktop agar dapat berjalan layaknya aplikasi native tanpa koneksi internet.</p>
-                <button class="btn btn-primary btn-sm" id="btnInstallPwaSettings">
-                  <i class="fa-solid fa-download"></i> Install HabitPulse PWA
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </section>
-
     </main>
 
-    <!-- Bottom Navigation Bar (Mobile View) -->
+    <!-- Mobile Bottom Navigation Bar -->
     <nav class="mobile-bottom-nav">
-      <a href="#daily-tasks" class="mobile-nav-item active" data-tab="daily-tasks">
-        <i class="fa-solid fa-list-check"></i>
+      <a href="#daily-tasks" class="bottom-nav-item active" data-tab="daily-tasks">
+        <i class="fa-solid fa-calendar-day"></i>
         <span>Tasks</span>
       </a>
-      <a href="#ibadah" class="mobile-nav-item" data-tab="ibadah">
+      <a href="#ibadah" class="bottom-nav-item disabled" title="Segera hadir">
         <i class="fa-solid fa-mosque"></i>
         <span>Ibadah</span>
       </a>
-      <a href="#goals" class="mobile-nav-item" data-tab="goals">
+      <button class="bottom-nav-add" id="mobile-quick-add" title="Tambah Tugas">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+      <a href="#goals" class="bottom-nav-item disabled" title="Segera hadir">
         <i class="fa-solid fa-bullseye"></i>
         <span>Goals</span>
       </a>
-      <a href="#exercise" class="mobile-nav-item" data-tab="exercise">
+      <a href="#exercise" class="bottom-nav-item disabled" title="Segera hadir">
         <i class="fa-solid fa-dumbbell"></i>
-        <span>Olahraga</span>
-      </a>
-      <a href="#sync-settings" class="mobile-nav-item" data-tab="sync-settings">
-        <i class="fa-solid fa-cloud"></i>
-        <span>Sync</span>
+        <span>Workout</span>
       </a>
     </nav>
-
   </div>
 
-  <!-- MODAL: ADD / EDIT DAILY TASK -->
-  <div class="modal-backdrop" id="modalTask">
+  <!-- MODAL: ADD / EDIT TASK -->
+  <div class="modal-overlay hidden" id="task-modal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="modalTaskTitle">Tambah Tugas Baru</h3>
-        <button class="modal-close" data-close="modalTask">&times;</button>
+        <h3 id="modal-task-title">Tambah Tugas Harian</h3>
+        <button class="btn-close" id="close-task-modal"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form id="formDailyTask">
-        <input type="hidden" id="taskEditId">
-        <div class="modal-body">
-          <div class="form-group mb-3">
-            <label class="form-label" for="taskNameInput">Nama Tugas / Aktivitas *</label>
-            <input type="text" id="taskNameInput" class="form-control" placeholder="Contoh: Qiyamul Lail / Lari Pagi" required>
+      <form id="task-form">
+        <input type="hidden" id="task-id">
+
+        <div class="form-group">
+          <label for="task-name">Nama Aktivitas / Tugas <span class="required">*</span></label>
+          <input type="text" id="task-name" class="form-control" placeholder="Contoh: Sholat Subuh & Dzikir, Belajar English, Briefing Kerja..." required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="task-category">Kategori <span class="required">*</span></label>
+            <select id="task-category" class="form-select" required>
+              <option value="Ibadah">Ibadah</option>
+              <option value="Olahraga">Olahraga</option>
+              <option value="Kewajiban" selected>Kewajiban</option>
+              <option value="Bermain">Bermain</option>
+              <option value="Kebutuhan">Kebutuhan</option>
+            </select>
           </div>
 
-          <div class="grid grid-2 gap-3 mb-3">
-            <div class="form-group">
-              <label class="form-label" for="taskCategorySelect">Kategori *</label>
-              <select id="taskCategorySelect" class="form-control" required>
-                <option value="Ibadah">Ibadah</option>
-                <option value="Olahraga">Olahraga</option>
-                <option value="Kewajiban">Kewajiban</option>
-                <option value="Bermain">Bermain</option>
-                <option value="Kebutuhan">Kebutuhan</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="taskStatusSelect">Status</label>
-              <select id="taskStatusSelect" class="form-control">
-                <option value="Pending">Pending</option>
-                <option value="Done">Done</option>
-                <option value="Overdue">Overdue</option>
-                <option value="Pass">Pass</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid grid-2 gap-3 mb-3">
-            <div class="form-group">
-              <label class="form-label" for="taskTimeStart">Waktu Mulai *</label>
-              <input type="time" id="taskTimeStart" class="form-control" required>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="taskTimeEnd">Waktu Selesai *</label>
-              <input type="time" id="taskTimeEnd" class="form-control" required>
-            </div>
+          <div class="form-group">
+            <label for="task-status">Status Aktivitas</label>
+            <select id="task-status" class="form-select">
+              <option value="Pending">Pending / Active</option>
+              <option value="Done">Done (Selesai)</option>
+              <option value="Overdue">Overdue (Terlewat)</option>
+              <option value="Pass">Pass (Dilewati)</option>
+            </select>
           </div>
         </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="task-start-time">Jam Mulai <span class="required">*</span></label>
+            <input type="time" id="task-start-time" class="form-control" required value="08:00">
+          </div>
+
+          <div class="form-group">
+            <label for="task-end-time">Jam Selesai <span class="required">*</span></label>
+            <input type="time" id="task-end-time" class="form-control" required value="09:00">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="task-notes">Catatan Tambahan (Opsional)</label>
+          <textarea id="task-notes" class="form-control" rows="2" placeholder="Catatan detail, link, atau perlengkapan..."></textarea>
+        </div>
+
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline" data-close="modalTask">Batal</button>
-          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Simpan Tugas</button>
+          <button type="button" class="btn btn-ghost" id="cancel-task-btn">Batal</button>
+          <button type="submit" class="btn btn-primary" id="save-task-btn">
+            <i class="fa-solid fa-save"></i> Simpan Tugas
+          </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: ADD CUSTOM GOAL -->
-  <div class="modal-backdrop" id="modalCustomGoal">
+  <!-- MODAL: SETTINGS & GOOGLE SHEETS SYNC -->
+  <div class="modal-overlay hidden" id="settings-modal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Tambah Custom Goal</h3>
-        <button class="modal-close" data-close="modalCustomGoal">&times;</button>
+        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Google Sheets Backend Settings</h3>
+        <button class="btn-close" id="close-settings-modal"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form id="formCustomGoal">
-        <div class="modal-body">
-          <div class="form-group mb-3">
-            <label class="form-label" for="goalTitleInput">Nama Personal Goal *</label>
-            <input type="text" id="goalTitleInput" class="form-control" placeholder="Contoh: Baca Buku, Cold Shower, Meditasi" required>
-          </div>
 
-          <div class="grid grid-2 gap-3 mb-3">
-            <div class="form-group">
-              <label class="form-label" for="goalTypeSelect">Tipe Pengukuran</label>
-              <select id="goalTypeSelect" class="form-control">
-                <option value="number">Numeric (Durasi/Jumlah)</option>
-                <option value="boolean">Boolean (Ya / Tidak)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="goalUnitInput">Satuan (Opsional)</label>
-              <input type="text" id="goalUnitInput" class="form-control" placeholder="halaman, menit, kali">
-            </div>
-          </div>
-
-          <div class="form-group mb-3">
-            <label class="form-label" for="goalTargetInput">Target Harian</label>
-            <input type="number" id="goalTargetInput" class="form-control" min="1" placeholder="10">
-          </div>
+      <div class="settings-body">
+        <div class="form-group">
+          <label for="gas-url-input">Google Apps Script Web App URL</label>
+          <input type="url" id="gas-url-input" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+          <small class="form-help">Masukkan URL Web App hasil deploy dari <code>Code.gs</code> di Google Apps Script Anda.</small>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" data-close="modalCustomGoal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan Goal</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
-  <!-- MODAL: CONFIGURE EXERCISE PLAN -->
-  <div class="modal-backdrop" id="modalExercisePlan">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>Pengaturan Scheduled Exercise Plan</h3>
-        <button class="modal-close" data-close="modalExercisePlan">&times;</button>
+        <div class="sync-actions-box">
+          <label>Aksi Sinkronisasi Manual:</label>
+          <div class="btn-group-responsive">
+            <button class="btn btn-success" id="push-data-btn">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Upload Data (Push)
+            </button>
+            <button class="btn btn-info" id="pull-data-btn">
+              <i class="fa-solid fa-cloud-arrow-down"></i> Download Data (Pull)
+            </button>
+          </div>
+          <small class="form-help text-muted">Upload: Mengirim data lokal ke Google Sheets. Download: Mengambil data terbaru dari Google Sheets.</small>
+        </div>
+
+        <hr class="divider">
+
+        <div class="form-group">
+          <label>Data & Storage Reset</label>
+          <button class="btn btn-danger-outline btn-sm" id="reset-storage-btn">
+            <i class="fa-solid fa-trash-can"></i> Clear Local Cache & Load Demo Data
+          </button>
+        </div>
       </div>
-      <form id="formExercisePlan">
-        <div class="modal-body">
-          <div class="form-group mb-3">
-            <label class="form-label" for="exPlanTitle">Nama Target Program Latihan *</label>
-            <input type="text" id="exPlanTitle" class="form-control" placeholder="Contoh: Program Lari 25km Ultah / Program Kalistenik" required>
-          </div>
 
-          <div class="grid grid-2 gap-3 mb-3">
-            <div class="form-group">
-              <label class="form-label" for="exPlanTargetDate">Tanggal Target</label>
-              <input type="date" id="exPlanTargetDate" class="form-control">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="exPlanTimeEst">Rentang Jam Rutin</label>
-              <input type="text" id="exPlanTimeEst" class="form-control" placeholder="06:00 - 07:00" value="06:00 - 07:00">
-            </div>
-          </div>
-
-          <div class="form-group mb-3">
-            <label class="form-label">Menu Latihan Harian (Satu per baris):</label>
-            <textarea id="exPlanMenus" class="form-control" rows="5" placeholder="Contoh:&#10;Lari Pagi 5 km&#10;Push Up 3 Set x 15 Reps&#10;Plank 3 Set x 60 Detik"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" data-close="modalExercisePlan">Batal</button>
-          <button type="submit" class="btn btn-amber"><i class="fa-solid fa-floppy-disk"></i> Simpan Plan</button>
-        </div>
-      </form>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="save-settings-btn">Simpan Pengaturan</button>
+      </div>
     </div>
   </div>
 
   <!-- Toast Notification Container -->
-  <div class="toast-container" id="toastContainer"></div>
+  <div class="toast-container" id="toast-container"></div>
 
+  <!-- App Core JS -->
   <script src="app.js"></script>
 </body>
 </html>
