@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en-GB">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -18,13 +19,15 @@
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body class="dark-mode">
   <div class="app-container">
 
@@ -35,26 +38,26 @@
       <section class="flat-section header-section">
         <div class="header-top-row">
           <div class="date-box">
-            <h2 id="live-date">Selasa, 12-08-2026</h2>
+            <h2 id="live-date">THURSDAY, 13/08/26</h2>
           </div>
           <div class="time-box text-right">
-            <h2 id="live-clock">08:27:58</h2>
+            <h2 id="live-clock">08:27<span class="clock-seconds">:58</span></h2>
           </div>
         </div>
       </section>
 
-      <!-- SECTION 2: ACTIVE TASK BANNER SECTION (Right now you should be :) -->
+      <!-- SECTION 2: ACTIVE TASK BANNER SECTION -->
       <section class="flat-section active-banner-section" id="active-task-banner">
         <div class="banner-header-title">Right now you should be :</div>
         <div class="banner-main-row">
-          <h2 class="banner-task-name" id="banner-title">Loading tugas aktif saat ini...</h2>
+          <h2 class="banner-task-name" id="banner-title">Loading active task...</h2>
         </div>
         <div class="banner-footer-row">
           <div class="banner-duration" id="banner-duration">
-            <i class="fa-regular fa-clock"></i> Duration left: <span id="banner-countdown-text">Menghitung...</span>
+            <i class="fa-regular fa-clock"></i> Duration left: <span id="banner-countdown-text">Calculating...</span>
           </div>
           <button class="btn btn-success btn-sm" id="banner-quick-done">
-            <i class="fa-solid fa-check"></i> Selesai
+            <i class="fa-solid fa-check"></i> Complete
           </button>
         </div>
       </section>
@@ -62,69 +65,67 @@
       <!-- SECTION 3: MAIN TASK LIST CONTAINER SECTION -->
       <section class="flat-section task-list-section">
 
-        <!-- Centered Date Header: DDDDD, DD-MM-YY -->
+        <!-- Centered Date Header -->
         <div class="date-header-centered">
-          <button class="btn-date-arrow" id="prev-day-btn" title="Hari Sebelumnya">
+          <button class="btn-date-arrow btn-date-prev" id="prev-day-btn" title="Previous Day">
             <i class="fa-solid fa-chevron-left"></i>
           </button>
 
-          <div class="date-title-underlined" id="selected-date-display">
-            <u id="date-label">RABU, 13-08-26</u>
+          <div class="date-title-underlined" id="selected-date-display" title="Tap to select date, hold to return to Today">
+            <u id="date-label">TODAY</u>
             <input type="date" id="date-picker-input" class="hidden-date-input">
           </div>
 
-          <button class="btn-date-arrow" id="next-day-btn" title="Hari Berikutnya">
+          <button class="btn-date-arrow btn-date-next" id="next-day-btn" title="Next Day">
             <i class="fa-solid fa-chevron-right"></i>
           </button>
-          
-          <button class="btn-today-pill" id="today-btn">Hari Ini</button>
         </div>
 
-        <!-- Consistent 4-Column Table View Container (Desktop & Mobile) -->
+        <!-- Consistent 4-Column Table View Container -->
         <div class="task-table-scroll-wrapper">
-          <!-- Table Column Headers: Task name | Category | Time Estimate | Status -->
-          <div class="task-table-headers">
+          <!-- Table Column Headers -->
+          <div class="task-table-headers" id="task-table-headers">
             <div class="col-header col-task">Task name</div>
             <div class="col-header col-category">Category</div>
             <div class="col-header col-time">Time Estimate</div>
             <div class="col-header col-status">Status</div>
           </div>
 
-          <!-- Empty State -->
-          <div class="empty-state hidden" id="empty-state">
-            <i class="fa-solid fa-clipboard-list"></i>
-            <h4>Belum ada tugas untuk tanggal ini</h4>
-            <p>Klik <strong>"+ Add task"</strong> untuk memasukkan aktivitas baru.</p>
-          </div>
-
           <!-- Task List Rows Container -->
           <div class="task-items-wrapper" id="task-items-wrapper">
             <!-- Dynamic task rows generated via JS -->
           </div>
-        </div>
 
-        <!-- Add Task Link / Button at Bottom Left of Card -->
-        <div class="card-bottom-actions">
-          <button class="btn-add-task-link" id="add-task-btn">
-            <i class="fa-solid fa-plus"></i> Add task
-          </button>
+          <!-- Add Task Link / Button -->
+          <div class="card-bottom-actions" id="card-bottom-actions">
+            <button class="btn-add-task-link" id="add-task-btn">
+              <i class="fa-solid fa-plus"></i> Add task
+            </button>
+          </div>
+
+          <!-- Empty State Notes Section -->
+          <div class="empty-state hidden" id="empty-state">
+            <i class="fa-solid fa-clipboard-list"></i>
+            <h4>No tasks scheduled for this date</h4>
+            <p>Click <strong>"+ Add task"</strong> to create a new activity.</p>
+          </div>
         </div>
 
       </section>
     </main>
 
-    <!-- UNIFIED PILL NAVIGATION BAR (DESKTOP & MOBILE MODE) -->
+    <!-- UNIFIED PILL NAVIGATION BAR -->
     <nav class="pill-navbar" id="pill-navbar">
       <a href="#daily-tasks" class="pill-nav-item active" data-tab="daily-tasks" title="Daily Tasks">
         <i class="fa-solid fa-calendar-day"></i>
       </a>
-      <a href="#ibadah" class="pill-nav-item disabled" title="Ibadah (Soon)">
+      <a href="#ibadah" class="pill-nav-item disabled" title="Worship (Soon)">
         <i class="fa-solid fa-mosque"></i>
       </a>
       <a href="#goals" class="pill-nav-item disabled" title="Goals & Streak (Soon)">
         <i class="fa-solid fa-bullseye"></i>
       </a>
-      <a href="#exercise" class="pill-nav-item disabled" title="Olahraga (Soon)">
+      <a href="#exercise" class="pill-nav-item disabled" title="Exercise (Soon)">
         <i class="fa-solid fa-dumbbell"></i>
       </a>
     </nav>
@@ -134,65 +135,70 @@
   <div class="modal-overlay hidden" id="task-modal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="modal-task-title">Tambah Tugas Harian</h3>
+        <h3 id="modal-task-title">Add New Task</h3>
         <button class="btn-close" id="close-task-modal"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <form id="task-form">
         <input type="hidden" id="task-id">
+        <input type="hidden" id="task-status" value="Pending">
 
+        <!-- 1. Task Name -->
         <div class="form-group">
           <label for="task-name">Task Name <span class="required">*</span></label>
-          <input type="text" id="task-name" class="form-control" placeholder="Contoh: Sholat Subuh, Belajar English, Briefing..." required>
+          <input type="text" id="task-name" class="form-control"
+            placeholder="e.g. Morning Prayer, Exercise, Team Sync..." required>
         </div>
 
+        <!-- 2. Start & Stop Time (24h Scrollable Wheel Picker) -->
         <div class="form-row">
           <div class="form-group">
-            <label for="task-category">Category <span class="required">*</span></label>
-            <select id="task-category" class="form-select" required>
-              <option value="Ibadah">Ibadah</option>
-              <option value="Olahraga">Olahraga</option>
-              <option value="Kewajiban" selected>Kewajiban</option>
-              <option value="Bermain">Bermain</option>
-              <option value="Kebutuhan">Kebutuhan</option>
-            </select>
+            <label>Start Time (24h) <span class="required">*</span></label>
+            <div class="wheel-time-container" id="start-time-wheel-box">
+              <div class="wheel-column" id="start-hour-wheel"></div>
+              <span class="wheel-colon">:</span>
+              <div class="wheel-column" id="start-min-wheel"></div>
+            </div>
+            <input type="hidden" id="task-start-time" value="08:00">
           </div>
 
           <div class="form-group">
-            <label for="task-status">Status</label>
-            <select id="task-status" class="form-select">
-              <option value="Pending">Pending</option>
-              <option value="Done">Done</option>
-              <option value="Overdue">Overdue</option>
-              <option value="Pass">Pass</option>
-            </select>
+            <label>End Time (24h) <span class="required">*</span></label>
+            <div class="wheel-time-container" id="end-time-wheel-box">
+              <div class="wheel-column" id="end-hour-wheel"></div>
+              <span class="wheel-colon">:</span>
+              <div class="wheel-column" id="end-min-wheel"></div>
+            </div>
+            <input type="hidden" id="task-end-time" value="09:00">
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="task-start-time">Jam Mulai (24 Jam) <span class="required">*</span></label>
-            <input type="time" id="task-start-time" class="form-control" required value="08:00" step="60">
-          </div>
-
-          <div class="form-group">
-            <label for="task-end-time">Jam Selesai (24 Jam) <span class="required">*</span></label>
-            <input type="time" id="task-end-time" class="form-control" required value="09:00" step="60">
-          </div>
-        </div>
-
+        <!-- 3. Category -->
         <div class="form-group">
-          <label for="task-notes">Catatan (Opsional)</label>
-          <textarea id="task-notes" class="form-control" rows="2" placeholder="Catatan detail..."></textarea>
+          <label for="task-category">Category <span class="required">*</span></label>
+          <select id="task-category" class="form-select" required>
+            <option value="Worship">Worship</option>
+            <option value="Exercise">Exercise</option>
+            <option value="Must Do" selected>Must Do</option>
+            <option value="Play">Play</option>
+            <option value="Essentials">Essentials</option>
+          </select>
+        </div>
+
+        <!-- 4. Notes (Optional) -->
+        <div class="form-group">
+          <label for="task-notes">Notes (Optional)</label>
+          <textarea id="task-notes" class="form-control" rows="2" placeholder="Detailed notes..."></textarea>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-ghost" id="cancel-task-btn">Batal</button>
+          <button type="button" class="btn btn-ghost" id="cancel-task-btn">Cancel</button>
           <button type="submit" class="btn btn-primary" id="save-task-btn">
-            <i class="fa-solid fa-save"></i> Simpan Task
+            <i class="fa-solid fa-save"></i> Save Task
           </button>
         </div>
       </form>
     </div>
+  </div>
   </div>
 
   <!-- MODAL: SETTINGS & GOOGLE SHEETS SYNC -->
@@ -206,7 +212,8 @@
       <div class="settings-body">
         <div class="form-group">
           <label for="gas-url-input">Google Apps Script Web App URL</label>
-          <input type="url" id="gas-url-input" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+          <input type="url" id="gas-url-input" class="form-control"
+            placeholder="https://script.google.com/macros/s/.../exec">
           <small class="form-help">Masukkan Web App URL dari deployment <code>Code.gs</code> Anda.</small>
         </div>
 
@@ -238,10 +245,30 @@
     </div>
   </div>
 
+  <!-- MODAL: CONFIRM ACTION (DELETE / RESET) -->
+  <div class="modal-overlay hidden" id="confirm-modal">
+    <div class="modal-card modal-confirm">
+      <div class="modal-header">
+        <h3 id="confirm-modal-title"><i class="fa-solid fa-triangle-exclamation"></i> Delete Task</h3>
+        <button class="btn-close" id="close-confirm-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="confirm-modal-body">
+        <p id="confirm-modal-message">Are you sure you want to delete this task?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="cancel-confirm-btn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="action-confirm-btn">
+          <i class="fa-solid fa-trash"></i> Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
   <!-- App Core JS -->
   <script src="app.js"></script>
 </body>
+
 </html>

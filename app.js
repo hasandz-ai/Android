@@ -12,6 +12,52 @@ let gasWebAppUrl = '';
 let deferredInstallPrompt = null;
 
 // ==========================================
+// HAPTIC FEEDBACK ENGINE & TUNING CONFIG
+// ==========================================
+// Easily tune haptic duration, patterns, and debounce thresholds here:
+const HAPTIC_CONFIG = {
+  enabled: true,
+  debounceMs: 35, // Preventive threshold blocking unwanted double vibrations
+};
+
+// Haptic Vibration Patterns (Tunable Presets)
+const HAPTIC_PRESETS = {
+  click: 12,                  // Short solid click for buttons & selections (User preferred)
+  heavyClick: 24,             // Firmer click for save/delete actions
+  snap: 10,                   // Ultra-crisp tick for wheel scrolling
+  holdSuccess: [15, 30, 20],   // Pulse pattern for long-press hold gesture
+};
+
+let lastHapticTimestamp = 0;
+
+/**
+ * Centralized Haptic Trigger with Preventive Double-Vibration Guard
+ * @param {string|number|number[]} pattern - Preset key or custom ms duration/pattern
+ */
+function triggerHaptic(pattern = 'click') {
+  if (!HAPTIC_CONFIG.enabled || !('vibrate' in navigator)) return;
+
+  const now = Date.now();
+  // Preventive Guard: Block unwanted double vibrations within debounceMs threshold
+  if (now - lastHapticTimestamp < HAPTIC_CONFIG.debounceMs) {
+    return;
+  }
+  lastHapticTimestamp = now;
+
+  try {
+    let vibePattern = HAPTIC_PRESETS.click;
+    if (typeof pattern === 'string' && HAPTIC_PRESETS[pattern] !== undefined) {
+      vibePattern = HAPTIC_PRESETS[pattern];
+    } else if (typeof pattern === 'number' || Array.isArray(pattern)) {
+      vibePattern = pattern;
+    }
+    navigator.vibrate(vibePattern);
+  } catch (e) {
+    // Ignore browser permission restrictions
+  }
+}
+
+// ==========================================
 // INITIALIZATION
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -31,24 +77,21 @@ function getTodayDateString() {
   return `${year}-${month}-${day}`;
 }
 
-// Format Wireframe Date Header (DDDDD, DD-MM-YY) e.g. "RABU, 13-08-26"
+// Format Date Header (DDDDD, DD/MM/YY) e.g. "THURSDAY, 13/08/26"
 function formatWireframeDateHeader(dateStr) {
   const [year, month, day] = dateStr.split('-');
   const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  
-  const days = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
+
+  const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
   const dayName = days[dateObj.getDay()];
   const yy = year.slice(-2);
-  
-  return `${dayName}, ${day}-${month}-${yy}`;
+
+  return `${dayName}, ${day}/${month}/${yy}`;
 }
 
-// Format Full Human Date (e.g. "Selasa, 12-08-2026")
+// Format Full Human Date (DDDDD, DD/MM/YY)
 function formatFullHumanDate(dateStr) {
-  const [year, month, day] = dateStr.split('-');
-  const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  const dayName = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
-  return `${dayName}, ${day}-${month}-${year}`;
+  return formatWireframeDateHeader(dateStr);
 }
 
 // Initialize Local Storage & Demo Data
@@ -75,68 +118,68 @@ function saveTasksToStorage() {
   localStorage.setItem(STATE_KEY_TASKS, JSON.stringify(tasks));
 }
 
-// Demo Data
+// Demo Data (English Defaults)
 function getDemoTasks() {
   const today = getTodayDateString();
   return [
     {
       id: 'demo-1',
-      name: "Sholat Subuh & Dzikir Pagi",
-      category: "Ibadah",
+      name: "Morning Prayer & Meditation",
+      category: "Worship",
       startTime: "04:30",
       endTime: "05:15",
       status: "Done",
-      notes: "Di Masjid Jami'",
+      notes: "Daily morning routine",
       date: today
     },
     {
       id: 'demo-2',
-      name: "Jogging & Kalistenik Ringan",
-      category: "Olahraga",
+      name: "Light Calisthenics & Jogging",
+      category: "Exercise",
       startTime: "06:00",
       endTime: "06:45",
       status: "Done",
-      notes: "Target 3km / 30 push-up",
+      notes: "Target 3km / 30 push-ups",
       date: today
     },
     {
       id: 'demo-3',
-      name: "Belajar Bahasa Inggris (Vocabulary)",
-      category: "Kewajiban",
+      name: "English Vocabulary Study",
+      category: "Must Do",
       startTime: "08:00",
       endTime: "09:00",
       status: "Done",
-      notes: "Modul 4 Daily Tracker",
+      notes: "Module 4 Daily Tracker",
       date: today
     },
     {
       id: 'demo-4',
-      name: "Briefing Tim & Eksekusi Project Utama",
-      category: "Kewajiban",
+      name: "Team Sync & Project Execution",
+      category: "Must Do",
       startTime: "09:30",
       endTime: "12:00",
       status: "Pending",
-      notes: "Review fitur PWA & Google Sheets integration",
+      notes: "Review PWA features & Google Sheets integration",
       date: today
     },
     {
       id: 'demo-5',
-      name: "Sholat Dzuhur & Makan Siang Sehat",
-      category: "Ibadah",
+      name: "Noon Prayer & Healthy Lunch",
+      category: "Worship",
       startTime: "12:15",
       endTime: "13:00",
       status: "Pending",
-      notes: "Jaga nutrisi & hidrasi",
+      notes: "Stay hydrated & eat well",
       date: today
     },
     {
       id: 'demo-6',
-      name: "Gaming & Relaxing",
-      category: "Bermain",
+      name: "Gaming & Relaxation",
+      category: "Play",
       startTime: "16:30",
       endTime: "17:30",
       status: "Pending",
-      notes: "Istirahat sore",
+      notes: "Afternoon break",
       date: today
     }
   ];
@@ -149,7 +192,7 @@ function initClockAndBanner() {
   updateClock();
   updateGreeting();
   updateActiveTaskBanner();
-  
+
   setInterval(updateClock, 1000);
   setInterval(updateGreeting, 60000);
   setInterval(updateActiveTaskBanner, 5000);
@@ -163,7 +206,8 @@ function updateClock() {
   if (clockEl) {
     const hh = String(now.getHours()).padStart(2, '0');
     const mm = String(now.getMinutes()).padStart(2, '0');
-    clockEl.textContent = `${hh}:${mm}`;
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    clockEl.innerHTML = `${hh}:${mm}<span class="clock-seconds">:${ss}</span>`;
   }
   if (dateEl) {
     dateEl.textContent = formatFullHumanDate(getTodayDateString());
@@ -175,16 +219,16 @@ function updateGreeting() {
   if (!greetingEl) return;
 
   const hour = new Date().getHours();
-  let text = 'Selamat Datang! Siap mencapai target produktivitas Anda hari ini?';
+  let text = 'Welcome! Ready to achieve your productivity goals today?';
 
   if (hour >= 4 && hour < 11) {
-    text = 'Selamat Pagi! Awali hari dengan sholat, olahraga, dan rencana terstruktur.';
+    text = 'Good Morning! Start your day structured and focused.';
   } else if (hour >= 11 && hour < 15) {
-    text = 'Selamat Siang! Tetap fokus pada prioritas tugas utama Anda hari ini.';
+    text = 'Good Afternoon! Stay focused on your primary task priorities.';
   } else if (hour >= 15 && hour < 18) {
-    text = 'Selamat Sore! Selesaikan sisa target sebelum waktu istirahat.';
+    text = 'Good Evening! Wrap up remaining goals before break time.';
   } else if (hour >= 18 || hour < 4) {
-    text = 'Selamat Malam! Evaluasi pencapaian hari ini & istirahat yang cukup.';
+    text = 'Good Night! Review today\'s achievements & rest well.';
   }
 
   greetingEl.textContent = text;
@@ -198,6 +242,7 @@ function updateActiveTaskBanner() {
   const statusText = document.getElementById('banner-status-text');
   const durationText = document.getElementById('banner-countdown-text');
   const quickDoneBtn = document.getElementById('banner-quick-done');
+  const headerTitleEl = bannerCard ? bannerCard.querySelector('.banner-header-title') : null;
 
   if (!bannerCard) return;
 
@@ -217,6 +262,7 @@ function updateActiveTaskBanner() {
 
   if (activeTask) {
     bannerCard.className = 'flat-section active-banner-section is-active';
+    if (headerTitleEl) headerTitleEl.textContent = 'Right now you should be :';
     titleEl.textContent = activeTask.name;
     if (statusText) statusText.textContent = activeTask.status === 'Pending' ? 'Active Now' : activeTask.status;
 
@@ -224,15 +270,15 @@ function updateActiveTaskBanner() {
     const endMinutes = endH * 60 + endM;
     const remainingMin = endMinutes - currentMinutes;
 
-    durationText.textContent = remainingMin > 0 ? `${remainingMin} menit (${activeTask.startTime} - ${activeTask.endTime})` : `Waktu Berakhir (${activeTask.startTime} - ${activeTask.endTime})`;
-    
+    durationText.textContent = remainingMin > 0 ? `${remainingMin} minutes left (${activeTask.startTime} - ${activeTask.endTime})` : `Time Ended (${activeTask.startTime} - ${activeTask.endTime})`;
+
     if (quickDoneBtn) {
       quickDoneBtn.style.display = 'inline-flex';
       quickDoneBtn.onclick = () => {
         activeTask.status = 'Done';
         saveTasksToStorage();
         renderApp();
-        showToast(`Tugas "${activeTask.name}" selesai!`, 'success');
+        showToast(`Task "${activeTask.name}" completed!`, 'success');
       };
     }
     return;
@@ -245,6 +291,7 @@ function updateActiveTaskBanner() {
 
   if (upcomingTask) {
     bannerCard.className = 'flat-section active-banner-section';
+    if (headerTitleEl) headerTitleEl.textContent = 'Upcoming activities :';
     titleEl.textContent = upcomingTask.name;
     if (statusText) statusText.textContent = 'Upcoming';
 
@@ -252,16 +299,17 @@ function updateActiveTaskBanner() {
     const startMinutes = startH * 60 + startM;
     const diffMin = startMinutes - currentMinutes;
 
-    durationText.textContent = `Mulai dalam ${diffMin} menit (${upcomingTask.startTime} - ${upcomingTask.endTime})`;
+    durationText.textContent = `Starts in ${diffMin} minutes (${upcomingTask.startTime} - ${upcomingTask.endTime})`;
     if (quickDoneBtn) quickDoneBtn.style.display = 'none';
     return;
   }
 
   // 3. Idle / Free time
   bannerCard.className = 'flat-section active-banner-section';
-  titleEl.textContent = 'Tidak Ada Aktivitas Aktif Saat Ini';
+  if (headerTitleEl) headerTitleEl.textContent = 'Upcoming activities :';
+  titleEl.textContent = 'No Active Activity Right Now';
   if (statusText) statusText.textContent = 'Free Time';
-  durationText.textContent = 'Semua jadwal tugas hari ini telah selesai atau belum dikonfigurasi.';
+  durationText.textContent = 'All tasks for today are completed or not scheduled yet.';
   if (quickDoneBtn) quickDoneBtn.style.display = 'none';
 }
 
@@ -278,27 +326,22 @@ function renderApp() {
 function renderDateNavigator() {
   const dateLabel = document.getElementById('date-label');
   const datePicker = document.getElementById('date-picker-input');
-  const todayBtn = document.getElementById('today-btn');
   const todayStr = getTodayDateString();
+  const isToday = (currentSelectedDate === todayStr);
 
   if (dateLabel) {
-    if (currentSelectedDate === todayStr) {
-      dateLabel.textContent = 'Today';
-    } else {
-      dateLabel.textContent = formatWireframeDateHeader(currentSelectedDate);
-    }
-  }
-
-  if (todayBtn) {
-    if (currentSelectedDate === todayStr) {
-      todayBtn.classList.add('hidden');
-    } else {
-      todayBtn.classList.remove('hidden');
-    }
+    dateLabel.textContent = isToday ? 'TODAY' : formatWireframeDateHeader(currentSelectedDate);
   }
 
   if (datePicker) {
     datePicker.value = currentSelectedDate;
+    if (isToday) {
+      datePicker.disabled = true;
+      datePicker.style.pointerEvents = 'none';
+    } else {
+      datePicker.disabled = false;
+      datePicker.style.pointerEvents = 'auto';
+    }
   }
 }
 
@@ -456,42 +499,249 @@ function renderStatistics() {
 // ACTIONS & MODALS
 // ==========================================
 function changeTaskStatus(taskId, newStatus) {
+  triggerHaptic('click');
   const task = tasks.find(t => t.id === taskId);
   if (!task) return;
 
   task.status = newStatus;
   saveTasksToStorage();
   renderApp();
-  showToast(`Status diubah ke ${newStatus}`, 'info');
+  showToast(`Status changed to ${newStatus}`, 'info');
+}
+
+function resetAllRowPositions() {
+  document.querySelectorAll('.task-table-row').forEach(row => {
+    row.style.transform = 'translateX(0)';
+    row.classList.remove('swiping-right', 'swiping-left');
+  });
+}
+
+let onConfirmActionCallback = null;
+
+function showConfirmModal({ title, message, confirmText = 'Delete', iconClass = 'fa-triangle-exclamation', onConfirm }) {
+  const modal = document.getElementById('confirm-modal');
+  const titleEl = document.getElementById('confirm-modal-title');
+  const messageEl = document.getElementById('confirm-modal-message');
+  const actionBtn = document.getElementById('action-confirm-btn');
+
+  if (titleEl) titleEl.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${title}`;
+  if (messageEl) messageEl.textContent = message;
+  if (actionBtn) actionBtn.innerHTML = `<i class="fa-solid fa-trash"></i> ${confirmText}`;
+
+  onConfirmActionCallback = onConfirm;
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+  const modal = document.getElementById('confirm-modal');
+  if (modal) modal.classList.add('hidden');
+  onConfirmActionCallback = null;
+  resetAllRowPositions();
 }
 
 function deleteTask(taskId) {
-  if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return;
+  const task = tasks.find(t => t.id === taskId);
+  const taskName = task ? `"${task.name}"` : 'this task';
 
-  tasks = tasks.filter(t => t.id !== taskId);
-  saveTasksToStorage();
-  renderApp();
-  showToast('Tugas dihapus', 'warning');
+  showConfirmModal({
+    title: 'Delete Task',
+    message: `Are you sure you want to delete ${taskName}?`,
+    confirmText: 'Delete',
+    iconClass: 'fa-triangle-exclamation',
+    onConfirm: () => {
+      tasks = tasks.filter(t => t.id !== taskId);
+      saveTasksToStorage();
+      renderApp();
+      showToast('Task deleted successfully', 'warning');
+    }
+  });
+}
+
+// ==========================================
+// SCROLLABLE 24-HOUR WHEEL TIME PICKER ENGINE
+// ==========================================
+let isWheelInitialized = false;
+let isAutoUpdatingEndTime = false;
+
+function initWheelTimePickers() {
+  const startHourWheel = document.getElementById('start-hour-wheel');
+  const startMinWheel = document.getElementById('start-min-wheel');
+  const endHourWheel = document.getElementById('end-hour-wheel');
+  const endMinWheel = document.getElementById('end-min-wheel');
+
+  if (!startHourWheel || !startMinWheel || !endHourWheel || !endMinWheel) return;
+
+  if (isWheelInitialized) return;
+  isWheelInitialized = true;
+
+  // Build Hours 00 to 23
+  let hoursHtml = '';
+  for (let i = 0; i < 24; i++) {
+    const hh = String(i).padStart(2, '0');
+    hoursHtml += `<div class="wheel-item" data-val="${hh}">${hh}</div>`;
+  }
+
+  // Build Minutes 00 to 59 (step of 1 minute)
+  let minHtml = '';
+  for (let i = 0; i < 60; i++) {
+    const mm = String(i).padStart(2, '0');
+    minHtml += `<div class="wheel-item" data-val="${mm}">${mm}</div>`;
+  }
+
+  startHourWheel.innerHTML = hoursHtml;
+  endHourWheel.innerHTML = hoursHtml;
+  startMinWheel.innerHTML = minHtml;
+  endMinWheel.innerHTML = minHtml;
+
+  attachWheelListeners(startHourWheel, 'start-h');
+  attachWheelListeners(startMinWheel, 'start-m');
+  attachWheelListeners(endHourWheel, 'end-h');
+  attachWheelListeners(endMinWheel, 'end-m');
+}
+
+function attachWheelListeners(wheelEl, type) {
+  let scrollTimeout;
+
+  wheelEl.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      onWheelScrollEnd(wheelEl, type);
+    }, 60);
+  }, { passive: true });
+
+  wheelEl.querySelectorAll('.wheel-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const val = item.dataset.val;
+      scrollToWheelValue(wheelEl, val, true);
+      onWheelScrollEnd(wheelEl, type);
+    });
+  });
+}
+
+function scrollToWheelValue(wheelEl, val, smooth = false) {
+  if (!wheelEl) return;
+  const items = Array.from(wheelEl.querySelectorAll('.wheel-item'));
+  const targetItem = items.find(el => el.dataset.val === val) || items[0];
+
+  if (targetItem) {
+    const itemHeight = 32;
+    const index = items.indexOf(targetItem);
+    wheelEl.scrollTo({ top: index * itemHeight, behavior: smooth ? 'smooth' : 'auto' });
+
+    items.forEach(el => el.classList.remove('selected'));
+    targetItem.classList.add('selected');
+  }
+}
+
+function getSelectedWheelValue(wheelEl) {
+  if (!wheelEl) return '00';
+  const itemHeight = 32;
+  const index = Math.round(wheelEl.scrollTop / itemHeight);
+  const items = wheelEl.querySelectorAll('.wheel-item');
+  const clampedIndex = Math.max(0, Math.min(items.length - 1, index));
+
+  items.forEach((el, i) => {
+    if (i === clampedIndex) el.classList.add('selected');
+    else el.classList.remove('selected');
+  });
+
+  return items[clampedIndex] ? items[clampedIndex].dataset.val : '00';
+}
+
+function onWheelScrollEnd(wheelEl, type) {
+  triggerHaptic('snap');
+  if (type.startsWith('start')) {
+    const startH = getSelectedWheelValue(document.getElementById('start-hour-wheel'));
+    const startM = getSelectedWheelValue(document.getElementById('start-min-wheel'));
+    const newStartTime = `${startH}:${startM}`;
+
+    const startTimeInput = document.getElementById('task-start-time');
+    if (startTimeInput) startTimeInput.value = newStartTime;
+
+    // Rule: End time is automatically updated based on Start time (+1 minute)
+    if (!isAutoUpdatingEndTime) {
+      isAutoUpdatingEndTime = true;
+      let startHNum = parseInt(startH, 10);
+      let startMNum = parseInt(startM, 10);
+
+      let endMNum = startMNum + 1;
+      let endHNum = startHNum;
+      if (endMNum >= 60) {
+        endMNum = 0;
+        endHNum = (endHNum + 1) % 24;
+      }
+
+      let endH = String(endHNum).padStart(2, '0');
+      let endM = String(endMNum).padStart(2, '0');
+
+      const endHourWheel = document.getElementById('end-hour-wheel');
+      const endMinWheel = document.getElementById('end-min-wheel');
+
+      scrollToWheelValue(endHourWheel, endH, true);
+      scrollToWheelValue(endMinWheel, endM, true);
+
+      const endTimeInput = document.getElementById('task-end-time');
+      if (endTimeInput) endTimeInput.value = `${endH}:${endM}`;
+
+      setTimeout(() => { isAutoUpdatingEndTime = false; }, 300);
+    }
+  } else if (type.startsWith('end')) {
+    const endH = getSelectedWheelValue(document.getElementById('end-hour-wheel'));
+    const endM = getSelectedWheelValue(document.getElementById('end-min-wheel'));
+    const endTimeInput = document.getElementById('task-end-time');
+    if (endTimeInput) endTimeInput.value = `${endH}:${endM}`;
+  }
+}
+
+function setTimePickerValue(startStr, endStr) {
+  initWheelTimePickers();
+
+  const [startH, startM] = (startStr || '08:00').split(':');
+  const [endH, endM] = (endStr || '09:00').split(':');
+
+  const startHourWheel = document.getElementById('start-hour-wheel');
+  const startMinWheel = document.getElementById('start-min-wheel');
+  const endHourWheel = document.getElementById('end-hour-wheel');
+  const endMinWheel = document.getElementById('end-min-wheel');
+
+  setTimeout(() => {
+    scrollToWheelValue(startHourWheel, startH || '08');
+    scrollToWheelValue(startMinWheel, startM || '00');
+    scrollToWheelValue(endHourWheel, endH || '09');
+    scrollToWheelValue(endMinWheel, endM || '00');
+
+    document.getElementById('task-start-time').value = `${startH || '08'}:${startM || '00'}`;
+    document.getElementById('task-end-time').value = `${endH || '09'}:${endM || '00'}`;
+  }, 50);
 }
 
 function openAddTaskModal() {
-  document.getElementById('modal-task-title').textContent = 'Tambah Task Baru';
+  triggerHaptic('click');
+  resetAllRowPositions();
+  const titleEl = document.getElementById('modal-task-title');
+  if (titleEl) titleEl.textContent = 'Add New Task';
+
   document.getElementById('task-form').reset();
   document.getElementById('task-id').value = '';
+  document.getElementById('task-status').value = 'Pending';
+  setTimePickerValue('08:00', '08:01');
   document.getElementById('task-modal').classList.remove('hidden');
 }
 
 function openEditTaskModal(taskId) {
+  triggerHaptic('click');
+  resetAllRowPositions();
   const task = tasks.find(t => t.id === taskId);
   if (!task) return;
 
-  document.getElementById('modal-task-title').textContent = 'Edit Task';
+  const titleEl = document.getElementById('modal-task-title');
+  if (titleEl) titleEl.textContent = 'Edit Daily Task';
+
   document.getElementById('task-id').value = task.id;
   document.getElementById('task-name').value = task.name;
   document.getElementById('task-category').value = task.category;
-  document.getElementById('task-status').value = task.status;
-  document.getElementById('task-start-time').value = task.startTime;
-  document.getElementById('task-end-time').value = task.endTime;
+  document.getElementById('task-status').value = task.status || 'Pending';
+  setTimePickerValue(task.startTime, task.endTime);
   document.getElementById('task-notes').value = task.notes || '';
 
   document.getElementById('task-modal').classList.remove('hidden');
@@ -499,22 +749,35 @@ function openEditTaskModal(taskId) {
 
 function handleSaveTask(e) {
   e.preventDefault();
+  triggerHaptic('heavyClick');
 
   const id = document.getElementById('task-id').value;
   const name = document.getElementById('task-name').value.trim();
   const category = document.getElementById('task-category').value;
-  const status = document.getElementById('task-status').value;
-  const startTime = document.getElementById('task-start-time').value;
-  const endTime = document.getElementById('task-end-time').value;
+  const status = document.getElementById('task-status').value || 'Pending';
   const notes = document.getElementById('task-notes').value.trim();
 
+  // Read Start & End Time directly from active wheel selection
+  const startH = getSelectedWheelValue(document.getElementById('start-hour-wheel')) || '08';
+  const startM = getSelectedWheelValue(document.getElementById('start-min-wheel')) || '00';
+  const endH = getSelectedWheelValue(document.getElementById('end-hour-wheel')) || '09';
+  const endM = getSelectedWheelValue(document.getElementById('end-min-wheel')) || '00';
+
+  const startTime = `${startH}:${startM}`;
+  const endTime = `${endH}:${endM}`;
+
+  const startTimeInput = document.getElementById('task-start-time');
+  const endTimeInput = document.getElementById('task-end-time');
+  if (startTimeInput) startTimeInput.value = startTime;
+  if (endTimeInput) endTimeInput.value = endTime;
+
   if (!name || !startTime || !endTime) {
-    showToast('Harap isi semua bidang wajib (*)', 'error');
+    showToast('Please fill in all required fields (*)', 'error');
     return;
   }
 
   if (startTime >= endTime) {
-    showToast('Jam selesai harus setelah jam mulai', 'error');
+    showToast('End time must be after start time', 'error');
     return;
   }
 
@@ -530,7 +793,7 @@ function handleSaveTask(e) {
         endTime,
         notes
       };
-      showToast('Task berhasil diperbarui!', 'success');
+      showToast('Task updated successfully!', 'success');
     }
   } else {
     const newTask = {
@@ -544,7 +807,7 @@ function handleSaveTask(e) {
       date: currentSelectedDate
     };
     tasks.push(newTask);
-    showToast('Task baru ditambahkan!', 'success');
+    showToast('Task added successfully!', 'success');
   }
 
   saveTasksToStorage();
@@ -632,13 +895,19 @@ function saveSettings() {
 }
 
 function resetStorageData() {
-  if (confirm('Reset seluruh cache lokal dan muat data demo?')) {
-    localStorage.removeItem(STATE_KEY_TASKS);
-    initStorage();
-    renderApp();
-    document.getElementById('settings-modal').classList.add('hidden');
-    showToast('Data lokal di-reset.', 'info');
-  }
+  showConfirmModal({
+    title: 'Reset Local Cache',
+    message: 'Are you sure you want to reset all local data and reload demo tasks?',
+    confirmText: 'Reset',
+    iconClass: 'fa-rotate-right',
+    onConfirm: () => {
+      localStorage.removeItem(STATE_KEY_TASKS);
+      initStorage();
+      renderApp();
+      document.getElementById('settings-modal').classList.add('hidden');
+      showToast('Local data reset successfully.', 'info');
+    }
+  });
 }
 
 // PWA
@@ -674,22 +943,89 @@ function initPwaInstall() {
   });
 }
 
+// Date Long-Press Gesture Handler (Hold to Return to Today)
+function initDateLongPressGesture() {
+  const selectedDateEl = document.getElementById('selected-date-display');
+  const datePicker = document.getElementById('date-picker-input');
+
+  if (!selectedDateEl) return;
+
+  let longPressTimer = null;
+  let isLongPress = false;
+  const LONG_PRESS_DURATION = 400;
+
+  const startPress = () => {
+    isLongPress = false;
+    selectedDateEl.classList.add('holding-date');
+
+    longPressTimer = setTimeout(() => {
+      isLongPress = true;
+      selectedDateEl.classList.remove('holding-date');
+
+      triggerHaptic('holdSuccess');
+
+      currentSelectedDate = getTodayDateString();
+      renderApp();
+      showToast('Switched to Today', 'info');
+    }, LONG_PRESS_DURATION);
+  };
+
+  const cancelPress = () => {
+    selectedDateEl.classList.remove('holding-date');
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  };
+
+  const endPress = (e) => {
+    cancelPress();
+    if (!isLongPress) {
+      const todayStr = getTodayDateString();
+      // Forbid opening date picker if already viewing Today!
+      if (currentSelectedDate === todayStr) {
+        return;
+      }
+
+      if (datePicker && e.target !== datePicker) {
+        if (typeof datePicker.showPicker === 'function') {
+          try { datePicker.showPicker(); } catch (err) { datePicker.click(); }
+        } else {
+          datePicker.click();
+        }
+      }
+    }
+  };
+
+  // Touch Events (Mobile)
+  selectedDateEl.addEventListener('touchstart', startPress, { passive: true });
+  selectedDateEl.addEventListener('touchend', endPress);
+  selectedDateEl.addEventListener('touchcancel', cancelPress);
+
+  // Mouse Events (Desktop)
+  selectedDateEl.addEventListener('mousedown', startPress);
+  selectedDateEl.addEventListener('mouseup', endPress);
+  selectedDateEl.addEventListener('mouseleave', cancelPress);
+}
+
 // Event Listeners
 function initEventListeners() {
-  document.getElementById('prev-day-btn').addEventListener('click', () => changeDate(-1));
-  document.getElementById('next-day-btn').addEventListener('click', () => changeDate(1));
-  document.getElementById('today-btn').addEventListener('click', () => {
-    currentSelectedDate = getTodayDateString();
-    renderApp();
-  });
+  const prevBtn = document.getElementById('prev-day-btn');
+  const nextBtn = document.getElementById('next-day-btn');
+  if (prevBtn) prevBtn.addEventListener('click', () => changeDate(-1));
+  if (nextBtn) nextBtn.addEventListener('click', () => changeDate(1));
+
+  initDateLongPressGesture();
 
   const datePicker = document.getElementById('date-picker-input');
-  datePicker.addEventListener('change', (e) => {
-    if (e.target.value) {
-      currentSelectedDate = e.target.value;
-      renderApp();
-    }
-  });
+  if (datePicker) {
+    datePicker.addEventListener('change', (e) => {
+      if (e.target.value) {
+        currentSelectedDate = e.target.value;
+        renderApp();
+      }
+    });
+  }
 
   const fCat = document.getElementById('filter-category');
   if (fCat) fCat.addEventListener('change', renderTasksList);
@@ -700,18 +1036,36 @@ function initEventListeners() {
 
   document.getElementById('close-task-modal').addEventListener('click', () => {
     document.getElementById('task-modal').classList.add('hidden');
+    resetAllRowPositions();
   });
   document.getElementById('cancel-task-btn').addEventListener('click', () => {
     document.getElementById('task-modal').classList.add('hidden');
+    resetAllRowPositions();
   });
   document.getElementById('task-form').addEventListener('submit', handleSaveTask);
 
+  // Confirm Modal Listeners
+  const closeConfirmBtn = document.getElementById('close-confirm-modal');
+  const cancelConfirmBtn = document.getElementById('cancel-confirm-btn');
+  const actionConfirmBtn = document.getElementById('action-confirm-btn');
+
+  if (closeConfirmBtn) closeConfirmBtn.addEventListener('click', closeConfirmModal);
+  if (cancelConfirmBtn) cancelConfirmBtn.addEventListener('click', closeConfirmModal);
+  if (actionConfirmBtn) {
+    actionConfirmBtn.addEventListener('click', () => {
+      if (typeof onConfirmActionCallback === 'function') {
+        onConfirmActionCallback();
+      }
+      closeConfirmModal();
+    });
+  }
+
   const openSettingsBtn = document.getElementById('open-settings-btn');
   if (openSettingsBtn) openSettingsBtn.addEventListener('click', openSettingsModal);
-  
+
   const sidebarSettingsBtn = document.getElementById('sidebar-settings-btn');
   if (sidebarSettingsBtn) sidebarSettingsBtn.addEventListener('click', openSettingsModal);
-  
+
   const closeSettingsBtn = document.getElementById('close-settings-modal');
   if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', () => {
     document.getElementById('settings-modal').classList.add('hidden');
@@ -740,6 +1094,7 @@ function initEventListeners() {
 }
 
 function changeDate(daysOffset) {
+  triggerHaptic('click');
   const [y, m, d] = currentSelectedDate.split('-').map(Number);
   const dateObj = new Date(y, m - 1, d);
   dateObj.setDate(dateObj.getDate() + daysOffset);
@@ -776,7 +1131,7 @@ function showToast(message, type = 'info') {
 
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/[&<>"']/g, function(m) {
+  return str.replace(/[&<>"']/g, function (m) {
     return {
       '&': '&amp;',
       '<': '&lt;',
