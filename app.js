@@ -214,7 +214,7 @@ function updateActiveTaskBanner() {
   });
 
   if (activeTask) {
-    bannerCard.className = 'wireframe-card active-banner-card is-active';
+    bannerCard.className = 'flat-section active-banner-section is-active';
     titleEl.textContent = activeTask.name;
     statusText.textContent = activeTask.status === 'Pending' ? 'Active Now' : activeTask.status;
 
@@ -242,7 +242,7 @@ function updateActiveTaskBanner() {
     .sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
 
   if (upcomingTask) {
-    bannerCard.className = 'wireframe-card active-banner-card';
+    bannerCard.className = 'flat-section active-banner-section';
     titleEl.textContent = upcomingTask.name;
     statusText.textContent = 'Upcoming';
 
@@ -256,7 +256,7 @@ function updateActiveTaskBanner() {
   }
 
   // 3. Idle / Free time
-  bannerCard.className = 'wireframe-card active-banner-card';
+  bannerCard.className = 'flat-section active-banner-section';
   titleEl.textContent = 'Tidak Ada Aktivitas Aktif Saat Ini';
   statusText.textContent = 'Free Time';
   durationText.textContent = 'Semua jadwal tugas hari ini telah selesai atau belum dikonfigurasi.';

@@ -92,11 +92,11 @@ body {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 32px;
   min-height: 100vh;
   overflow-y: auto;
-  padding: 24px 32px 110px 32px;
-  max-width: 1100px;
+  padding: 32px 36px 120px 36px;
+  max-width: 1150px;
   margin: 0 auto;
   width: 100%;
 }
@@ -106,7 +106,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 44px;
+  min-height: 48px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .brand-header {
@@ -116,16 +118,17 @@ body {
 }
 
 .brand-logo {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(135deg, var(--accent-primary), #8b5cf6);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 18px;
   color: #fff;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .brand-info {
@@ -134,9 +137,10 @@ body {
 }
 
 .brand-info h2 {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 800;
   line-height: 1.2;
+  letter-spacing: -0.3px;
 }
 
 .version-tag {
@@ -160,7 +164,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(20, 28, 46, 0.92);
+  background: rgba(20, 28, 46, 0.94);
   border: 1px solid var(--border-color);
   padding: 6px 12px;
   border-radius: var(--radius-full);
@@ -215,36 +219,27 @@ body {
 }
 
 /* ==========================================
-   WIREFRAME CARD STYLES
+   FLAT MATERIAL DESIGN STYLES
    ========================================== */
-.wireframe-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 20px 24px;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition-normal);
-  backdrop-filter: blur(8px);
+.flat-section {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
 }
 
-.wireframe-card:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.wireframe-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
+.flat-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
   margin-bottom: 4px;
   display: block;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
-/* CARD 1: HEADER CARD */
-.header-card {
-  display: flex;
-  flex-direction: column;
+/* SECTION 1: HEADER SECTION */
+.header-section {
   gap: 16px;
 }
 
@@ -252,7 +247,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
 }
 
 .date-box, .time-box {
@@ -261,7 +256,7 @@ body {
 }
 
 .date-box h2, .time-box h2 {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.5px;
   color: var(--text-primary);
@@ -277,42 +272,45 @@ body {
 }
 
 .greeting-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
   margin-bottom: 4px;
   display: block;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .greeting-box h3 {
   font-size: 15px;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #cbd5e1;
   line-height: 1.4;
 }
 
-/* CARD 2: ACTIVE TASK BANNER CARD */
-.active-banner-card {
+/* SECTION 2: ACTIVE TASK BANNER SECTION */
+.active-banner-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(30, 41, 59, 0.45);
+  border-left: 4px solid var(--accent-primary);
+  border-radius: var(--radius-md);
+  padding: 18px 24px;
+  transition: var(--transition-normal);
 }
 
-.active-banner-card.is-active {
-  border-color: rgba(16, 185, 129, 0.6);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(30, 41, 59, 0.9));
+.active-banner-section.is-active {
+  border-left-color: var(--status-done);
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .banner-header-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .banner-main-row {
@@ -354,7 +352,7 @@ body {
   gap: 12px;
   font-size: 13px;
   color: var(--text-secondary);
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--border-color);
 }
 
@@ -370,8 +368,8 @@ body {
   color: var(--accent-primary);
 }
 
-/* CARD 3: MAIN TASK LIST CONTAINER CARD */
-.task-list-card {
+/* SECTION 3: MAIN TASK LIST CONTAINER SECTION */
+.task-list-section {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -384,7 +382,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  padding-bottom: 14px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--border-color);
   position: relative;
   min-height: 44px;
@@ -428,7 +426,7 @@ body {
   position: absolute;
   right: 0;
   top: 50%;
-  transform: translateY(calc(-50% - 7px));
+  transform: translateY(calc(-50% - 8px));
   padding: 5px 14px;
   font-size: 11px;
   font-weight: 700;
@@ -482,7 +480,7 @@ body {
   font-size: 12px;
   color: var(--text-secondary);
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   padding: 6px 16px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-color);
@@ -493,33 +491,33 @@ body {
 }
 
 /* ==========================================
-   CONSISTENT 4-COLUMN TASK TABLE (DESKTOP & MOBILE)
+   FLAT 4-COLUMN TASK TABLE (DESKTOP & MOBILE)
    ========================================== */
 .task-table-scroll-wrapper {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border-radius: var(--radius-sm);
 }
 
 .task-table-headers,
 .task-table-row {
   display: grid;
   grid-template-columns: 2.2fr 1fr 1.1fr 1.2fr;
-  gap: 12px;
-  min-width: 560px; /* guarantees consistent 4 columns even on small screens */
+  gap: 16px;
+  min-width: 580px;
   align-items: center;
 }
 
 .task-table-headers {
   padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .col-header {
@@ -530,28 +528,25 @@ body {
 .task-items-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
 }
 
-/* Dynamic Task Row */
+/* Dynamic Flat Task Row */
 .task-table-row {
-  padding: 12px 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  background: transparent;
+  border-bottom: 1px solid var(--border-color);
+  border-radius: 0;
   transition: var(--transition-fast);
-  min-height: 52px;
+  min-height: 54px;
 }
 
 .task-table-row:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: var(--bg-card-hover);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .task-table-row.active-now {
-  border: 1.5px solid var(--status-done);
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.06);
+  border-left: 3px solid var(--status-done);
 }
 
 .col-task {
@@ -576,8 +571,8 @@ body {
   flex: 1;
   min-width: 0;
   word-break: break-word;
-  white-space: normal; /* wraps long titles onto multiple lines/rows within column 1 */
-  line-height: 1.35;
+  white-space: normal;
+  line-height: 1.4;
 }
 
 .task-table-row.status-done .task-title-text {
@@ -601,11 +596,11 @@ body {
   white-space: nowrap;
 }
 
-.cat-ibadah { background: rgba(129, 140, 248, 0.2); color: var(--cat-ibadah); }
-.cat-olahraga { background: rgba(52, 211, 153, 0.2); color: var(--cat-olahraga); }
-.cat-kewajiban { background: rgba(251, 191, 36, 0.2); color: var(--cat-kewajiban); }
-.cat-bermain { background: rgba(192, 132, 252, 0.2); color: var(--cat-bermain); }
-.cat-kebutuhan { background: rgba(244, 63, 94, 0.2); color: var(--cat-kebutuhan); }
+.cat-ibadah { background: rgba(129, 140, 248, 0.18); color: var(--cat-ibadah); }
+.cat-olahraga { background: rgba(52, 211, 153, 0.18); color: var(--cat-olahraga); }
+.cat-kewajiban { background: rgba(251, 191, 36, 0.18); color: var(--cat-kewajiban); }
+.cat-bermain { background: rgba(192, 132, 252, 0.18); color: var(--cat-bermain); }
+.cat-kebutuhan { background: rgba(244, 63, 94, 0.18); color: var(--cat-kebutuhan); }
 
 .col-time {
   display: flex;
@@ -658,9 +653,8 @@ body {
 }
 
 .card-bottom-actions {
-  padding-top: 14px;
-  border-top: 1px solid var(--border-color);
-  margin-top: 4px;
+  padding-top: 16px;
+  margin-top: 8px;
   display: flex;
   align-items: center;
 }
