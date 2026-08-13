@@ -1,8 +1,8 @@
 /**
  * Personal Habit Tracker & Daily Task Scheduler - Core PWA Logic
+ * Wireframe Layout Engine
  */
 
-// Global State
 const STATE_KEY_TASKS = 'pts_tasks_v1';
 const STATE_KEY_GAS_URL = 'pts_gas_url_v1';
 
@@ -31,16 +31,24 @@ function getTodayDateString() {
   return `${year}-${month}-${day}`;
 }
 
-// Format Human Date (e.g. "Rabu, 12 Agustus 2026")
-function formatHumanDate(dateStr) {
+// Format Wireframe Date Header (DDDDD, DD-MM-YY) e.g. "RABU, 13-08-26"
+function formatWireframeDateHeader(dateStr) {
   const [year, month, day] = dateStr.split('-');
-  const dateObj = new Date(year, parseInt(month) - 1, day);
-  return dateObj.toLocaleDateString('id-ID', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
+  const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  
+  const days = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
+  const dayName = days[dateObj.getDay()];
+  const yy = year.slice(-2);
+  
+  return `${dayName}, ${day}-${month}-${yy}`;
+}
+
+// Format Full Human Date (e.g. "Selasa, 12-08-2026")
+function formatFullHumanDate(dateStr) {
+  const [year, month, day] = dateStr.split('-');
+  const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  const dayName = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
+  return `${dayName}, ${day}-${month}-${year}`;
 }
 
 // Initialize Local Storage & Demo Data
@@ -54,7 +62,6 @@ function initStorage() {
       tasks = getDemoTasks();
     }
   } else {
-    // Generate initial demo tasks for today
     tasks = getDemoTasks();
     saveTasksToStorage();
   }
@@ -68,7 +75,7 @@ function saveTasksToStorage() {
   localStorage.setItem(STATE_KEY_TASKS, JSON.stringify(tasks));
 }
 
-// Initial Demo Tasks
+// Demo Data
 function getDemoTasks() {
   const today = getTodayDateString();
   return [
@@ -94,7 +101,7 @@ function getDemoTasks() {
     },
     {
       id: 'demo-3',
-      name: "Belajar Bahasa Inggris (Vocabulary & Listening)",
+      name: "Belajar Bahasa Inggris (Vocabulary)",
       category: "Kewajiban",
       startTime: "08:00",
       endTime: "09:00",
@@ -136,14 +143,15 @@ function getDemoTasks() {
 }
 
 // ==========================================
-// CLOCK & REAL-TIME ACTIVE TASK BANNER ENGINE (FITUR A)
+// CLOCK, GREETING & ACTIVE BANNER ENGINE
 // ==========================================
 function initClockAndBanner() {
   updateClock();
+  updateGreeting();
   updateActiveTaskBanner();
   
-  // Real-time tick every 1s for clock, 5s for active banner check
   setInterval(updateClock, 1000);
+  setInterval(updateGreeting, 60000);
   setInterval(updateActiveTaskBanner, 5000);
 }
 
@@ -156,27 +164,40 @@ function updateClock() {
     clockEl.textContent = now.toLocaleTimeString('id-ID', { hour12: false });
   }
   if (dateEl) {
-    dateEl.textContent = now.toLocaleDateString('id-ID', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+    dateEl.textContent = formatFullHumanDate(getTodayDateString());
   }
 }
 
-// Core Logic: Real-time Active Task Banner
+function updateGreeting() {
+  const greetingEl = document.getElementById('greeting-text');
+  if (!greetingEl) return;
+
+  const hour = new Date().getHours();
+  let text = 'Selamat Datang! Siap mencapai target produktivitas Anda hari ini?';
+
+  if (hour >= 4 && hour < 11) {
+    text = 'Selamat Pagi! Awali hari dengan sholat, olahraga, dan rencana terstruktur.';
+  } else if (hour >= 11 && hour < 15) {
+    text = 'Selamat Siang! Tetap fokus pada prioritas tugas utama Anda hari ini.';
+  } else if (hour >= 15 && hour < 18) {
+    text = 'Selamat Sore! Selesaikan sisa target sebelum waktu istirahat.';
+  } else if (hour >= 18 || hour < 4) {
+    text = 'Selamat Malam! Evaluasi pencapaian hari ini & istirahat yang cukup.';
+  }
+
+  greetingEl.textContent = text;
+}
+
+// Active Task Banner (Card 2)
 function updateActiveTaskBanner() {
-  const banner = document.getElementById('active-task-banner');
-  const tag = document.getElementById('banner-tag');
-  const category = document.getElementById('banner-category');
-  const title = document.getElementById('banner-title');
-  const time = document.getElementById('banner-time');
-  const countdown = document.getElementById('banner-countdown');
-  const actionBox = document.getElementById('banner-action-box');
+  const bannerCard = document.getElementById('active-task-banner');
+  const titleEl = document.getElementById('banner-title');
+  const statusBadge = document.getElementById('banner-status-badge');
+  const statusText = document.getElementById('banner-status-text');
+  const durationText = document.getElementById('banner-countdown-text');
   const quickDoneBtn = document.getElementById('banner-quick-done');
 
-  if (!banner) return;
+  if (!bannerCard) return;
 
   const now = new Date();
   const currentHH = String(now.getHours()).padStart(2, '0');
@@ -187,68 +208,63 @@ function updateActiveTaskBanner() {
   const todayStr = getTodayDateString();
   const todayTasks = tasks.filter(t => t.date === todayStr);
 
-  // 1. Find task currently inside Time Estimate range (startTime <= currentTime < endTime)
+  // 1. Find active task
   let activeTask = todayTasks.find(t => {
     return t.startTime <= currentTimeStr && currentTimeStr < t.endTime && t.status !== 'Done';
   });
 
   if (activeTask) {
-    // ACTIVE TASK NOW FOUND
-    banner.className = 'active-task-banner is-active';
-    tag.textContent = 'SEDANG BERLANGSUNG';
-    category.textContent = activeTask.category;
-    title.textContent = activeTask.name;
-    time.innerHTML = `<i class="fa-regular fa-clock"></i> ${activeTask.startTime} - ${activeTask.endTime}`;
+    bannerCard.className = 'wireframe-card active-banner-card is-active';
+    titleEl.textContent = activeTask.name;
+    statusText.textContent = activeTask.status === 'Pending' ? 'Active Now' : activeTask.status;
 
     const [endH, endM] = activeTask.endTime.split(':').map(Number);
     const endMinutes = endH * 60 + endM;
     const remainingMin = endMinutes - currentMinutes;
 
-    countdown.textContent = remainingMin > 0 ? `Sisa waktu: ${remainingMin} menit` : 'Waktu berakhir';
-    actionBox.classList.remove('hidden');
-
-    quickDoneBtn.onclick = () => {
-      activeTask.status = 'Done';
-      saveTasksToStorage();
-      renderApp();
-      showToast(`Tugas "${activeTask.name}" selesai!`, 'success');
-    };
+    durationText.textContent = remainingMin > 0 ? `${remainingMin} menit (${activeTask.startTime} - ${activeTask.endTime})` : `Waktu Berakhir (${activeTask.startTime} - ${activeTask.endTime})`;
+    
+    if (quickDoneBtn) {
+      quickDoneBtn.style.display = 'inline-flex';
+      quickDoneBtn.onclick = () => {
+        activeTask.status = 'Done';
+        saveTasksToStorage();
+        renderApp();
+        showToast(`Tugas "${activeTask.name}" selesai!`, 'success');
+      };
+    }
     return;
   }
 
-  // 2. Check for next upcoming task today
+  // 2. Find next upcoming task today
   let upcomingTask = todayTasks
     .filter(t => t.startTime > currentTimeStr && t.status === 'Pending')
     .sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
 
   if (upcomingTask) {
-    banner.className = 'active-task-banner';
-    tag.textContent = 'TUGAS BERIKUTNYA';
-    category.textContent = upcomingTask.category;
-    title.textContent = upcomingTask.name;
-    time.innerHTML = `<i class="fa-regular fa-clock"></i> ${upcomingTask.startTime} - ${upcomingTask.endTime}`;
+    bannerCard.className = 'wireframe-card active-banner-card';
+    titleEl.textContent = upcomingTask.name;
+    statusText.textContent = 'Upcoming';
 
     const [startH, startM] = upcomingTask.startTime.split(':').map(Number);
     const startMinutes = startH * 60 + startM;
     const diffMin = startMinutes - currentMinutes;
 
-    countdown.textContent = `Mulai dalam ${diffMin} menit`;
-    actionBox.classList.add('hidden');
+    durationText.textContent = `Mulai dalam ${diffMin} menit (${upcomingTask.startTime} - ${upcomingTask.endTime})`;
+    if (quickDoneBtn) quickDoneBtn.style.display = 'none';
     return;
   }
 
-  // 3. No active or upcoming task remaining today
-  banner.className = 'active-task-banner is-idle';
-  tag.textContent = 'STATUS KOSONG';
-  category.textContent = 'Istirahat';
-  title.textContent = 'Tidak Ada Tugas Aktif Saat Ini';
-  time.innerHTML = `<i class="fa-regular fa-clock"></i> Free Time`;
-  countdown.textContent = 'Semua jadwal tugas hari ini telah selesai atau belum dikonfigurasi.';
-  actionBox.classList.add('hidden');
+  // 3. Idle / Free time
+  bannerCard.className = 'wireframe-card active-banner-card';
+  titleEl.textContent = 'Tidak Ada Aktivitas Aktif Saat Ini';
+  statusText.textContent = 'Free Time';
+  durationText.textContent = 'Semua jadwal tugas hari ini telah selesai atau belum dikonfigurasi.';
+  if (quickDoneBtn) quickDoneBtn.style.display = 'none';
 }
 
 // ==========================================
-// RENDER DAILY TASKS SCHEDULER & STATS (FITUR B)
+// RENDER DAILY TASKS & SCHEDULER
 // ==========================================
 function renderApp() {
   renderDateNavigator();
@@ -261,25 +277,21 @@ function renderDateNavigator() {
   const dateLabel = document.getElementById('date-label');
   const datePicker = document.getElementById('date-picker-input');
 
-  const todayStr = getTodayDateString();
-  if (currentSelectedDate === todayStr) {
-    dateLabel.textContent = `Hari Ini (${formatHumanDate(currentSelectedDate)})`;
-  } else {
-    dateLabel.textContent = formatHumanDate(currentSelectedDate);
+  if (dateLabel) {
+    dateLabel.textContent = formatWireframeDateHeader(currentSelectedDate);
   }
-
-  if (datePicker) datePicker.value = currentSelectedDate;
+  if (datePicker) {
+    datePicker.value = currentSelectedDate;
+  }
 }
 
 function renderTasksList() {
   const wrapper = document.getElementById('task-items-wrapper');
   const emptyState = document.getElementById('empty-state');
-  const countBadge = document.getElementById('task-count-text');
 
   const categoryFilter = document.getElementById('filter-category').value;
   const statusFilter = document.getElementById('filter-status').value;
 
-  // Filter tasks for current date and category/status filters
   let filtered = tasks.filter(t => t.date === currentSelectedDate);
 
   if (categoryFilter !== 'ALL') {
@@ -287,25 +299,18 @@ function renderTasksList() {
   }
 
   if (statusFilter !== 'ALL') {
-    if (statusFilter === 'Pending') {
-      filtered = filtered.filter(t => t.status === 'Pending');
-    } else {
-      filtered = filtered.filter(t => t.status === statusFilter);
-    }
+    filtered = filtered.filter(t => t.status === statusFilter);
   }
 
-  // Sort by startTime
   filtered.sort((a, b) => a.startTime.localeCompare(b.startTime));
-
-  countBadge.textContent = `${filtered.length} tugas`;
 
   if (filtered.length === 0) {
     wrapper.innerHTML = '';
-    emptyState.classList.remove('hidden');
+    if (emptyState) emptyState.classList.remove('hidden');
     return;
   }
 
-  emptyState.classList.add('hidden');
+  if (emptyState) emptyState.classList.add('hidden');
   wrapper.innerHTML = '';
 
   const now = new Date();
@@ -317,47 +322,43 @@ function renderTasksList() {
     const isActiveNow = currentSelectedDate === getTodayDateString() &&
       task.startTime <= currentTimeStr && currentTimeStr < task.endTime && task.status !== 'Done';
 
-    const card = document.createElement('div');
-    card.className = `task-item-card status-${task.status.toLowerCase()} ${isActiveNow ? 'active-now' : ''}`;
+    const row = document.createElement('div');
+    row.className = `task-table-row status-${task.status.toLowerCase()} ${isActiveNow ? 'active-now' : ''}`;
 
     const catClass = `cat-${task.category.toLowerCase()}`;
 
-    card.innerHTML = `
-      <button class="task-status-btn" onclick="toggleTaskStatus('${task.id}')" title="Klik untuk ubah status">
-        <i class="fa-solid fa-check"></i>
-      </button>
-
-      <div class="task-main-info">
-        <div class="task-title-row">
-          <span class="task-title">${escapeHtml(task.name)}</span>
-          <span class="task-category-pill ${catClass}">${task.category}</span>
-          ${isActiveNow ? '<span class="banner-tag" style="font-size:10px; color:#10b981;">● Active Now</span>' : ''}
-        </div>
-        <div class="task-meta-row">
-          <span class="task-time-badge"><i class="fa-regular fa-clock"></i> ${task.startTime} - ${task.endTime}</span>
-          ${task.notes ? `<span class="task-notes-snippet"><i class="fa-regular fa-note-sticky"></i> ${escapeHtml(task.notes)}</span>` : ''}
-        </div>
+    row.innerHTML = `
+      <div class="col-task">
+        <span class="task-title">
+          ${escapeHtml(task.name)}
+          <button class="btn btn-ghost btn-sm" onclick="openEditTaskModal('${task.id}')" title="Edit" style="padding:2px 6px;">
+            <i class="fa-solid fa-pen" style="font-size:11px;"></i>
+          </button>
+        </span>
       </div>
 
-      <div class="task-actions">
-        <select class="status-dropdown-select" onchange="changeTaskStatus('${task.id}', this.value)">
+      <div class="col-category">
+        <span class="cat-pill ${catClass}">${task.category}</span>
+      </div>
+
+      <div class="col-time">
+        <span>${task.startTime} - ${task.endTime}</span>
+      </div>
+
+      <div class="col-status">
+        <select class="form-select-sm" onchange="changeTaskStatus('${task.id}', this.value)">
           <option value="Pending" ${task.status === 'Pending' ? 'selected' : ''}>Pending</option>
           <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
           <option value="Overdue" ${task.status === 'Overdue' ? 'selected' : ''}>Overdue</option>
           <option value="Pass" ${task.status === 'Pass' ? 'selected' : ''}>Pass</option>
         </select>
-
-        <button class="btn btn-icon btn-ghost" onclick="openEditTaskModal('${task.id}')" title="Edit Tugas">
-          <i class="fa-solid fa-pen-to-square"></i>
-        </button>
-
-        <button class="btn btn-icon btn-ghost" onclick="deleteTask('${task.id}')" title="Hapus Tugas">
-          <i class="fa-solid fa-trash-can" style="color:#ef4444;"></i>
+        <button class="btn btn-ghost btn-sm" onclick="deleteTask('${task.id}')" title="Delete" style="padding:2px 6px; color:#ef4444;">
+          <i class="fa-solid fa-trash-can" style="font-size:11px;"></i>
         </button>
       </div>
     `;
 
-    wrapper.appendChild(card);
+    wrapper.appendChild(row);
   });
 }
 
@@ -368,30 +369,18 @@ function renderStatistics() {
   const overdue = dayTasks.filter(t => t.status === 'Overdue').length;
   const percentage = total > 0 ? Math.round((done / total) * 100) : 0;
 
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-done').textContent = done;
-  document.getElementById('stat-overdue').textContent = overdue;
-  document.getElementById('stat-progress').textContent = `${percentage}%`;
+  const totalEl = document.getElementById('stat-total');
+  const doneEl = document.getElementById('stat-done');
+  const progressEl = document.getElementById('stat-progress');
+
+  if (totalEl) totalEl.textContent = total;
+  if (doneEl) doneEl.textContent = done;
+  if (progressEl) progressEl.textContent = `${percentage}%`;
 }
 
 // ==========================================
-// TASK ACTIONS (ADD / EDIT / DELETE / STATUS)
+// ACTIONS & MODALS
 // ==========================================
-function toggleTaskStatus(taskId) {
-  const task = tasks.find(t => t.id === taskId);
-  if (!task) return;
-
-  if (task.status === 'Done') {
-    task.status = 'Pending';
-  } else {
-    task.status = 'Done';
-  }
-
-  saveTasksToStorage();
-  renderApp();
-  showToast(`Status tugas diperbarui ke ${task.status}`, 'info');
-}
-
 function changeTaskStatus(taskId, newStatus) {
   const task = tasks.find(t => t.id === taskId);
   if (!task) return;
@@ -399,7 +388,7 @@ function changeTaskStatus(taskId, newStatus) {
   task.status = newStatus;
   saveTasksToStorage();
   renderApp();
-  showToast(`Status tugas diubah ke ${newStatus}`, 'info');
+  showToast(`Status diubah ke ${newStatus}`, 'info');
 }
 
 function deleteTask(taskId) {
@@ -408,11 +397,11 @@ function deleteTask(taskId) {
   tasks = tasks.filter(t => t.id !== taskId);
   saveTasksToStorage();
   renderApp();
-  showToast('Tugas berhasil dihapus', 'warning');
+  showToast('Tugas dihapus', 'warning');
 }
 
 function openAddTaskModal() {
-  document.getElementById('modal-task-title').textContent = 'Tambah Tugas Harian Baru';
+  document.getElementById('modal-task-title').textContent = 'Tambah Task Baru';
   document.getElementById('task-form').reset();
   document.getElementById('task-id').value = '';
   document.getElementById('task-modal').classList.remove('hidden');
@@ -422,7 +411,7 @@ function openEditTaskModal(taskId) {
   const task = tasks.find(t => t.id === taskId);
   if (!task) return;
 
-  document.getElementById('modal-task-title').textContent = 'Edit Tugas Harian';
+  document.getElementById('modal-task-title').textContent = 'Edit Task';
   document.getElementById('task-id').value = task.id;
   document.getElementById('task-name').value = task.name;
   document.getElementById('task-category').value = task.category;
@@ -446,7 +435,7 @@ function handleSaveTask(e) {
   const notes = document.getElementById('task-notes').value.trim();
 
   if (!name || !startTime || !endTime) {
-    showToast('Harap isi semua bidang yang wajib (*)', 'error');
+    showToast('Harap isi semua bidang wajib (*)', 'error');
     return;
   }
 
@@ -456,7 +445,6 @@ function handleSaveTask(e) {
   }
 
   if (id) {
-    // Edit existing task
     const taskIndex = tasks.findIndex(t => t.id === id);
     if (taskIndex !== -1) {
       tasks[taskIndex] = {
@@ -468,10 +456,9 @@ function handleSaveTask(e) {
         endTime,
         notes
       };
-      showToast('Tugas berhasil diperbarui!', 'success');
+      showToast('Task berhasil diperbarui!', 'success');
     }
   } else {
-    // Create new task
     const newTask = {
       id: 'task-' + Date.now(),
       name,
@@ -483,7 +470,7 @@ function handleSaveTask(e) {
       date: currentSelectedDate
     };
     tasks.push(newTask);
-    showToast('Tugas baru berhasil ditambahkan!', 'success');
+    showToast('Task baru ditambahkan!', 'success');
   }
 
   saveTasksToStorage();
@@ -492,11 +479,11 @@ function handleSaveTask(e) {
 }
 
 // ==========================================
-// GOOGLE SHEETS BACKEND SYNC ENGINE (UPLOAD & DOWNLOAD)
+// GOOGLE SHEETS SYNC (PUSH & PULL)
 // ==========================================
 async function pushDataToGoogleSheets() {
   if (!gasWebAppUrl) {
-    showToast('Google Apps Script Web App URL belum diisi. Buka Settings untuk mengonfigurasi.', 'warning');
+    showToast('Google Apps Script URL belum diisi. Buka Settings.', 'warning');
     openSettingsModal();
     return;
   }
@@ -513,9 +500,7 @@ async function pushDataToGoogleSheets() {
     const response = await fetch(gasWebAppUrl, {
       method: 'POST',
       mode: 'cors',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
 
@@ -533,7 +518,7 @@ async function pushDataToGoogleSheets() {
 
 async function pullDataFromGoogleSheets() {
   if (!gasWebAppUrl) {
-    showToast('Google Apps Script Web App URL belum diisi. Buka Settings untuk mengonfigurasi.', 'warning');
+    showToast('Google Apps Script URL belum diisi. Buka Settings.', 'warning');
     openSettingsModal();
     return;
   }
@@ -549,13 +534,13 @@ async function pullDataFromGoogleSheets() {
       tasks = result.tasks;
       saveTasksToStorage();
       renderApp();
-      showToast(`Download Sukses! ${tasks.length} tugas dimuat dari Google Sheets.`, 'success');
+      showToast(`Download Sukses! ${tasks.length} task dimuat.`, 'success');
     } else {
-      showToast('Data dari Google Sheets kosong atau format tidak sesuai.', 'warning');
+      showToast('Data dari Google Sheets kosong.', 'warning');
     }
   } catch (error) {
     console.error('GAS Pull Error:', error);
-    showToast('Gagal mendownload data dari Google Sheets. Pastikan Web App GAS sudah di-deploy dengan akses "Anyone".', 'error');
+    showToast('Gagal mendownload data dari Google Sheets.', 'error');
   }
 }
 
@@ -569,38 +554,32 @@ function saveSettings() {
   gasWebAppUrl = url;
   localStorage.setItem(STATE_KEY_GAS_URL, gasWebAppUrl);
   document.getElementById('settings-modal').classList.add('hidden');
-  showToast('Pengaturan backend tersimpan!', 'success');
+  showToast('Pengaturan tersimpan!', 'success');
 }
 
 function resetStorageData() {
-  if (confirm('Apakah Anda yakin ingin menghapus seluruh cache lokal dan memuat ulang data demo?')) {
+  if (confirm('Reset seluruh cache lokal dan muat data demo?')) {
     localStorage.removeItem(STATE_KEY_TASKS);
     initStorage();
     renderApp();
     document.getElementById('settings-modal').classList.add('hidden');
-    showToast('Data lokal berhasil di-reset ke data demo.', 'info');
+    showToast('Data lokal di-reset.', 'info');
   }
 }
 
-// ==========================================
-// PWA SERVICE WORKER & INSTALL PROMPT LOGIC
-// ==========================================
+// PWA
 function initPwaInstall() {
-  // Register Service Worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
-      .catch(err => console.error('[PWA] Service Worker registration failed:', err));
+      .then(reg => console.log('[PWA] SW registered:', reg.scope))
+      .catch(err => console.error('[PWA] SW failed:', err));
   }
 
-  // Intercept beforeinstallprompt event
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-
     const desktopBtn = document.getElementById('sidebar-install-btn');
     const mobileBtn = document.getElementById('mobile-install-btn');
-
     if (desktopBtn) desktopBtn.classList.remove('hidden');
     if (mobileBtn) mobileBtn.classList.remove('hidden');
   });
@@ -615,21 +594,14 @@ function initPwaInstall() {
       btn.addEventListener('click', async () => {
         if (!deferredInstallPrompt) return;
         deferredInstallPrompt.prompt();
-        const { outcome } = await deferredInstallPrompt.userChoice;
-        console.log('[PWA] User response to install prompt:', outcome);
         deferredInstallPrompt = null;
-        if (desktopBtn) desktopBtn.classList.add('hidden');
-        if (mobileBtn) mobileBtn.classList.add('hidden');
       });
     }
   });
 }
 
-// ==========================================
-// EVENT LISTENERS
-// ==========================================
+// Event Listeners
 function initEventListeners() {
-  // Date Navigator Controls
   document.getElementById('prev-day-btn').addEventListener('click', () => changeDate(-1));
   document.getElementById('next-day-btn').addEventListener('click', () => changeDate(1));
   document.getElementById('today-btn').addEventListener('click', () => {
@@ -645,17 +617,11 @@ function initEventListeners() {
     }
   });
 
-  // Filter Event Listeners
   document.getElementById('filter-category').addEventListener('change', renderTasksList);
   document.getElementById('filter-status').addEventListener('change', renderTasksList);
 
-  // Add Task Buttons
   document.getElementById('add-task-btn').addEventListener('click', openAddTaskModal);
-  document.getElementById('empty-add-btn').addEventListener('click', openAddTaskModal);
-  const mobileQuickAdd = document.getElementById('mobile-quick-add');
-  if (mobileQuickAdd) mobileQuickAdd.addEventListener('click', openAddTaskModal);
 
-  // Modal Controls
   document.getElementById('close-task-modal').addEventListener('click', () => {
     document.getElementById('task-modal').classList.add('hidden');
   });
@@ -664,7 +630,6 @@ function initEventListeners() {
   });
   document.getElementById('task-form').addEventListener('submit', handleSaveTask);
 
-  // Settings & Sync Controls
   document.getElementById('open-settings-btn').addEventListener('click', openSettingsModal);
   document.getElementById('sidebar-settings-btn').addEventListener('click', openSettingsModal);
   document.getElementById('close-settings-modal').addEventListener('click', () => {
@@ -673,7 +638,6 @@ function initEventListeners() {
   document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
   document.getElementById('reset-storage-btn').addEventListener('click', resetStorageData);
 
-  // Quick Push / Pull Buttons
   document.getElementById('quick-push-btn').addEventListener('click', pushDataToGoogleSheets);
   document.getElementById('quick-pull-btn').addEventListener('click', pullDataFromGoogleSheets);
   document.getElementById('sidebar-sync-btn').addEventListener('click', openSettingsModal);
@@ -694,7 +658,6 @@ function changeDate(daysOffset) {
   renderApp();
 }
 
-// Toast System
 function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -714,10 +677,9 @@ function showToast(message, type = 'info') {
     toast.style.opacity = '0';
     toast.style.transition = 'opacity 0.3s ease';
     setTimeout(() => toast.remove(), 300);
-  }, 3500);
+  }, 3000);
 }
 
-// Utility: HTML Escaping
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/[&<>"']/g, function(m) {

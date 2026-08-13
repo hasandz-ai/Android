@@ -7,7 +7,7 @@
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4f46e5">
+  <meta name="theme-color" content="#0f172a">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -45,17 +45,17 @@
           <i class="fa-solid fa-calendar-day"></i>
           <span>Daily Tasks</span>
         </a>
-        <a href="#ibadah" class="nav-item disabled" title="Segera hadir pada modul Ibadah">
+        <a href="#ibadah" class="nav-item disabled" title="Segera hadir">
           <i class="fa-solid fa-mosque"></i>
           <span>Ibadah</span>
           <span class="badge-soon">Soon</span>
         </a>
-        <a href="#goals" class="nav-item disabled" title="Segera hadir pada modul Personal Goals">
+        <a href="#goals" class="nav-item disabled" title="Segera hadir">
           <i class="fa-solid fa-bullseye"></i>
           <span>Goals & Streak</span>
           <span class="badge-soon">Soon</span>
         </a>
-        <a href="#exercise" class="nav-item disabled" title="Segera hadir pada modul Olahraga">
+        <a href="#exercise" class="nav-item disabled" title="Segera hadir">
           <i class="fa-solid fa-dumbbell"></i>
           <span>Olahraga</span>
           <span class="badge-soon">Soon</span>
@@ -75,202 +75,162 @@
       </div>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main Content Area (Matches Wireframe Layout) -->
     <main class="main-content">
 
-      <!-- Top Header Navigation (Mobile Header + Global Actions) -->
-      <header class="top-header">
-        <div class="header-brand mobile-only">
-          <div class="brand-logo-sm">
-            <i class="fa-solid fa-list-check"></i>
-          </div>
-          <h1>TaskTracker</h1>
+      <!-- Global Actions Bar (Top right icons for Sync/Settings/PWA) -->
+      <div class="top-actions-bar">
+        <div class="brand-mobile mobile-only">
+          <i class="fa-solid fa-list-check"></i> TaskTracker
         </div>
-
-        <div class="header-clock-date">
-          <div class="live-clock" id="live-clock">00:00:00</div>
-          <div class="live-date" id="live-date">Selasa, 12 Agustus 2026</div>
-        </div>
-
-        <div class="header-actions">
-          <!-- Install Button Mobile -->
+        <div class="actions-right">
           <button id="mobile-install-btn" class="btn btn-primary btn-sm hidden">
             <i class="fa-solid fa-download"></i> Install
           </button>
-
-          <!-- Fast Sync Buttons -->
           <button id="quick-push-btn" class="btn btn-outline btn-icon" title="Upload ke Google Sheets">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-            <span class="desktop-only">Upload</span>
+            <i class="fa-solid fa-cloud-arrow-up"></i> <span class="desktop-only">Upload</span>
           </button>
           <button id="quick-pull-btn" class="btn btn-outline btn-icon" title="Download dari Google Sheets">
-            <i class="fa-solid fa-cloud-arrow-down"></i>
-            <span class="desktop-only">Download</span>
+            <i class="fa-solid fa-cloud-arrow-down"></i> <span class="desktop-only">Download</span>
           </button>
-          <button id="open-settings-btn" class="btn btn-icon btn-ghost" title="Pengaturan App & Sync">
+          <button id="open-settings-btn" class="btn btn-icon btn-ghost" title="Settings">
             <i class="fa-solid fa-gear"></i>
           </button>
         </div>
-      </header>
+      </div>
 
-      <!-- REAL-TIME ACTIVE TASK BANNER (FITUR A) -->
-      <section class="active-banner-container">
-        <div class="active-task-banner" id="active-task-banner">
-          <div class="banner-status-pulse" id="banner-pulse">
-            <span class="pulse-ring"></span>
-            <span class="pulse-dot"></span>
+      <!-- CARD 1: HEADER CARD (Current Date, Current Time, Greeting Cards) -->
+      <section class="wireframe-card header-card">
+        <div class="header-top-row">
+          <div class="date-box">
+            <span class="wireframe-label">Current Date</span>
+            <h2 id="live-date">Selasa, 12-08-2026</h2>
           </div>
-          <div class="banner-content">
-            <div class="banner-header-row">
-              <span class="banner-tag" id="banner-tag">ACTIVE TASK NOW</span>
-              <span class="banner-category" id="banner-category">Kewajiban</span>
-            </div>
-            <h2 class="banner-title" id="banner-title">Loading tugas aktif saat ini...</h2>
-            <div class="banner-time-row">
-              <span class="banner-time" id="banner-time"><i class="fa-regular fa-clock"></i> --:-- - --:--</span>
-              <span class="banner-countdown" id="banner-countdown">Menghitung waktu...</span>
-            </div>
+          <div class="time-box text-right">
+            <span class="wireframe-label">Current Time</span>
+            <h2 id="live-clock">08:27:58</h2>
           </div>
-          <div class="banner-action" id="banner-action-box">
-            <button class="btn btn-success" id="banner-quick-done">
-              <i class="fa-solid fa-check"></i> Selesai
-            </button>
-          </div>
+        </div>
+        <div class="greeting-box">
+          <span class="greeting-label">Greeting Cards</span>
+          <h3 id="greeting-text">Selamat Pagi! Siap mencapai target produktivitas Anda hari ini?</h3>
         </div>
       </section>
 
-      <!-- MAIN TAB: DAILY TASK SCHEDULER (FITUR B) -->
-      <section class="tab-content active" id="tab-daily-tasks">
-        
-        <!-- Controls & Date Selector Toolbar -->
-        <div class="toolbar">
-          <div class="date-navigator">
-            <button class="btn btn-icon btn-ghost" id="prev-day-btn" title="Hari Sebelumnya">
-              <i class="fa-solid fa-chevron-left"></i>
-            </button>
-            <div class="current-selected-date" id="selected-date-display">
-              <i class="fa-regular fa-calendar"></i>
-              <span id="date-label">Hari Ini</span>
-              <input type="date" id="date-picker-input" class="hidden-date-input">
-            </div>
-            <button class="btn btn-icon btn-ghost" id="next-day-btn" title="Hari Berikutnya">
-              <i class="fa-solid fa-chevron-right"></i>
-            </button>
-            <button class="btn btn-outline btn-sm" id="today-btn">Hari Ini</button>
+      <!-- CARD 2: ACTIVE TASK BANNER CARD (Right now you should be :) -->
+      <section class="wireframe-card active-banner-card" id="active-task-banner">
+        <div class="banner-header-title">Right now you should be :</div>
+        <div class="banner-main-row">
+          <h2 class="banner-task-name" id="banner-title">Loading tugas aktif saat ini...</h2>
+          <div class="banner-status-badge" id="banner-status-badge">
+            <span class="status-tag" id="banner-status-text">Pending</span>
+          </div>
+        </div>
+        <div class="banner-footer-row">
+          <div class="banner-duration" id="banner-duration">
+            <i class="fa-regular fa-clock"></i> Duration left: <span id="banner-countdown-text">Menghitung...</span>
+          </div>
+          <button class="btn btn-success btn-sm" id="banner-quick-done">
+            <i class="fa-solid fa-check"></i> Selesai
+          </button>
+        </div>
+      </section>
+
+      <!-- CARD 3: MAIN TASK LIST CONTAINER CARD -->
+      <section class="wireframe-card task-list-card">
+
+        <!-- Centered Date Header: DDDDD, DD-MM-YY -->
+        <div class="date-header-centered">
+          <button class="btn-date-arrow" id="prev-day-btn" title="Hari Sebelumnya">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+
+          <div class="date-title-underlined" id="selected-date-display">
+            <u id="date-label">RABU, 13-08-26</u>
+            <input type="date" id="date-picker-input" class="hidden-date-input">
           </div>
 
-          <div class="toolbar-actions">
-            <!-- Filter Category -->
-            <select id="filter-category" class="form-select">
-              <option value="ALL">Semua Kategori</option>
+          <button class="btn-date-arrow" id="next-day-btn" title="Hari Berikutnya">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          
+          <button class="btn-today-pill" id="today-btn">Hari Ini</button>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="table-filter-bar">
+          <div class="filter-item">
+            <label>Kategori:</label>
+            <select id="filter-category" class="form-select-sm">
+              <option value="ALL">Semua</option>
               <option value="Ibadah">Ibadah</option>
               <option value="Olahraga">Olahraga</option>
               <option value="Kewajiban">Kewajiban</option>
               <option value="Bermain">Bermain</option>
               <option value="Kebutuhan">Kebutuhan</option>
             </select>
+          </div>
 
-            <!-- Filter Status -->
-            <select id="filter-status" class="form-select">
-              <option value="ALL">Semua Status</option>
-              <option value="Pending">Pending / Active</option>
+          <div class="filter-item">
+            <label>Status:</label>
+            <select id="filter-status" class="form-select-sm">
+              <option value="ALL">Semua</option>
+              <option value="Pending">Pending</option>
               <option value="Done">Done</option>
               <option value="Overdue">Overdue</option>
               <option value="Pass">Pass</option>
             </select>
+          </div>
 
-            <!-- Add Task Button -->
-            <button class="btn btn-primary" id="add-task-btn">
-              <i class="fa-solid fa-plus"></i> Tambah Tugas
-            </button>
+          <!-- Progress % Summary Pill -->
+          <div class="progress-pill" id="progress-pill-text">
+            Progress: <strong id="stat-progress">0%</strong> (<span id="stat-done">0</span>/<span id="stat-total">0</span>)
           </div>
         </div>
 
-        <!-- Progress Summary Cards -->
-        <div class="progress-cards-grid">
-          <div class="progress-card">
-            <div class="card-icon icon-primary">
-              <i class="fa-solid fa-list-check"></i>
-            </div>
-            <div class="card-data">
-              <span class="card-label">Total Tugas</span>
-              <h3 id="stat-total">0</h3>
-            </div>
-          </div>
-          <div class="progress-card">
-            <div class="card-icon icon-success">
-              <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <div class="card-data">
-              <span class="card-label">Selesai (Done)</span>
-              <h3 id="stat-done">0</h3>
-            </div>
-          </div>
-          <div class="progress-card">
-            <div class="card-icon icon-danger">
-              <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
-            <div class="card-data">
-              <span class="card-label">Terlewat (Overdue)</span>
-              <h3 id="stat-overdue">0</h3>
-            </div>
-          </div>
-          <div class="progress-card">
-            <div class="card-icon icon-info">
-              <i class="fa-solid fa-chart-line"></i>
-            </div>
-            <div class="card-data">
-              <span class="card-label">Pencapaian</span>
-              <h3 id="stat-progress">0%</h3>
-            </div>
-          </div>
+        <!-- Table Column Headers (Wireframe Matching: Task name | Category | Time Estimate | Status) -->
+        <div class="task-table-headers">
+          <div class="col-header col-task">Task name</div>
+          <div class="col-header col-category">Category</div>
+          <div class="col-header col-time">Time Estimate</div>
+          <div class="col-header col-status">Status</div>
         </div>
 
-        <!-- Tasks List Section -->
-        <div class="task-list-container">
-          <div class="task-list-header">
-            <h3>Daftar Tugas Harian</h3>
-            <span class="task-count-badge" id="task-count-text">0 tugas</span>
-          </div>
-
-          <!-- Empty State -->
-          <div class="empty-state hidden" id="empty-state">
-            <i class="fa-solid fa-clipboard-list"></i>
-            <h4>Belum ada tugas untuk tanggal ini</h4>
-            <p>Klik tombol <strong>"Tambah Tugas"</strong> untuk memasukkan aktivitas harian Anda.</p>
-            <button class="btn btn-primary btn-sm margin-top" id="empty-add-btn">
-              <i class="fa-solid fa-plus"></i> Tambah Tugas Baru
-            </button>
-          </div>
-
-          <!-- Task Items Container -->
-          <div class="task-items-wrapper" id="task-items-wrapper">
-            <!-- Dynamic task item cards will be inserted here via JS -->
-          </div>
+        <!-- Empty State -->
+        <div class="empty-state hidden" id="empty-state">
+          <i class="fa-solid fa-clipboard-list"></i>
+          <h4>Belum ada tugas untuk tanggal ini</h4>
+          <p>Klik <strong>"+ Add task"</strong> untuk memasukkan aktivitas baru.</p>
         </div>
+
+        <!-- Task List Rows Container -->
+        <div class="task-items-wrapper" id="task-items-wrapper">
+          <!-- Dynamic task rows generated via JS -->
+        </div>
+
+        <!-- Add Task Link / Button at Bottom Left of Card -->
+        <div class="card-bottom-actions">
+          <button class="btn-add-task-link" id="add-task-btn">
+            <i class="fa-solid fa-plus"></i> Add task
+          </button>
+        </div>
+
       </section>
     </main>
 
-    <!-- Mobile Bottom Navigation Bar -->
-    <nav class="mobile-bottom-nav">
-      <a href="#daily-tasks" class="bottom-nav-item active" data-tab="daily-tasks">
-        <i class="fa-solid fa-calendar-day"></i>
-        <span>Tasks</span>
+    <!-- MOBILE CIRCULAR BOTTOM NAVIGATION (Section 4 matching 4 circles in wireframe) -->
+    <nav class="mobile-circular-nav">
+      <a href="#daily-tasks" class="circle-nav-btn active" data-tab="daily-tasks" title="Daily Tasks">
+        <i class="fa-solid fa-list-check"></i>
       </a>
-      <a href="#ibadah" class="bottom-nav-item disabled" title="Segera hadir">
+      <a href="#ibadah" class="circle-nav-btn disabled" title="Ibadah (Soon)">
         <i class="fa-solid fa-mosque"></i>
-        <span>Ibadah</span>
       </a>
-      <button class="bottom-nav-add" id="mobile-quick-add" title="Tambah Tugas">
-        <i class="fa-solid fa-plus"></i>
-      </button>
-      <a href="#goals" class="bottom-nav-item disabled" title="Segera hadir">
+      <a href="#goals" class="circle-nav-btn disabled" title="Goals (Soon)">
         <i class="fa-solid fa-bullseye"></i>
-        <span>Goals</span>
       </a>
-      <a href="#exercise" class="bottom-nav-item disabled" title="Segera hadir">
+      <a href="#exercise" class="circle-nav-btn disabled" title="Olahraga (Soon)">
         <i class="fa-solid fa-dumbbell"></i>
-        <span>Workout</span>
       </a>
     </nav>
   </div>
@@ -286,13 +246,13 @@
         <input type="hidden" id="task-id">
 
         <div class="form-group">
-          <label for="task-name">Nama Aktivitas / Tugas <span class="required">*</span></label>
-          <input type="text" id="task-name" class="form-control" placeholder="Contoh: Sholat Subuh & Dzikir, Belajar English, Briefing Kerja..." required>
+          <label for="task-name">Task Name <span class="required">*</span></label>
+          <input type="text" id="task-name" class="form-control" placeholder="Contoh: Sholat Subuh, Belajar English, Briefing..." required>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="task-category">Kategori <span class="required">*</span></label>
+            <label for="task-category">Category <span class="required">*</span></label>
             <select id="task-category" class="form-select" required>
               <option value="Ibadah">Ibadah</option>
               <option value="Olahraga">Olahraga</option>
@@ -303,12 +263,12 @@
           </div>
 
           <div class="form-group">
-            <label for="task-status">Status Aktivitas</label>
+            <label for="task-status">Status</label>
             <select id="task-status" class="form-select">
-              <option value="Pending">Pending / Active</option>
-              <option value="Done">Done (Selesai)</option>
-              <option value="Overdue">Overdue (Terlewat)</option>
-              <option value="Pass">Pass (Dilewati)</option>
+              <option value="Pending">Pending</option>
+              <option value="Done">Done</option>
+              <option value="Overdue">Overdue</option>
+              <option value="Pass">Pass</option>
             </select>
           </div>
         </div>
@@ -326,14 +286,14 @@
         </div>
 
         <div class="form-group">
-          <label for="task-notes">Catatan Tambahan (Opsional)</label>
-          <textarea id="task-notes" class="form-control" rows="2" placeholder="Catatan detail, link, atau perlengkapan..."></textarea>
+          <label for="task-notes">Catatan (Opsional)</label>
+          <textarea id="task-notes" class="form-control" rows="2" placeholder="Catatan detail..."></textarea>
         </div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" id="cancel-task-btn">Batal</button>
           <button type="submit" class="btn btn-primary" id="save-task-btn">
-            <i class="fa-solid fa-save"></i> Simpan Tugas
+            <i class="fa-solid fa-save"></i> Simpan Task
           </button>
         </div>
       </form>
@@ -344,7 +304,7 @@
   <div class="modal-overlay hidden" id="settings-modal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Google Sheets Backend Settings</h3>
+        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Google Sheets Settings</h3>
         <button class="btn-close" id="close-settings-modal"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
@@ -352,7 +312,7 @@
         <div class="form-group">
           <label for="gas-url-input">Google Apps Script Web App URL</label>
           <input type="url" id="gas-url-input" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
-          <small class="form-help">Masukkan URL Web App hasil deploy dari <code>Code.gs</code> di Google Apps Script Anda.</small>
+          <small class="form-help">Masukkan Web App URL dari deployment <code>Code.gs</code> Anda.</small>
         </div>
 
         <div class="sync-actions-box">
@@ -365,15 +325,14 @@
               <i class="fa-solid fa-cloud-arrow-down"></i> Download Data (Pull)
             </button>
           </div>
-          <small class="form-help text-muted">Upload: Mengirim data lokal ke Google Sheets. Download: Mengambil data terbaru dari Google Sheets.</small>
         </div>
 
         <hr class="divider">
 
         <div class="form-group">
-          <label>Data & Storage Reset</label>
+          <label>Data Reset</label>
           <button class="btn btn-danger-outline btn-sm" id="reset-storage-btn">
-            <i class="fa-solid fa-trash-can"></i> Clear Local Cache & Load Demo Data
+            <i class="fa-solid fa-trash-can"></i> Clear Cache & Reset Demo
           </button>
         </div>
       </div>
