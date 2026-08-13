@@ -94,7 +94,8 @@ body {
   flex-direction: column;
   gap: 32px;
   min-height: 100vh;
-  overflow-y: auto;
+  height: auto;
+  overflow: visible;
   padding: 32px 36px 120px 36px;
   max-width: 1150px;
   margin: 0 auto;
@@ -155,7 +156,7 @@ body {
   margin-left: auto;
 }
 
-/* UNIFIED PILL NAVIGATION BAR (DESKTOP & MOBILE MODE) */
+/* UNIFIED ICON-ONLY PILL NAVIGATION BAR (DESKTOP & MOBILE MODE) */
 .pill-navbar {
   position: fixed;
   bottom: 24px;
@@ -163,10 +164,10 @@ body {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: rgba(20, 28, 46, 0.94);
   border: 1px solid var(--border-color);
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: var(--radius-full);
   backdrop-filter: blur(16px);
   z-index: 90;
@@ -176,23 +177,23 @@ body {
 .pill-nav-item {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: var(--radius-full);
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 16px;
   transition: var(--transition-fast);
-  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pill-nav-item i {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .pill-nav-item:hover:not(.disabled) {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
@@ -368,12 +369,14 @@ body {
   color: var(--accent-primary);
 }
 
-/* SECTION 3: MAIN TASK LIST CONTAINER SECTION */
+/* SECTION 3: MAIN TASK LIST CONTAINER SECTION (FLEXIBLE HEIGHT, NON-SCROLLABLE) */
 .task-list-section {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  min-height: 400px;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
 }
 
 /* Centered Date Header */
@@ -907,21 +910,16 @@ textarea.form-control {
   }
 
   .pill-navbar {
-    bottom: 14px;
-    gap: 4px;
-    padding: 5px 8px;
-    max-width: 96vw;
-    overflow-x: auto;
+    bottom: 16px;
+    gap: 8px;
+    padding: 6px 10px;
   }
 
   .pill-nav-item {
-    padding: 6px 12px;
-    font-size: 12px;
-    gap: 6px;
-  }
-
-  .pill-nav-item .badge-soon {
-    display: none;
+    width: 38px;
+    height: 38px;
+    font-size: 15px;
+    padding: 0;
   }
 
   .toast-container {
