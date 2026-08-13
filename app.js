@@ -328,13 +328,11 @@ function renderTasksList() {
     const catClass = `cat-${task.category.toLowerCase()}`;
 
     row.innerHTML = `
-      <div class="col-task">
-        <div class="task-title">
-          <span class="task-title-text">${escapeHtml(task.name)}</span>
-          <button class="btn-action-icon" onclick="openEditTaskModal('${task.id}')" title="Edit Task">
-            <i class="fa-solid fa-pen"></i>
-          </button>
-        </div>
+      <div class="swipe-indicator swipe-edit"><i class="fa-solid fa-pen"></i> Edit</div>
+      <div class="swipe-indicator swipe-delete"><i class="fa-solid fa-trash-can"></i> Hapus</div>
+
+      <div class="col-task" onclick="openEditTaskModal('${task.id}')" title="Klik / Swipe Kanan untuk Edit">
+        <span class="task-title-text">${escapeHtml(task.name)}</span>
       </div>
 
       <div class="col-category">
@@ -342,7 +340,6 @@ function renderTasksList() {
       </div>
 
       <div class="col-time">
-        <i class="fa-regular fa-clock col-time-icon"></i>
         <span>${task.startTime} - ${task.endTime}</span>
       </div>
 
@@ -353,13 +350,70 @@ function renderTasksList() {
           <option value="Overdue" ${task.status === 'Overdue' ? 'selected' : ''}>Overdue</option>
           <option value="Pass" ${task.status === 'Pass' ? 'selected' : ''}>Pass</option>
         </select>
-        <button class="btn-action-icon btn-action-delete" onclick="deleteTask('${task.id}')" title="Delete Task">
-          <i class="fa-solid fa-trash-can"></i>
-        </button>
       </div>
     `;
 
+    initSwipeGestures(row, task.id);
     wrapper.appendChild(row);
+  });
+}
+
+// Touch Swipe Gestures (Swipe Right to Edit, Swipe Left to Delete)
+function initSwipeGestures(rowEl, taskId) {
+  let startX = 0;
+  let startY = 0;
+  let currentX = 0;
+  let isSwiping = false;
+
+  rowEl.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isSwiping = false;
+    rowEl.style.transition = 'none';
+  }, { passive: true });
+
+  rowEl.addEventListener('touchmove', (e) => {
+    const diffX = e.touches[0].clientX - startX;
+    const diffY = e.touches[0].clientY - startY;
+
+    if (!isSwiping && Math.abs(diffY) > Math.abs(diffX)) return;
+
+    if (Math.abs(diffX) > 10) {
+      isSwiping = true;
+      currentX = diffX;
+      const clampedX = Math.max(-120, Math.min(120, diffX));
+      rowEl.style.transform = `translateX(${clampedX}px)`;
+
+      if (clampedX > 25) {
+        rowEl.classList.add('swiping-right');
+        rowEl.classList.remove('swiping-left');
+      } else if (clampedX < -25) {
+        rowEl.classList.add('swiping-left');
+        rowEl.classList.remove('swiping-right');
+      } else {
+        rowEl.classList.remove('swiping-right', 'swiping-left');
+      }
+    }
+  }, { passive: true });
+
+  rowEl.addEventListener('touchend', () => {
+    rowEl.style.transition = 'transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.22s ease';
+    if (currentX > 65) {
+      rowEl.style.transform = 'translateX(0)';
+      rowEl.classList.remove('swiping-right', 'swiping-left');
+      openEditTaskModal(taskId);
+    } else if (currentX < -65) {
+      rowEl.style.transform = 'translateX(-100%)';
+      setTimeout(() => {
+        deleteTask(taskId);
+      }, 200);
+    } else {
+      rowEl.style.transform = 'translateX(0)';
+      rowEl.classList.remove('swiping-right', 'swiping-left');
+    }
+    startX = 0;
+    currentX = 0;
+    isSwiping = false;
   });
 }
 
