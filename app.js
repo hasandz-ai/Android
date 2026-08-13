@@ -631,19 +631,37 @@ function initEventListeners() {
   });
   document.getElementById('task-form').addEventListener('submit', handleSaveTask);
 
-  document.getElementById('open-settings-btn').addEventListener('click', openSettingsModal);
-  document.getElementById('sidebar-settings-btn').addEventListener('click', openSettingsModal);
-  document.getElementById('close-settings-modal').addEventListener('click', () => {
+  const openSettingsBtn = document.getElementById('open-settings-btn');
+  if (openSettingsBtn) openSettingsBtn.addEventListener('click', openSettingsModal);
+  
+  const sidebarSettingsBtn = document.getElementById('sidebar-settings-btn');
+  if (sidebarSettingsBtn) sidebarSettingsBtn.addEventListener('click', openSettingsModal);
+  
+  const closeSettingsBtn = document.getElementById('close-settings-modal');
+  if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', () => {
     document.getElementById('settings-modal').classList.add('hidden');
   });
-  document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
-  document.getElementById('reset-storage-btn').addEventListener('click', resetStorageData);
 
-  document.getElementById('quick-push-btn').addEventListener('click', pushDataToGoogleSheets);
-  document.getElementById('quick-pull-btn').addEventListener('click', pullDataFromGoogleSheets);
-  document.getElementById('sidebar-sync-btn').addEventListener('click', openSettingsModal);
-  document.getElementById('push-data-btn').addEventListener('click', pushDataToGoogleSheets);
-  document.getElementById('pull-data-btn').addEventListener('click', pullDataFromGoogleSheets);
+  const saveSettingsBtn = document.getElementById('save-settings-btn');
+  if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
+
+  const resetStorageBtn = document.getElementById('reset-storage-btn');
+  if (resetStorageBtn) resetStorageBtn.addEventListener('click', resetStorageData);
+
+  const quickPushBtn = document.getElementById('quick-push-btn');
+  if (quickPushBtn) quickPushBtn.addEventListener('click', pushDataToGoogleSheets);
+
+  const quickPullBtn = document.getElementById('quick-pull-btn');
+  if (quickPullBtn) quickPullBtn.addEventListener('click', pullDataFromGoogleSheets);
+
+  const sidebarSyncBtn = document.getElementById('sidebar-sync-btn');
+  if (sidebarSyncBtn) sidebarSyncBtn.addEventListener('click', openSettingsModal);
+
+  const pushDataBtn = document.getElementById('push-data-btn');
+  if (pushDataBtn) pushDataBtn.addEventListener('click', pushDataToGoogleSheets);
+
+  const pullDataBtn = document.getElementById('pull-data-btn');
+  if (pullDataBtn) pullDataBtn.addEventListener('click', pullDataFromGoogleSheets);
 }
 
 function changeDate(daysOffset) {

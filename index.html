@@ -27,62 +27,22 @@
 </head>
 <body class="dark-mode">
   <div class="app-container">
-    
-    <!-- Desktop Sidebar -->
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-logo">
-          <i class="fa-solid fa-list-check"></i>
-        </div>
-        <div class="brand-info">
-          <h2>TaskTracker</h2>
-          <span class="version-tag">PWA v1.0</span>
-        </div>
-      </div>
 
-      <nav class="sidebar-nav">
-        <a href="#daily-tasks" class="nav-item active" data-tab="daily-tasks">
-          <i class="fa-solid fa-calendar-day"></i>
-          <span>Daily Tasks</span>
-        </a>
-        <a href="#ibadah" class="nav-item disabled" title="Segera hadir">
-          <i class="fa-solid fa-mosque"></i>
-          <span>Ibadah</span>
-          <span class="badge-soon">Soon</span>
-        </a>
-        <a href="#goals" class="nav-item disabled" title="Segera hadir">
-          <i class="fa-solid fa-bullseye"></i>
-          <span>Goals & Streak</span>
-          <span class="badge-soon">Soon</span>
-        </a>
-        <a href="#exercise" class="nav-item disabled" title="Segera hadir">
-          <i class="fa-solid fa-dumbbell"></i>
-          <span>Olahraga</span>
-          <span class="badge-soon">Soon</span>
-        </a>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button id="sidebar-install-btn" class="sidebar-btn install-btn hidden">
-          <i class="fa-solid fa-download"></i> Install App
-        </button>
-        <button id="sidebar-sync-btn" class="sidebar-btn">
-          <i class="fa-solid fa-cloud-arrow-up"></i> Google Sync
-        </button>
-        <button id="sidebar-settings-btn" class="sidebar-btn text-btn">
-          <i class="fa-solid fa-gear"></i> Settings
-        </button>
-      </div>
-    </aside>
-
-    <!-- Main Content Area (Matches Wireframe Layout) -->
+    <!-- Main Content Area -->
     <main class="main-content">
 
-      <!-- Global Actions Bar (Top right icons for Sync/Settings/PWA) -->
+      <!-- Global Header & Actions Bar -->
       <div class="top-actions-bar">
-        <div class="brand-mobile mobile-only">
-          <i class="fa-solid fa-list-check"></i> TaskTracker
+        <div class="brand-header">
+          <div class="brand-logo">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+          <div class="brand-info">
+            <h2>TaskTracker</h2>
+            <span class="version-tag">PWA v1.0</span>
+          </div>
         </div>
+
         <div class="actions-right">
           <button id="mobile-install-btn" class="btn btn-primary btn-sm hidden">
             <i class="fa-solid fa-download"></i> Install
@@ -188,24 +148,27 @@
           </div>
         </div>
 
-        <!-- Table Column Headers (Wireframe Matching: Task name | Category | Time Estimate | Status) -->
-        <div class="task-table-headers">
-          <div class="col-header col-task">Task name</div>
-          <div class="col-header col-category">Category</div>
-          <div class="col-header col-time">Time Estimate</div>
-          <div class="col-header col-status">Status</div>
-        </div>
+        <!-- Consistent 4-Column Table View Container (Desktop & Mobile) -->
+        <div class="task-table-scroll-wrapper">
+          <!-- Table Column Headers: Task name | Category | Time Estimate | Status -->
+          <div class="task-table-headers">
+            <div class="col-header col-task">Task name</div>
+            <div class="col-header col-category">Category</div>
+            <div class="col-header col-time">Time Estimate</div>
+            <div class="col-header col-status">Status</div>
+          </div>
 
-        <!-- Empty State -->
-        <div class="empty-state hidden" id="empty-state">
-          <i class="fa-solid fa-clipboard-list"></i>
-          <h4>Belum ada tugas untuk tanggal ini</h4>
-          <p>Klik <strong>"+ Add task"</strong> untuk memasukkan aktivitas baru.</p>
-        </div>
+          <!-- Empty State -->
+          <div class="empty-state hidden" id="empty-state">
+            <i class="fa-solid fa-clipboard-list"></i>
+            <h4>Belum ada tugas untuk tanggal ini</h4>
+            <p>Klik <strong>"+ Add task"</strong> untuk memasukkan aktivitas baru.</p>
+          </div>
 
-        <!-- Task List Rows Container -->
-        <div class="task-items-wrapper" id="task-items-wrapper">
-          <!-- Dynamic task rows generated via JS -->
+          <!-- Task List Rows Container -->
+          <div class="task-items-wrapper" id="task-items-wrapper">
+            <!-- Dynamic task rows generated via JS -->
+          </div>
         </div>
 
         <!-- Add Task Link / Button at Bottom Left of Card -->
@@ -218,19 +181,26 @@
       </section>
     </main>
 
-    <!-- MOBILE CIRCULAR BOTTOM NAVIGATION (Section 4 matching 4 circles in wireframe) -->
-    <nav class="mobile-circular-nav">
-      <a href="#daily-tasks" class="circle-nav-btn active" data-tab="daily-tasks" title="Daily Tasks">
-        <i class="fa-solid fa-list-check"></i>
+    <!-- UNIFIED PILL NAVIGATION BAR (DESKTOP & MOBILE MODE) -->
+    <nav class="pill-navbar" id="pill-navbar">
+      <a href="#daily-tasks" class="pill-nav-item active" data-tab="daily-tasks">
+        <i class="fa-solid fa-calendar-day"></i>
+        <span>Daily Tasks</span>
       </a>
-      <a href="#ibadah" class="circle-nav-btn disabled" title="Ibadah (Soon)">
+      <a href="#ibadah" class="pill-nav-item disabled" title="Segera hadir">
         <i class="fa-solid fa-mosque"></i>
+        <span>Ibadah</span>
+        <span class="badge-soon">Soon</span>
       </a>
-      <a href="#goals" class="circle-nav-btn disabled" title="Goals (Soon)">
+      <a href="#goals" class="pill-nav-item disabled" title="Segera hadir">
         <i class="fa-solid fa-bullseye"></i>
+        <span>Goals & Streak</span>
+        <span class="badge-soon">Soon</span>
       </a>
-      <a href="#exercise" class="circle-nav-btn disabled" title="Olahraga (Soon)">
+      <a href="#exercise" class="pill-nav-item disabled" title="Segera hadir">
         <i class="fa-solid fa-dumbbell"></i>
+        <span>Olahraga</span>
+        <span class="badge-soon">Soon</span>
       </a>
     </nav>
   </div>
