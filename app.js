@@ -329,12 +329,12 @@ function renderTasksList() {
 
     row.innerHTML = `
       <div class="col-task">
-        <span class="task-title">
-          ${escapeHtml(task.name)}
-          <button class="btn btn-ghost btn-sm" onclick="openEditTaskModal('${task.id}')" title="Edit" style="padding:2px 6px;">
-            <i class="fa-solid fa-pen" style="font-size:11px;"></i>
+        <div class="task-title">
+          <span class="task-title-text">${escapeHtml(task.name)}</span>
+          <button class="btn-action-icon" onclick="openEditTaskModal('${task.id}')" title="Edit Task">
+            <i class="fa-solid fa-pen"></i>
           </button>
-        </span>
+        </div>
       </div>
 
       <div class="col-category">
@@ -342,18 +342,19 @@ function renderTasksList() {
       </div>
 
       <div class="col-time">
+        <i class="fa-regular fa-clock col-time-icon"></i>
         <span>${task.startTime} - ${task.endTime}</span>
       </div>
 
       <div class="col-status">
-        <select class="form-select-sm" onchange="changeTaskStatus('${task.id}', this.value)">
+        <select class="form-select-sm task-status-select" onchange="changeTaskStatus('${task.id}', this.value)">
           <option value="Pending" ${task.status === 'Pending' ? 'selected' : ''}>Pending</option>
           <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
           <option value="Overdue" ${task.status === 'Overdue' ? 'selected' : ''}>Overdue</option>
           <option value="Pass" ${task.status === 'Pass' ? 'selected' : ''}>Pass</option>
         </select>
-        <button class="btn btn-ghost btn-sm" onclick="deleteTask('${task.id}')" title="Delete" style="padding:2px 6px; color:#ef4444;">
-          <i class="fa-solid fa-trash-can" style="font-size:11px;"></i>
+        <button class="btn-action-icon btn-action-delete" onclick="deleteTask('${task.id}')" title="Delete Task">
+          <i class="fa-solid fa-trash-can"></i>
         </button>
       </div>
     `;
