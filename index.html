@@ -48,9 +48,6 @@
         <div class="banner-header-title">Right now you should be :</div>
         <div class="banner-main-row">
           <h2 class="banner-task-name" id="banner-title">Loading tugas aktif saat ini...</h2>
-          <div class="banner-status-badge" id="banner-status-badge">
-            <span class="status-tag" id="banner-status-text">Pending</span>
-          </div>
         </div>
         <div class="banner-footer-row">
           <div class="banner-duration" id="banner-duration">
@@ -173,13 +170,13 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="task-start-time">Jam Mulai <span class="required">*</span></label>
-            <input type="time" id="task-start-time" class="form-control" required value="08:00">
+            <label for="task-start-time">Jam Mulai (24 Jam) <span class="required">*</span></label>
+            <input type="time" id="task-start-time" class="form-control" required value="08:00" step="60">
           </div>
 
           <div class="form-group">
-            <label for="task-end-time">Jam Selesai <span class="required">*</span></label>
-            <input type="time" id="task-end-time" class="form-control" required value="09:00">
+            <label for="task-end-time">Jam Selesai (24 Jam) <span class="required">*</span></label>
+            <input type="time" id="task-end-time" class="form-control" required value="09:00" step="60">
           </div>
         </div>
 

@@ -161,7 +161,9 @@ function updateClock() {
   const dateEl = document.getElementById('live-date');
 
   if (clockEl) {
-    clockEl.textContent = now.toLocaleTimeString('id-ID', { hour12: false });
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    clockEl.textContent = `${hh}:${mm}`;
   }
   if (dateEl) {
     dateEl.textContent = formatFullHumanDate(getTodayDateString());
@@ -216,7 +218,7 @@ function updateActiveTaskBanner() {
   if (activeTask) {
     bannerCard.className = 'flat-section active-banner-section is-active';
     titleEl.textContent = activeTask.name;
-    statusText.textContent = activeTask.status === 'Pending' ? 'Active Now' : activeTask.status;
+    if (statusText) statusText.textContent = activeTask.status === 'Pending' ? 'Active Now' : activeTask.status;
 
     const [endH, endM] = activeTask.endTime.split(':').map(Number);
     const endMinutes = endH * 60 + endM;
@@ -244,7 +246,7 @@ function updateActiveTaskBanner() {
   if (upcomingTask) {
     bannerCard.className = 'flat-section active-banner-section';
     titleEl.textContent = upcomingTask.name;
-    statusText.textContent = 'Upcoming';
+    if (statusText) statusText.textContent = 'Upcoming';
 
     const [startH, startM] = upcomingTask.startTime.split(':').map(Number);
     const startMinutes = startH * 60 + startM;
@@ -258,7 +260,7 @@ function updateActiveTaskBanner() {
   // 3. Idle / Free time
   bannerCard.className = 'flat-section active-banner-section';
   titleEl.textContent = 'Tidak Ada Aktivitas Aktif Saat Ini';
-  statusText.textContent = 'Free Time';
+  if (statusText) statusText.textContent = 'Free Time';
   durationText.textContent = 'Semua jadwal tugas hari ini telah selesai atau belum dikonfigurasi.';
   if (quickDoneBtn) quickDoneBtn.style.display = 'none';
 }
@@ -276,10 +278,25 @@ function renderApp() {
 function renderDateNavigator() {
   const dateLabel = document.getElementById('date-label');
   const datePicker = document.getElementById('date-picker-input');
+  const todayBtn = document.getElementById('today-btn');
+  const todayStr = getTodayDateString();
 
   if (dateLabel) {
-    dateLabel.textContent = formatWireframeDateHeader(currentSelectedDate);
+    if (currentSelectedDate === todayStr) {
+      dateLabel.textContent = 'Today';
+    } else {
+      dateLabel.textContent = formatWireframeDateHeader(currentSelectedDate);
+    }
   }
+
+  if (todayBtn) {
+    if (currentSelectedDate === todayStr) {
+      todayBtn.classList.add('hidden');
+    } else {
+      todayBtn.classList.remove('hidden');
+    }
+  }
+
   if (datePicker) {
     datePicker.value = currentSelectedDate;
   }
