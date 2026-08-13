@@ -393,7 +393,7 @@ function renderTasksList() {
       <div class="swipe-indicator swipe-edit"><i class="fa-solid fa-pen"></i> Edit</div>
       <div class="swipe-indicator swipe-delete"><i class="fa-solid fa-trash-can"></i> Hapus</div>
 
-      <div class="col-task" onclick="openEditTaskModal('${task.id}')" title="Klik / Swipe Kanan untuk Edit">
+      <div class="col-task">
         <span class="task-title-text">${escapeHtml(task.name)}</span>
       </div>
 

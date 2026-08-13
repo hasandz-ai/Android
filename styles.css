@@ -1,6 +1,6 @@
 /* ==========================================
    BORDERLESS FLAT DESIGN SYSTEM
-   Palette Tokens:
+   Inverted High-Contrast Palette System:
    #5F0F40 (Deep Plum)
    #9A031E (Crimson Ruby)
    #FB8B24 (Tangerine Amber)
@@ -15,27 +15,27 @@
   --c-orange: #E36414;
   --c-teal: #0F4C5C;
 
-  /* Flat Canvas Surfaces (Zero Shadows, Zero Outlines) */
-  --bg-primary: #090d16;
-  --bg-surface: #101726;
-  --bg-card: #141d2f;
-  --bg-subtle: #1a253b;
+  /* Inverted High-Contrast Canvas & Surfaces */
+  --bg-primary: #0a111a;
+  --bg-surface: #121c29;
+  --bg-card: #192738;
+  --bg-subtle: #213349;
 
   --border-color: transparent;
   --border-highlight: transparent;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #ffffff;
+  --text-secondary: #f1f5f9;
+  --text-muted: #cbd5e1;
 
-  --accent-primary: var(--c-amber);
-  --accent-secondary: var(--c-orange);
+  --accent-primary: #ffffff;
+  --accent-secondary: var(--c-amber);
 
-  /* Flat Status Tints */
-  --status-done: #10b981;
-  --status-overdue: var(--c-orange);
-  --status-pass: var(--c-crimson);
-  --status-pending: var(--c-teal);
+  /* Inverted Solid Status Fills */
+  --status-done-bg: #065f46;
+  --status-overdue-bg: var(--c-orange);
+  --status-pass-bg: var(--c-crimson);
+  --status-pending-bg: var(--c-teal);
 
   /* Categories mapped to Palette */
   --cat-worship: var(--c-teal);
@@ -52,6 +52,26 @@
   --radius-full: 9999px;
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light / Bright Environment Overrides */
+body.light-mode,
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-card: #ffffff;
+    --bg-subtle: #e2e8f0;
+
+    --text-primary: #0f172a;
+    --text-secondary: #1e293b;
+    --text-muted: #475569;
+
+    --status-done-bg: #10b981;
+    --status-overdue-bg: #f97316;
+    --status-pass-bg: #e11d48;
+    --status-pending-bg: #0284c7;
+  }
 }
 
 /* Global Reset & Scrollbar Suppression */
@@ -156,7 +176,7 @@ body {
   font-size: 0.90em;
   font-weight: 600;
   color: var(--text-muted);
-  opacity: 0.75;
+  opacity: 0.85;
   margin-left: 1px;
 }
 
@@ -164,7 +184,7 @@ body {
   text-align: right;
 }
 
-/* SECTION 2: BORDERLESS FLAT ACTIVE BANNER */
+/* SECTION 2: INVERTED SOLID ACTIVE BANNER */
 .active-banner-section {
   display: flex;
   flex-direction: column;
@@ -176,7 +196,7 @@ body {
 }
 
 .active-banner-section.is-active {
-  background: linear-gradient(135deg, rgba(15, 76, 92, 0.45), rgba(95, 15, 64, 0.35));
+  background: linear-gradient(135deg, var(--c-teal), var(--c-plum));
 }
 
 .banner-header-title {
@@ -197,7 +217,7 @@ body {
 .banner-task-name {
   font-size: 20px;
   font-weight: 800;
-  color: var(--text-primary);
+  color: #ffffff;
   line-height: 1.3;
 }
 
@@ -207,7 +227,7 @@ body {
   justify-content: space-between;
   gap: 12px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: #f1f5f9;
   padding-top: 12px;
 }
 
@@ -215,9 +235,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
 }
 
 .banner-duration i {
@@ -228,7 +248,7 @@ body {
 .task-list-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
   height: auto;
   min-height: 0;
   overflow: visible;
@@ -241,8 +261,9 @@ body {
   justify-content: center;
   position: relative;
   width: 100%;
-  padding-bottom: 8px;
-  min-height: 40px;
+  padding-bottom: 0;
+  margin-bottom: 4px;
+  min-height: 36px;
 }
 
 .date-title-underlined {
@@ -352,9 +373,9 @@ body {
 
 .col-header {
   font-family: var(--font-family) !important;
-  font-size: 10px !important;
+  font-size: 11px !important;
   font-weight: 800 !important;
-  color: var(--text-muted) !important;
+  color: var(--text-secondary) !important;
   text-transform: uppercase !important;
   letter-spacing: 0.8px !important;
   line-height: 1 !important;
@@ -387,7 +408,7 @@ body {
   overflow: visible !important;
 }
 
-/* BORDERLESS FLAT TASK ROWS */
+/* BORDERLESS INVERTED SOLID TASK ROWS */
 .task-table-row {
   position: relative;
   padding: 12px 14px;
@@ -400,15 +421,16 @@ body {
 }
 
 .task-table-row:hover {
-  filter: brightness(1.08);
+  filter: brightness(1.1);
 }
 
-/* 1. Pending (Inactive) -> Flat Deep Teal Tint */
+/* 1. Pending -> Inverted Solid Deep Teal Surface */
 .task-table-row.status-pending:not(.active-now) {
-  background: rgba(15, 76, 92, 0.18);
+  background: var(--status-pending-bg);
+  color: #ffffff;
 }
 
-/* 2. Active Task -> Flat Tangerine Amber Canvas with Bold Dark Plum Text */
+/* 2. Active Task -> Inverted Tangerine Amber Surface with Bold Dark Plum Text */
 .task-table-row.active-now {
   background: var(--c-amber) !important;
   color: #000000 !important;
@@ -426,30 +448,33 @@ body {
 }
 
 .task-table-row.active-now .cat-pill {
-  background: rgba(95, 15, 64, 0.25) !important;
+  background: rgba(0, 0, 0, 0.22) !important;
   color: #000000 !important;
   font-weight: 800 !important;
 }
 
 .task-table-row.active-now .task-status-select {
-  background: rgba(95, 15, 64, 0.2) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
   color: #000000 !important;
   font-weight: 800 !important;
 }
 
-/* 3. Pass -> Flat Crimson Red Tint */
+/* 3. Pass -> Inverted Solid Crimson Surface */
 .task-table-row.status-pass {
-  background: rgba(154, 3, 30, 0.22);
+  background: var(--status-pass-bg);
+  color: #ffffff;
 }
 
-/* 4. Overdue -> Flat Soft Orange Tint */
+/* 4. Overdue -> Inverted Solid Burnt Orange Surface */
 .task-table-row.status-overdue {
-  background: rgba(227, 100, 20, 0.18);
+  background: var(--status-overdue-bg);
+  color: #ffffff;
 }
 
-/* 5. Done -> Flat Soft Emerald Tint */
+/* 5. Done -> Inverted Solid Deep Emerald Surface */
 .task-table-row.status-done {
-  background: rgba(16, 185, 129, 0.14);
+  background: var(--status-done-bg);
+  color: #ffffff;
 }
 
 /* Swipe Actions */
@@ -499,8 +524,8 @@ body {
 
 .task-title-text {
   font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-weight: 800;
+  color: #ffffff;
   word-break: break-word;
   white-space: normal;
   line-height: 1.3;
@@ -508,9 +533,13 @@ body {
   min-width: 0;
 }
 
+body.light-mode .task-title-text {
+  color: #ffffff;
+}
+
 .task-table-row.status-done .task-title-text {
   text-decoration: none !important;
-  opacity: 0.85;
+  opacity: 0.95;
 }
 
 .col-category {
@@ -519,9 +548,10 @@ body {
   justify-content: center;
 }
 
+/* Inverted High-Contrast Category Badges */
 .col-category .cat-pill {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
   height: 24px;
   width: 76px;
   min-width: 76px;
@@ -536,32 +566,32 @@ body {
   box-sizing: border-box;
 }
 
-/* Category Palette Classes */
+/* Inverted Stark White Pill Badges for Ultra Contrast */
 .cat-worship {
-  background: rgba(15, 76, 92, 0.35);
-  color: #38bdf8;
+  background: #ffffff;
+  color: #0F4C5C;
 }
 
 .cat-exercise {
-  background: rgba(251, 139, 36, 0.28);
-  color: var(--c-amber);
+  background: #ffffff;
+  color: #b45309;
 }
 
 .cat-mustdo,
 .cat-must-do,
 .cat-must {
-  background: rgba(227, 100, 20, 0.28);
-  color: var(--c-orange);
+  background: #ffffff;
+  color: #c2410c;
 }
 
 .cat-play {
-  background: rgba(95, 15, 64, 0.4);
-  color: #f472b6;
+  background: #ffffff;
+  color: #5F0F40;
 }
 
 .cat-essentials {
-  background: rgba(154, 3, 30, 0.35);
-  color: #f87171;
+  background: #ffffff;
+  color: #9A031E;
 }
 
 .col-time {
@@ -569,9 +599,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ffffff;
   white-space: nowrap;
   text-align: center;
 }
@@ -586,6 +616,7 @@ body {
   box-sizing: border-box;
 }
 
+/* Inverted Status Select Button */
 .task-status-select {
   width: 100%;
   max-width: 100%;
@@ -595,8 +626,8 @@ body {
   font-size: 11px;
   font-weight: 800;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
   outline: none;
   text-align: center;
   text-align-last: center;
@@ -611,13 +642,13 @@ body {
   display: none;
 }
 
-/* Explicit styling for dropdown popup options to streamline with dark theme */
+/* Explicit dropdown popup options to streamline with dark theme */
 .task-status-select option {
-  background-color: #141d2f !important;
-  color: #f8fafc !important;
+  background-color: #121c29 !important;
+  color: #ffffff !important;
   font-family: var(--font-family) !important;
   font-size: 13px !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important;
   padding: 8px 12px !important;
   text-align: center !important;
 }
@@ -656,6 +687,27 @@ body {
   color: var(--c-amber);
 }
 
+/* TOP & BOTTOM VIGNETTE EDGE FADE OVERLAYS */
+.fade-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 85;
+}
+
+.fade-top {
+  top: 0;
+  height: 32px;
+  background: linear-gradient(to bottom, var(--bg-primary) 0%, rgba(10, 17, 26, 0) 100%);
+}
+
+.fade-bottom {
+  bottom: 0;
+  height: 100px;
+  background: linear-gradient(to top, var(--bg-primary) 0%, rgba(10, 17, 26, 0) 100%);
+}
+
 /* UNIFIED BORDERLESS FLAT NAVIGATION BAR */
 .pill-navbar {
   position: fixed;
@@ -691,7 +743,7 @@ body {
 
 .pill-nav-item:hover:not(.disabled) {
   background: var(--bg-subtle);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .pill-nav-item.active {
@@ -733,8 +785,9 @@ body {
 }
 
 .btn-success {
-  background: var(--status-done);
-  color: #fff;
+  background: #065f46;
+  color: #ffffff;
+  font-weight: 800;
 }
 
 .btn-ghost {
@@ -743,7 +796,7 @@ body {
 }
 
 .btn-ghost:hover {
-  color: #fff;
+  color: var(--text-primary);
   background: var(--bg-surface);
 }
 
@@ -835,11 +888,11 @@ textarea.form-control {
   cursor: pointer;
   transition: color 0.15s ease, transform 0.15s ease;
   user-select: none;
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .wheel-item.selected {
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 16px;
   font-weight: 800;
   opacity: 1;
@@ -864,7 +917,7 @@ textarea.form-control {
 
 .form-group label {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-secondary);
   display: flex;
   align-items: center;
@@ -955,7 +1008,7 @@ textarea.form-control {
 
 .btn-close:hover {
   background: var(--bg-subtle);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .modal-footer {
@@ -1014,7 +1067,7 @@ textarea.form-control {
   background: var(--bg-surface);
   padding: 12px 18px;
   border-radius: var(--radius-md);
-  color: #fff;
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 600;
   display: inline-flex;
@@ -1075,10 +1128,11 @@ textarea.form-control {
 
   .date-header-centered {
     padding-top: 0;
-    padding-bottom: 8px;
+    padding-bottom: 0;
+    margin-bottom: 4px;
     justify-content: center;
     position: relative;
-    min-height: 40px;
+    min-height: 36px;
   }
 
   .date-title-underlined {
