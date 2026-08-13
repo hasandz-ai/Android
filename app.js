@@ -289,8 +289,10 @@ function renderTasksList() {
   const wrapper = document.getElementById('task-items-wrapper');
   const emptyState = document.getElementById('empty-state');
 
-  const categoryFilter = document.getElementById('filter-category').value;
-  const statusFilter = document.getElementById('filter-status').value;
+  const catEl = document.getElementById('filter-category');
+  const statEl = document.getElementById('filter-status');
+  const categoryFilter = catEl ? catEl.value : 'ALL';
+  const statusFilter = statEl ? statEl.value : 'ALL';
 
   let filtered = tasks.filter(t => t.date === currentSelectedDate);
 
@@ -672,8 +674,10 @@ function initEventListeners() {
     }
   });
 
-  document.getElementById('filter-category').addEventListener('change', renderTasksList);
-  document.getElementById('filter-status').addEventListener('change', renderTasksList);
+  const fCat = document.getElementById('filter-category');
+  if (fCat) fCat.addEventListener('change', renderTasksList);
+  const fStat = document.getElementById('filter-status');
+  if (fStat) fStat.addEventListener('change', renderTasksList);
 
   document.getElementById('add-task-btn').addEventListener('click', openAddTaskModal);
 

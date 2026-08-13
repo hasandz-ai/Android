@@ -31,49 +31,15 @@
     <!-- Main Content Area -->
     <main class="main-content">
 
-      <!-- Global Header & Actions Bar -->
-      <div class="top-actions-bar">
-        <div class="brand-header">
-          <div class="brand-logo">
-            <i class="fa-solid fa-list-check"></i>
-          </div>
-          <div class="brand-info">
-            <h2>TaskTracker</h2>
-            <span class="version-tag">PWA v1.0</span>
-          </div>
-        </div>
-
-        <div class="actions-right">
-          <button id="mobile-install-btn" class="btn btn-primary btn-sm hidden">
-            <i class="fa-solid fa-download"></i> Install
-          </button>
-          <button id="quick-push-btn" class="btn btn-outline btn-sm" title="Upload ke Google Sheets">
-            <i class="fa-solid fa-cloud-arrow-up"></i> <span class="desktop-only">Upload</span>
-          </button>
-          <button id="quick-pull-btn" class="btn btn-outline btn-sm" title="Download dari Google Sheets">
-            <i class="fa-solid fa-cloud-arrow-down"></i> <span class="desktop-only">Download</span>
-          </button>
-          <button id="open-settings-btn" class="btn btn-icon btn-ghost" title="Settings">
-            <i class="fa-solid fa-gear"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- SECTION 1: HEADER SECTION (Current Date, Current Time, Greeting) -->
+      <!-- SECTION 1: HEADER SECTION (Current Date & Time) -->
       <section class="flat-section header-section">
         <div class="header-top-row">
           <div class="date-box">
-            <span class="flat-label">Current Date</span>
             <h2 id="live-date">Selasa, 12-08-2026</h2>
           </div>
           <div class="time-box text-right">
-            <span class="flat-label">Current Time</span>
             <h2 id="live-clock">08:27:58</h2>
           </div>
-        </div>
-        <div class="greeting-box">
-          <span class="greeting-label">Greeting Cards</span>
-          <h3 id="greeting-text">Selamat Pagi! Siap mencapai target produktivitas Anda hari ini?</h3>
         </div>
       </section>
 
@@ -115,37 +81,6 @@
           </button>
           
           <button class="btn-today-pill" id="today-btn">Hari Ini</button>
-        </div>
-
-        <!-- Filter Controls -->
-        <div class="table-filter-bar">
-          <div class="filter-item">
-            <label>Kategori:</label>
-            <select id="filter-category" class="form-select-sm">
-              <option value="ALL">Semua</option>
-              <option value="Ibadah">Ibadah</option>
-              <option value="Olahraga">Olahraga</option>
-              <option value="Kewajiban">Kewajiban</option>
-              <option value="Bermain">Bermain</option>
-              <option value="Kebutuhan">Kebutuhan</option>
-            </select>
-          </div>
-
-          <div class="filter-item">
-            <label>Status:</label>
-            <select id="filter-status" class="form-select-sm">
-              <option value="ALL">Semua</option>
-              <option value="Pending">Pending</option>
-              <option value="Done">Done</option>
-              <option value="Overdue">Overdue</option>
-              <option value="Pass">Pass</option>
-            </select>
-          </div>
-
-          <!-- Progress % Summary Pill -->
-          <div class="progress-pill" id="progress-pill-text">
-            Progress: <strong id="stat-progress">0%</strong> (<span id="stat-done">0</span>/<span id="stat-total">0</span>)
-          </div>
         </div>
 
         <!-- Consistent 4-Column Table View Container (Desktop & Mobile) -->
