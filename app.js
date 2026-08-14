@@ -588,6 +588,7 @@ function deleteTask(taskId) {
 // ==========================================
 let isWheelInitialized = false;
 let isAutoUpdatingEndTime = false;
+let isProgrammaticWheelScroll = false;
 
 function initWheelTimePickers() {
   const startHourWheel = document.getElementById('start-hour-wheel');
@@ -675,6 +676,8 @@ function getSelectedWheelValue(wheelEl) {
 }
 
 function onWheelScrollEnd(wheelEl, type) {
+  if (isProgrammaticWheelScroll) return;
+
   triggerHaptic('snap');
   if (type.startsWith('start')) {
     const startH = getSelectedWheelValue(document.getElementById('start-hour-wheel'));
@@ -684,7 +687,7 @@ function onWheelScrollEnd(wheelEl, type) {
     const startTimeInput = document.getElementById('task-start-time');
     if (startTimeInput) startTimeInput.value = newStartTime;
 
-    // Rule: End time is automatically updated based on Start time (+1 minute)
+    // Rule: End time is automatically updated based on Start time (+1 minute) ONLY during manual user interaction
     if (!isAutoUpdatingEndTime) {
       isAutoUpdatingEndTime = true;
       let startHNum = parseInt(startH, 10);
@@ -730,6 +733,8 @@ function setTimePickerValue(startStr, endStr) {
   const endHourWheel = document.getElementById('end-hour-wheel');
   const endMinWheel = document.getElementById('end-min-wheel');
 
+  isProgrammaticWheelScroll = true;
+
   setTimeout(() => {
     scrollToWheelValue(startHourWheel, startH || '08');
     scrollToWheelValue(startMinWheel, startM || '00');
@@ -738,6 +743,10 @@ function setTimePickerValue(startStr, endStr) {
 
     document.getElementById('task-start-time').value = `${startH || '08'}:${startM || '00'}`;
     document.getElementById('task-end-time').value = `${endH || '09'}:${endM || '00'}`;
+
+    setTimeout(() => {
+      isProgrammaticWheelScroll = false;
+    }, 350);
   }, 50);
 }
 
