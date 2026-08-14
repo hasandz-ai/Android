@@ -31,93 +31,277 @@
 <body class="dark-mode">
   <div class="app-container">
 
-    <!-- Top & Bottom Edge Vignette Fade Overlays -->
+    <!-- Top & Bottom Edge Vignette Fade Overlays & Focusing Backdrop -->
     <div class="fade-overlay fade-top"></div>
     <div class="fade-overlay fade-bottom"></div>
+    <div class="focus-backdrop" id="focus-backdrop"></div>
 
     <!-- Main Content Area -->
     <main class="main-content">
 
-      <!-- SECTION 1: HEADER SECTION (Current Date & Time) -->
-      <section class="flat-section header-section">
-        <div class="header-top-row">
-          <div class="date-box">
-            <h2 id="live-date">THURSDAY, 13/08/26</h2>
+      <!-- TAB VIEW 1: DAILY TASKS -->
+      <div class="tab-page-view active" id="view-daily-tasks">
+        <!-- SECTION 1: HEADER SECTION (Current Date & Time) -->
+        <section class="flat-section header-section">
+          <div class="header-top-row">
+            <div class="date-box">
+              <h2 id="live-date">THURSDAY, 13/08/26</h2>
+            </div>
+            <div class="time-box text-right">
+              <h2 id="live-clock">08:27<span class="clock-seconds">:58</span></h2>
+            </div>
           </div>
-          <div class="time-box text-right">
-            <h2 id="live-clock">08:27<span class="clock-seconds">:58</span></h2>
+        </section>
+
+        <!-- SECTION 2: ACTIVE TASK BANNER SECTION -->
+        <section class="flat-section active-banner-section" id="active-task-banner">
+          <div class="banner-header-title">Right now you should be :</div>
+          <div class="banner-main-row">
+            <h2 class="banner-task-name" id="banner-title">Loading active task...</h2>
           </div>
-        </div>
-      </section>
-
-      <!-- SECTION 2: ACTIVE TASK BANNER SECTION -->
-      <section class="flat-section active-banner-section" id="active-task-banner">
-        <div class="banner-header-title">Right now you should be :</div>
-        <div class="banner-main-row">
-          <h2 class="banner-task-name" id="banner-title">Loading active task...</h2>
-        </div>
-        <div class="banner-footer-row">
-          <div class="banner-duration" id="banner-duration">
-            <span class="banner-duration-label"><i class="fa-regular fa-clock"></i> Duration left:</span><span id="banner-countdown-text">Calculating...</span>
+          <div class="banner-footer-row">
+            <div class="banner-duration" id="banner-duration">
+              <span class="banner-duration-label"><i class="fa-regular fa-clock"></i> Duration left:</span><span id="banner-countdown-text">Calculating...</span>
+            </div>
           </div>
-        </div>
-        <div class="banner-action-bottom">
-          <button class="btn btn-success btn-sm" id="banner-quick-done">
-            <i class="fa-solid fa-check"></i> Complete
-          </button>
-        </div>
-      </section>
-
-      <!-- SECTION 3: MAIN TASK LIST CONTAINER SECTION -->
-      <section class="flat-section task-list-section">
-
-        <!-- Centered Date Header -->
-        <div class="date-header-centered">
-          <button class="btn-date-arrow btn-date-prev" id="prev-day-btn" title="Previous Day">
-            <i class="fa-solid fa-chevron-left"></i>
-          </button>
-
-          <div class="date-title-underlined" id="selected-date-display" title="Tap to select date, hold to return to Today">
-            <u id="date-label">TODAY</u>
-            <input type="date" id="date-picker-input" class="hidden-date-input">
+          <div class="banner-action-bottom">
+            <button class="btn btn-success btn-sm" id="banner-quick-done">
+              <i class="fa-solid fa-check"></i> Complete
+            </button>
           </div>
+        </section>
 
-          <button class="btn-date-arrow btn-date-next" id="next-day-btn" title="Next Day">
-            <i class="fa-solid fa-chevron-right"></i>
-          </button>
-        </div>
+        <!-- SECTION 3: MAIN TASK LIST CONTAINER SECTION -->
+        <section class="flat-section task-list-section">
 
-        <!-- Consistent 4-Column Table View Container -->
-        <div class="task-table-scroll-wrapper">
-          <!-- Table Column Headers -->
-          <div class="task-table-headers" id="task-table-headers">
-            <div class="col-header col-task">Task name</div>
-            <div class="col-header col-category">Category</div>
-            <div class="col-header col-time">Time Estimate</div>
-            <div class="col-header col-status">Status</div>
-          </div>
+          <!-- Centered Date Header -->
+          <div class="date-header-centered">
+            <button class="btn-date-arrow btn-date-prev" id="prev-day-btn" title="Previous Day">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
 
-          <!-- Task List Rows Container -->
-          <div class="task-items-wrapper" id="task-items-wrapper">
-            <!-- Dynamic task rows generated via JS -->
-          </div>
+            <div class="date-title-underlined" id="selected-date-display" title="Tap to select date, hold to return to Today">
+              <u id="date-label">TODAY</u>
+              <input type="date" id="date-picker-input" class="hidden-date-input">
+            </div>
 
-          <!-- Add Task Link / Button -->
-          <div class="card-bottom-actions" id="card-bottom-actions">
-            <button class="btn-add-task-link" id="add-task-btn">
-              <i class="fa-solid fa-plus"></i> Add task
+            <button class="btn-date-arrow btn-date-next" id="next-day-btn" title="Next Day">
+              <i class="fa-solid fa-chevron-right"></i>
             </button>
           </div>
 
-          <!-- Empty State Notes Section -->
-          <div class="empty-state hidden" id="empty-state">
-            <i class="fa-solid fa-clipboard-list"></i>
-            <h4>No tasks scheduled for this date</h4>
-            <p>Click <strong>"+ Add task"</strong> to create a new activity.</p>
-          </div>
-        </div>
+          <!-- Consistent 4-Column Table View Container -->
+          <div class="task-table-scroll-wrapper">
+            <!-- Table Column Headers -->
+            <div class="task-table-headers" id="task-table-headers">
+              <div class="col-header col-task">Task name</div>
+              <div class="col-header col-category">Category</div>
+              <div class="col-header col-time">Time Estimate</div>
+              <div class="col-header col-status">Status</div>
+            </div>
 
-      </section>
+            <!-- Task List Rows Container -->
+            <div class="task-items-wrapper" id="task-items-wrapper">
+              <!-- Dynamic task rows generated via JS -->
+            </div>
+
+            <!-- Add Task Link / Button -->
+            <div class="card-bottom-actions" id="card-bottom-actions">
+              <button class="btn-add-task-link" id="add-task-btn">
+                <i class="fa-solid fa-plus"></i> Add task
+              </button>
+            </div>
+
+            <!-- Empty State Notes Section -->
+            <div class="empty-state hidden" id="empty-state">
+              <i class="fa-solid fa-clipboard-list"></i>
+              <h4>No tasks scheduled for this date</h4>
+              <p>Click <strong>"+ Add task"</strong> to create a new activity.</p>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+      <!-- TAB VIEW 2: IBADAH (WORSHIP TRACKER) -->
+      <div class="tab-page-view hidden" id="view-ibadah">
+        <!-- SECTION 1: HEADER & SPIRITUAL QUOTE CARD -->
+        <section class="flat-section header-section">
+          <div class="header-top-row">
+            <div class="date-box">
+              <h2 id="ibadah-live-date">THURSDAY, 13/08/26</h2>
+            </div>
+            <div class="time-box text-right">
+              <h2 id="ibadah-live-clock">08:27<span class="clock-seconds">:58</span></h2>
+            </div>
+          </div>
+        </section>
+
+        <!-- Spiritual Verse Quote Card (Bahasa Indonesia per user explicit instruction) -->
+        <section class="flat-section ibadah-quote-card" id="ibadah-quote-card">
+          <p class="ibadah-quote-text">
+            "...dan laksanakanlah shalat. Sesungguhnya shalat itu mencegah dari (perbuatan) keji dan munkar. Dan sungguh, mengingat Allah (shalat) itu lebih besar (keutamaannya)."
+          </p>
+          <div class="ibadah-quote-author">QS. Al-'Ankabut: 45</div>
+        </section>
+
+        <!-- SECTION 2: IBADAH DATE NAVIGATOR (Today & Backwards ONLY) -->
+        <section class="flat-section task-list-section ibadah-section">
+          <div class="date-header-centered">
+            <button class="btn-date-arrow btn-date-prev" id="ibadah-prev-day-btn" title="Previous Day">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+
+            <div class="date-title-underlined" id="ibadah-selected-date-display" title="Tap to select past date, hold to return to Today">
+              <u id="ibadah-date-label">TODAY</u>
+              <input type="date" id="ibadah-date-picker-input" class="hidden-date-input">
+            </div>
+
+            <button class="btn-date-arrow btn-date-next disabled-arrow" id="ibadah-next-day-btn" title="Next Day (Disabled for future dates)">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <!-- PRAYERS TABLE SECTION -->
+          <div class="ibadah-table-wrapper">
+            <div class="ibadah-table-headers">
+              <div class="ibadah-col-header ibadah-col-prayer">Prayers</div>
+              <div class="ibadah-col-header ibadah-col-status">Status</div>
+            </div>
+
+            <div class="ibadah-prayers-container" id="ibadah-prayers-container">
+              <!-- Dynamic Prayer Rows Generated via JS -->
+            </div>
+          </div>
+
+          <!-- GOOD HABBITS SECTION -->
+          <div class="ibadah-habits-section">
+            <div class="ibadah-table-headers">
+              <div class="ibadah-col-header ibadah-col-habit">Good habit</div>
+              <div class="ibadah-col-header ibadah-col-duration">Duration</div>
+            </div>
+
+            <div class="ibadah-habits-container" id="ibadah-habits-container">
+              <!-- Quran Reading Habit Row -->
+              <div class="ibadah-row habit-row">
+                <div class="ibadah-col-habit">
+                  <div class="prayer-icon-circle"><i class="fa-solid fa-book-quran"></i></div>
+                  <span class="prayer-name-text">Read Quran</span>
+                </div>
+                <div class="ibadah-col-duration">
+                  <div class="duration-stepper-box">
+                    <button class="btn-step" id="quran-minus-btn" title="Decrease 1 min"><i class="fa-solid fa-minus"></i></button>
+                    <input type="number" id="quran-duration-input" class="duration-input" value="0" min="0" max="1440">
+                    <span class="duration-unit">Minutes</span>
+                    <button class="btn-step" id="quran-plus-btn" title="Increase 1 min (+1)"><i class="fa-solid fa-plus"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Floating Summary Popup Button (Appears above pill navbar when scrolled at top) -->
+        <button class="ibadah-floating-summary-btn" id="ibadah-floating-summary-btn">
+          <i class="fa-solid fa-chart-pie"></i> Worship Summary
+        </button>
+      </div>
+
+      <!-- TAB VIEW 3: WORSHIP SUMMARY PAGE -->
+      <div class="tab-page-view hidden" id="view-ibadah-summary">
+        <!-- HEADER & BACK BUTTON -->
+        <section class="flat-section header-section ibadah-summary-header">
+          <div class="summary-header-row">
+            <button class="btn-back-link" id="back-to-ibadah-btn">
+              <i class="fa-solid fa-arrow-left"></i> Back to Worship
+            </button>
+            <h3 class="summary-page-title"><i class="fa-solid fa-chart-pie"></i> Worship Summary</h3>
+          </div>
+        </section>
+
+        <!-- 1. HISTORICAL 7-DAY HEATMAP MATRIX GRID (ALL 9 PRAYERS) -->
+        <section class="flat-section heatmap-card-section">
+          <div class="card-section-header">
+            <div class="section-title">7-Day Prayer History Matrix</div>
+            <div class="section-subtitle">Overview of prayer fulfillment for the past 7 days</div>
+          </div>
+
+          <div class="heatmap-grid-container" id="ibadah-heatmap-grid">
+            <!-- Dynamic 7-day heatmap matrix rendered via JS -->
+          </div>
+
+          <div class="heatmap-legend-row">
+            <div class="legend-item"><span class="legend-dot status-not-prayed"></span> Not Prayed</div>
+            <div class="legend-item"><span class="legend-dot status-qada"></span> Qada'</div>
+            <div class="legend-item"><span class="legend-dot status-ada"></span> Ada'</div>
+            <div class="legend-item"><span class="legend-dot status-jamaah"></span> Jama'ah</div>
+          </div>
+        </section>
+
+        <!-- 2. PERFORMANCE REPORTS SECTION -->
+        <section class="flat-section performance-reports-section">
+          
+          <!-- Period Selector Bar -->
+          <div class="summary-period-selector">
+            <button class="period-pill active" data-period="weekly" id="period-btn-weekly">Weekly (7 Days)</button>
+            <button class="period-pill" data-period="monthly" id="period-btn-monthly">Monthly (30 Days)</button>
+            <button class="period-pill" data-period="yearly" id="period-btn-yearly">Yearly (365 Days)</button>
+          </div>
+
+          <!-- CARD 1: MANDATORY (FARD) PRAYERS PERFORMANCE -->
+          <div class="summary-report-card" id="fard-prayers-card">
+            <div class="report-card-header">
+              <div class="report-title">
+                <i class="fa-solid fa-mosque"></i> Mandatory (Fard) Prayers
+              </div>
+              <div class="report-badge" id="fard-overall-badge">0/0 (0%)</div>
+            </div>
+            <div class="report-card-body">
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="fard-progress-fill" style="width: 0%;"></div>
+              </div>
+              <div class="report-stats-grid grid-4-col" id="fard-stats-grid">
+                <!-- Dynamic Fard prayer stats rendered via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 2: SUNNAH PRAYERS BREAKDOWN -->
+          <div class="summary-report-card" id="sunnah-prayers-card">
+            <div class="report-card-header">
+              <div class="report-title">
+                <i class="fa-solid fa-hands-praying"></i> Sunnah Prayers Breakdown
+              </div>
+              <div class="report-badge badge-amber" id="sunnah-overall-badge">0/0 (0%)</div>
+            </div>
+            <div class="report-card-body">
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill fill-amber" id="sunnah-progress-fill" style="width: 0%;"></div>
+              </div>
+              <div class="report-stats-grid grid-4-col" id="sunnah-stats-grid">
+                <!-- Dynamic Sunnah prayer stats rendered via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 3: QURAN READING HABIT REPORT -->
+          <div class="summary-report-card" id="quran-habit-card">
+            <div class="report-card-header">
+              <div class="report-title">
+                <i class="fa-solid fa-book-quran"></i> Quran Reading Habit
+              </div>
+              <div class="report-badge badge-purple" id="quran-time-badge">0 Minutes</div>
+            </div>
+            <div class="report-card-body">
+              <div class="quran-stats-summary" id="quran-stats-summary">
+                <!-- Dynamic Quran reading stats rendered via JS -->
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
     </main>
 
     <!-- UNIFIED PILL NAVIGATION BAR -->
@@ -125,16 +309,34 @@
       <a href="#daily-tasks" class="pill-nav-item active" data-tab="daily-tasks" title="Daily Tasks">
         <i class="fa-solid fa-calendar-day"></i>
       </a>
-      <a href="#ibadah" class="pill-nav-item disabled" title="Worship (Soon)">
+      <a href="#ibadah" class="pill-nav-item" data-tab="ibadah" title="Worship (Ibadah)">
         <i class="fa-solid fa-mosque"></i>
-      </a>
-      <a href="#goals" class="pill-nav-item disabled" title="Goals & Streak (Soon)">
-        <i class="fa-solid fa-bullseye"></i>
       </a>
       <a href="#exercise" class="pill-nav-item disabled" title="Exercise (Soon)">
         <i class="fa-solid fa-dumbbell"></i>
       </a>
     </nav>
+
+    <!-- FLOATING CLOUD SYNC FAB MENU (Bottom Right Corner) -->
+    <div class="fab-cloud-wrapper" id="fab-cloud-wrapper">
+      <!-- Vertical Speed Dial Popup Menu (Circular Icons Only) -->
+      <div class="fab-cloud-menu hidden" id="fab-cloud-menu">
+        <button class="fab-menu-item fab-item-upload" id="fab-push-btn" title="Upload Data to Google Sheets (Push)">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </button>
+        <button class="fab-menu-item fab-item-download" id="fab-pull-btn" title="Download Data from Google Sheets (Pull)">
+          <i class="fa-solid fa-cloud-arrow-down"></i>
+        </button>
+        <button class="fab-menu-item fab-item-settings" id="fab-settings-btn" title="Google Sheets Settings">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+
+      <!-- Main Floating Cloud Button -->
+      <button class="fab-cloud-btn" id="fab-cloud-btn" title="Cloud Sync Options">
+        <i class="fa-solid fa-cloud"></i>
+      </button>
+    </div>
   </div>
 
   <!-- MODAL: ADD / EDIT TASK -->
@@ -152,48 +354,50 @@
         <div class="form-group">
           <label for="task-name">Task Name <span class="required">*</span></label>
           <input type="text" id="task-name" class="form-control"
-            placeholder="e.g. Morning Prayer, Exercise, Team Sync..." required>
+            placeholder="e.g. Morning Prayer, Exercise, Team Sync..." required autofocus autocomplete="off">
         </div>
 
         <!-- 2. Start & Stop Time (24h Scrollable Wheel Picker) -->
         <div class="form-row">
           <div class="form-group">
             <label>Start Time (24h) <span class="required">*</span></label>
-            <div class="wheel-time-container" id="start-time-wheel-box">
+            <input type="hidden" id="task-start-time" value="08:00">
+            <div class="wheel-time-container">
               <div class="wheel-column" id="start-hour-wheel"></div>
-              <span class="wheel-colon">:</span>
+              <div class="wheel-colon">:</div>
               <div class="wheel-column" id="start-min-wheel"></div>
             </div>
-            <input type="hidden" id="task-start-time" value="08:00">
           </div>
 
           <div class="form-group">
             <label>End Time (24h) <span class="required">*</span></label>
-            <div class="wheel-time-container" id="end-time-wheel-box">
+            <input type="hidden" id="task-end-time" value="09:00">
+            <div class="wheel-time-container">
               <div class="wheel-column" id="end-hour-wheel"></div>
-              <span class="wheel-colon">:</span>
+              <div class="wheel-colon">:</div>
               <div class="wheel-column" id="end-min-wheel"></div>
             </div>
-            <input type="hidden" id="task-end-time" value="09:00">
           </div>
         </div>
 
-        <!-- 3. Category -->
-        <div class="form-group">
-          <label for="task-category">Category <span class="required">*</span></label>
-          <select id="task-category" class="form-select" required>
-            <option value="Worship">Worship</option>
-            <option value="Exercise">Exercise</option>
-            <option value="Must Do" selected>Must Do</option>
-            <option value="Play">Play</option>
-            <option value="Essentials">Essentials</option>
-          </select>
+        <!-- 3. Category & Initial Status -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="task-category">Category</label>
+            <select id="task-category" class="form-select">
+              <option value="Must Do" selected>Must Do</option>
+              <option value="Worship">Worship</option>
+              <option value="Exercise">Exercise</option>
+              <option value="Play">Play</option>
+              <option value="Essentials">Essentials</option>
+            </select>
+          </div>
         </div>
 
         <!-- 4. Notes (Optional) -->
         <div class="form-group">
           <label for="task-notes">Notes (Optional)</label>
-          <textarea id="task-notes" class="form-control" rows="2" placeholder="Detailed notes..."></textarea>
+          <textarea id="task-notes" class="form-control" placeholder="Add additional instructions or details..."></textarea>
         </div>
 
         <div class="modal-footer">
@@ -205,48 +409,54 @@
       </form>
     </div>
   </div>
-  </div>
 
-  <!-- MODAL: SETTINGS & GOOGLE SHEETS SYNC -->
+  <!-- MODAL: SETTINGS & GOOGLE SHEETS SYNC (ORGANIZED & ALIGNED) -->
   <div class="modal-overlay hidden" id="settings-modal">
-    <div class="modal-card">
+    <div class="modal-card modal-settings-card">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Google Sheets Settings</h3>
+        <h3><i class="fa-solid fa-cloud-gear"></i> Google Sheets Sync Settings</h3>
         <button class="btn-close" id="close-settings-modal"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="settings-body">
-        <div class="form-group">
-          <label for="gas-url-input">Google Apps Script Web App URL</label>
-          <input type="url" id="gas-url-input" class="form-control"
-            placeholder="https://script.google.com/macros/s/.../exec">
-          <small class="form-help">Masukkan Web App URL dari deployment <code>Code.gs</code> Anda.</small>
+        <div class="settings-section">
+          <div class="form-group">
+            <label for="gas-url-input"><i class="fa-solid fa-link"></i> Web App URL (GAS Deployment)</label>
+            <input type="url" id="gas-url-input" class="form-control"
+              placeholder="https://script.google.com/macros/s/.../exec">
+            <small class="form-help">Paste your deployed Google Apps Script <code>Code.gs</code> Web App URL to sync data online.</small>
+          </div>
         </div>
 
-        <div class="sync-actions-box">
-          <label>Aksi Sinkronisasi Manual:</label>
-          <div class="btn-group-responsive">
-            <button class="btn btn-success" id="push-data-btn">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Upload Data (Push)
+        <div class="settings-section sync-actions-card">
+          <div class="section-sublabel"><i class="fa-solid fa-arrows-rotate"></i> Manual Cloud Actions</div>
+          <div class="btn-group-row">
+            <button class="btn btn-success flex-1" id="push-data-btn">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Push (Upload)
             </button>
-            <button class="btn btn-info" id="pull-data-btn">
-              <i class="fa-solid fa-cloud-arrow-down"></i> Download Data (Pull)
+            <button class="btn btn-info flex-1" id="pull-data-btn">
+              <i class="fa-solid fa-cloud-arrow-down"></i> Pull (Download)
             </button>
           </div>
         </div>
 
         <hr class="divider">
 
-        <div class="form-group">
-          <label>Data Reset</label>
-          <button class="btn btn-danger-outline btn-sm" id="reset-storage-btn">
-            <i class="fa-solid fa-trash-can"></i> Clear Cache & Reset Demo
-          </button>
+        <div class="settings-section">
+          <div class="form-group margin-0">
+            <div class="section-sublabel danger-text"><i class="fa-solid fa-triangle-exclamation"></i> Cache Management</div>
+            <button class="btn btn-danger-outline btn-sm align-self-start" id="reset-storage-btn">
+              <i class="fa-solid fa-trash-can"></i> Clear Local Cache
+            </button>
+          </div>
         </div>
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="save-settings-btn">Simpan Pengaturan</button>
+        <button type="button" class="btn btn-ghost" id="cancel-settings-btn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="save-settings-btn">
+          <i class="fa-solid fa-floppy-disk"></i> Save Settings
+        </button>
       </div>
     </div>
   </div>

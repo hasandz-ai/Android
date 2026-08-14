@@ -233,14 +233,6 @@ body {
   background: linear-gradient(135deg, rgba(15, 76, 92, 0.95), rgba(95, 15, 64, 0.95)) !important;
 }
 
-.banner-header-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-}
-
 .banner-header-title {
   font-size: 11px;
   font-weight: 800;
@@ -785,6 +777,650 @@ body.light-mode .task-title-text {
   color: #ffffff !important;
 }
 
+/* ==========================================
+ * TAB PAGE VIEWS & IBADAH TRACKER STYLING
+ * ========================================== */
+.tab-page-view.hidden {
+  display: none !important;
+}
+
+.tab-page-view.active {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#view-ibadah.tab-page-view.active {
+  gap: 10px !important;
+}
+
+/* Spiritual Quote Card (Bahasa Indonesia per user request) */
+.ibadah-quote-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 14px 18px 10px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ibadah-quote-text {
+  font-size: 12.5px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+  text-align: left;
+}
+
+.ibadah-quote-author {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--c-amber);
+  text-align: right;
+  letter-spacing: 0.5px;
+}
+
+.btn-date-arrow.disabled-arrow {
+  opacity: 0.2 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* Ibadah Prayer & Habit Table Layout */
+.ibadah-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px !important;
+}
+
+.ibadah-section .date-header-centered {
+  margin: 0 !important;
+  padding: 2px 0 !important;
+}
+
+.ibadah-table-wrapper,
+.ibadah-habits-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.ibadah-table-headers {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 14px !important;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.ibadah-col-prayer,
+.ibadah-col-habit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ibadah-col-status,
+.ibadah-col-duration {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.ibadah-prayers-container,
+.ibadah-habits-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ibadah-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  min-height: 52px;
+  box-sizing: border-box;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.18s ease;
+}
+
+.ibadah-row.is-focused {
+  z-index: 75 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 0 2px var(--c-amber) !important;
+  transform: scale(1.02);
+}
+
+.prayer-icon-circle {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--c-amber);
+  background: rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
+}
+
+.prayer-name-text {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+/* Color-Coded Prayer Status Dropdown Options */
+.ibadah-status-select {
+  width: 120px;
+  height: 30px;
+  padding: 2px 8px;
+  font-family: var(--font-family);
+  font-size: 11.5px;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+  outline: none;
+  border: none;
+  text-align: center;
+  text-align-last: center;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  transition: var(--transition-fast);
+}
+
+/* Status Color Rules: Not Prayed (Red), Qada' (Yellow), Ada' (Green), Jama'ah (Blue) */
+.ibadah-status-select.status-not-prayed {
+  background: #9A031E !important;
+  color: #ffffff !important;
+}
+
+.ibadah-status-select.status-qada {
+  background: #facc15 !important;
+  color: #000000 !important;
+}
+
+.ibadah-status-select.status-ada {
+  background: #065f46 !important;
+  color: #ffffff !important;
+}
+
+.ibadah-status-select.status-jamaah {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.ibadah-status-select.is-locked {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+.ibadah-status-select option[value="Not Prayed"] {
+  background-color: #9A031E !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.ibadah-status-select option[value="Qada'"] {
+  background-color: #facc15 !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+}
+
+.ibadah-status-select option[value="Ada'"] {
+  background-color: #065f46 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.ibadah-status-select option[value="Jama'ah"] {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+/* ==========================================
+ * FLOATING WORSHIP SUMMARY BUTTON
+ * ========================================== */
+.ibadah-floating-summary-btn {
+  position: fixed;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  background: var(--c-amber);
+  color: #000000;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 9px 20px;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 12px rgba(251, 139, 36, 0.3);
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.18s ease;
+}
+
+.ibadah-floating-summary-btn:hover {
+  background: #facc15;
+  color: #000000;
+  transform: translateX(-50%) scale(1.04);
+}
+
+.ibadah-floating-summary-btn.hidden-float {
+  opacity: 0 !important;
+  transform: translate(-50%, 15px) !important;
+  pointer-events: none !important;
+}
+
+/* ==========================================
+ * WORSHIP SUMMARY PAGE STYLING
+ * ========================================== */
+.ibadah-summary-header {
+  padding-bottom: 4px;
+}
+
+.summary-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.btn-back-link {
+  background: transparent;
+  border: none;
+  color: var(--c-amber);
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.summary-page-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.heatmap-card-section {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.section-subtitle {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* 7-Day Heatmap Grid Matrix (Matching attached wireframe!) */
+.heatmap-grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #0f172a;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.heatmap-grid-table tr {
+  height: 34px;
+}
+
+.heatmap-grid-table th {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-align: center;
+  padding-bottom: 8px;
+}
+
+.heatmap-grid-table th.th-today {
+  color: var(--c-amber);
+}
+
+.heatmap-grid-table th.th-prayer-name {
+  text-align: right;
+  padding-left: 10px;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.heatmap-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding: 3px;
+}
+
+.heatmap-tile {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: transform 0.15s ease;
+}
+
+.heatmap-tile:hover {
+  transform: scale(1.15);
+}
+
+.tile-not-prayed {
+  background: #9A031E !important;
+}
+
+.tile-qada {
+  background: #facc15 !important;
+}
+
+.tile-ada {
+  background: #065f46 !important;
+}
+
+.tile-jamaah {
+  background: #0284c7 !important;
+}
+
+.heatmap-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.legend-dot.status-not-prayed { background: #9A031E; }
+.legend-dot.status-qada { background: #facc15; }
+.legend-dot.status-ada { background: #065f46; }
+.legend-dot.status-jamaah { background: #0284c7; }
+
+/* Performance Report Cards (Weekly, Monthly, Yearly) */
+.performance-reports-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.summary-report-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.report-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(6, 95, 70, 0.3);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.report-badge.badge-amber {
+  background: rgba(180, 83, 9, 0.3);
+  color: #facc15;
+  border-color: rgba(250, 204, 21, 0.3);
+}
+
+.report-badge.badge-purple {
+  background: rgba(126, 34, 206, 0.3);
+  color: #c084fc;
+  border-color: rgba(192, 132, 252, 0.3);
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.progress-bar-fill.fill-amber {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.progress-bar-fill.fill-purple {
+  background: linear-gradient(90deg, #a855f7, #7e22ce);
+}
+
+/* Period Selector Pills Bar */
+.summary-period-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 4px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: fit-content;
+  margin: 0 auto 6px auto;
+}
+
+.period-pill {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-family);
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.period-pill.active {
+  background: var(--c-amber);
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(251, 139, 36, 0.3);
+}
+
+.report-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.report-stats-grid.grid-4-col {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 480px) {
+  .report-stats-grid.grid-4-col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-metric-box {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 10px 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-metric-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.stat-metric-sub {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--c-amber);
+}
+
+.stat-metric-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.quran-stats-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 14px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.quran-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.quran-stat-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: #c084fc;
+}
+
+.quran-stat-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Good Habits Quran Duration Stepper Box */
+.duration-stepper-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.duration-stepper-box .btn-step {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: none;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.duration-stepper-box .btn-step:hover {
+  background: var(--c-amber);
+  color: #000000;
+}
+
+.duration-stepper-box .duration-input {
+  width: 48px;
+  height: 28px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  outline: none;
+}
+
+.duration-unit {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
 .card-bottom-actions {
   padding-top: 8px;
   margin-top: 4px;
@@ -812,13 +1448,33 @@ body.light-mode .task-title-text {
   color: var(--c-amber);
 }
 
-/* TOP & BOTTOM VIGNETTE EDGE FADE OVERLAYS */
+/* TOP & BOTTOM VIGNETTE EDGE FADE OVERLAYS & FOCUS BACKDROP */
 .fade-overlay {
   position: fixed;
   left: 0;
   right: 0;
   pointer-events: none;
   z-index: 85;
+}
+
+.focus-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(5, 10, 16, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 70;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focus-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .fade-top {
@@ -846,6 +1502,87 @@ body.light-mode .task-title-text {
   padding: 6px 12px;
   border-radius: var(--radius-full);
   z-index: 90;
+}
+
+/* FLOATING CLOUD SYNC FAB MENU (Vertically Center Aligned with Pill Navbar) */
+.fab-cloud-wrapper {
+  position: fixed;
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  right: 20px;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.fab-cloud-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--c-amber);
+  border: 1.5px solid rgba(251, 139, 36, 0.4);
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(251, 139, 36, 0.15);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.22s ease, color 0.22s ease;
+  user-select: none;
+}
+
+.fab-cloud-btn:hover {
+  background: var(--c-amber);
+  color: #000000;
+  transform: scale(1.06);
+}
+
+.fab-cloud-wrapper.is-open .fab-cloud-btn {
+  background: var(--c-amber);
+  color: #000000;
+  transform: rotate(45deg) scale(1.06);
+  box-shadow: 0 8px 26px rgba(251, 139, 36, 0.4);
+}
+
+.fab-cloud-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fab-cloud-menu.hidden {
+  display: none !important;
+}
+
+/* Sleek Circular Speed Dial Action Buttons (No text!) */
+.fab-menu-item {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(251, 139, 36, 0.35);
+  color: var(--text-primary);
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.fab-menu-item:hover {
+  transform: scale(1.12);
+  background: var(--c-amber);
+  color: #000000;
+  border-color: var(--c-amber);
 }
 
 .pill-nav-item {
@@ -1076,8 +1813,9 @@ textarea.form-control {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(8px);
+  background: rgba(5, 10, 16, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1097,6 +1835,56 @@ textarea.form-control {
   padding: 24px;
   display: flex;
   flex-direction: column;
+}
+
+/* ORGANIZED & ALIGNED SETTINGS MODAL STYLING */
+.modal-settings-card {
+  max-width: 500px;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-sublabel {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--c-amber);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.section-sublabel.danger-text {
+  color: var(--c-crimson);
+}
+
+.btn-group-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+
+.btn-group-row .flex-1 {
+  flex: 1;
+  justify-content: center;
+}
+
+.margin-0 {
+  margin: 0 !important;
 }
 
 .modal-header {

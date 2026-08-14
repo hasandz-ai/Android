@@ -5,9 +5,12 @@
 
 const STATE_KEY_TASKS = 'pts_tasks_v1';
 const STATE_KEY_GAS_URL = 'pts_gas_url_v1';
+const STATE_KEY_IBADAH = 'pts_ibadah_v1';
 
 let tasks = [];
+let ibadahData = {};
 let currentSelectedDate = getTodayDateString();
+let currentIbadahDate = getTodayDateString();
 let gasWebAppUrl = '';
 let deferredInstallPrompt = null;
 
@@ -66,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initPwaInstall();
   initEventListeners();
   initStickyBannerScroll();
+  initTabNavigation();
+  initIbadahEngine();
+  initFabCloudMenu();
   renderApp();
   autoScrollToActiveTask();
 });
@@ -96,7 +102,7 @@ function formatFullHumanDate(dateStr) {
   return formatWireframeDateHeader(dateStr);
 }
 
-// Initialize Local Storage & Demo Data
+// Initialize Local Storage
 function initStorage() {
   const storedTasks = localStorage.getItem(STATE_KEY_TASKS);
   if (storedTasks) {
@@ -104,11 +110,21 @@ function initStorage() {
       tasks = JSON.parse(storedTasks);
     } catch (e) {
       console.error('Failed to parse local tasks:', e);
-      tasks = getDemoTasks();
+      tasks = [];
     }
   } else {
-    tasks = getDemoTasks();
+    tasks = [];
     saveTasksToStorage();
+  }
+
+  const storedIbadah = localStorage.getItem(STATE_KEY_IBADAH);
+  if (storedIbadah) {
+    try {
+      ibadahData = JSON.parse(storedIbadah);
+    } catch (e) {
+      console.error('Failed to parse Ibadah data:', e);
+      ibadahData = {};
+    }
   }
 
   gasWebAppUrl = localStorage.getItem(STATE_KEY_GAS_URL) || '';
@@ -120,120 +136,38 @@ function saveTasksToStorage() {
   localStorage.setItem(STATE_KEY_TASKS, JSON.stringify(tasks));
 }
 
-// Demo Data (English Defaults)
-function getDemoTasks() {
-  const today = getTodayDateString();
-  return [
-    {
-      id: 'demo-1',
-      name: "Morning Prayer & Meditation",
-      category: "Worship",
-      startTime: "04:30",
-      endTime: "05:15",
-      status: "Done",
-      notes: "Daily morning routine",
-      date: today
-    },
-    {
-      id: 'demo-2',
-      name: "Light Calisthenics & Jogging",
-      category: "Exercise",
-      startTime: "06:00",
-      endTime: "06:45",
-      status: "Done",
-      notes: "Target 3km / 30 push-ups",
-      date: today
-    },
-    {
-      id: 'demo-3',
-      name: "English Vocabulary Study",
-      category: "Must Do",
-      startTime: "08:00",
-      endTime: "09:00",
-      status: "Done",
-      notes: "Module 4 Daily Tracker",
-      date: today
-    },
-    {
-      id: 'demo-4',
-      name: "Team Sync & Project Execution",
-      category: "Must Do",
-      startTime: "09:30",
-      endTime: "12:00",
-      status: "Pending",
-      notes: "Review PWA features & Google Sheets integration",
-      date: today
-    },
-    {
-      id: 'demo-5',
-      name: "Noon Prayer & Healthy Lunch",
-      category: "Worship",
-      startTime: "12:15",
-      endTime: "13:00",
-      status: "Pending",
-      notes: "Stay hydrated & eat well",
-      date: today
-    },
-    {
-      id: 'demo-6',
-      name: "Gaming & Relaxation",
-      category: "Play",
-      startTime: "16:30",
-      endTime: "17:30",
-      status: "Pending",
-      notes: "Afternoon break",
-      date: today
-    }
-  ];
+function saveIbadahDataToStorage() {
+  localStorage.setItem(STATE_KEY_IBADAH, JSON.stringify(ibadahData));
 }
 
 // ==========================================
-// CLOCK, GREETING & ACTIVE BANNER ENGINE
+// CLOCK & ACTIVE BANNER ENGINE
 // ==========================================
 function initClockAndBanner() {
   updateClock();
-  updateGreeting();
   updateActiveTaskBanner();
 
   setInterval(updateClock, 1000);
-  setInterval(updateGreeting, 60000);
   setInterval(updateActiveTaskBanner, 5000);
 }
 
 function updateClock() {
   const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  const timeHtml = `${hh}:${mm}<span class="clock-seconds">:${ss}</span>`;
+  const dateText = formatFullHumanDate(getTodayDateString());
+
   const clockEl = document.getElementById('live-clock');
   const dateEl = document.getElementById('live-date');
+  if (clockEl) clockEl.innerHTML = timeHtml;
+  if (dateEl) dateEl.textContent = dateText;
 
-  if (clockEl) {
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
-    const ss = String(now.getSeconds()).padStart(2, '0');
-    clockEl.innerHTML = `${hh}:${mm}<span class="clock-seconds">:${ss}</span>`;
-  }
-  if (dateEl) {
-    dateEl.textContent = formatFullHumanDate(getTodayDateString());
-  }
-}
-
-function updateGreeting() {
-  const greetingEl = document.getElementById('greeting-text');
-  if (!greetingEl) return;
-
-  const hour = new Date().getHours();
-  let text = 'Welcome! Ready to achieve your productivity goals today?';
-
-  if (hour >= 4 && hour < 11) {
-    text = 'Good Morning! Start your day structured and focused.';
-  } else if (hour >= 11 && hour < 15) {
-    text = 'Good Afternoon! Stay focused on your primary task priorities.';
-  } else if (hour >= 15 && hour < 18) {
-    text = 'Good Evening! Wrap up remaining goals before break time.';
-  } else if (hour >= 18 || hour < 4) {
-    text = 'Good Night! Review today\'s achievements & rest well.';
-  }
-
-  greetingEl.textContent = text;
+  const ibadahClockEl = document.getElementById('ibadah-live-clock');
+  const ibadahDateEl = document.getElementById('ibadah-live-date');
+  if (ibadahClockEl) ibadahClockEl.innerHTML = timeHtml;
+  if (ibadahDateEl) ibadahDateEl.textContent = dateText;
 }
 
 // Active Task Banner (Card 2)
@@ -402,7 +336,7 @@ function renderTasksList() {
 
     row.innerHTML = `
       <div class="swipe-indicator swipe-edit"><i class="fa-solid fa-pen"></i> Edit</div>
-      <div class="swipe-indicator swipe-delete"><i class="fa-solid fa-trash-can"></i> Hapus</div>
+      <div class="swipe-indicator swipe-delete"><i class="fa-solid fa-trash-can"></i> Delete</div>
 
       <div class="col-task">
         <span class="task-title-text">${escapeHtml(task.name)}</span>
@@ -780,6 +714,14 @@ function openAddTaskModal() {
   updateCategorySelectColor();
   setTimePickerValue('08:00', '08:01');
   document.getElementById('task-modal').classList.remove('hidden');
+
+  // Streamlined Frictionless UX: Auto-Focus Task Name Input Box (Triggers Software Keyboard on Mobile)
+  setTimeout(() => {
+    const taskNameInput = document.getElementById('task-name');
+    if (taskNameInput) {
+      taskNameInput.focus();
+    }
+  }, 60);
 }
 
 function openEditTaskModal(taskId) {
@@ -800,6 +742,15 @@ function openEditTaskModal(taskId) {
   document.getElementById('task-notes').value = task.notes || '';
 
   document.getElementById('task-modal').classList.remove('hidden');
+
+  // Auto-Focus Task Name Input Box
+  setTimeout(() => {
+    const taskNameInput = document.getElementById('task-name');
+    if (taskNameInput) {
+      taskNameInput.focus();
+      if (typeof taskNameInput.select === 'function') taskNameInput.select();
+    }
+  }, 60);
 }
 
 function handleSaveTask(e) {
@@ -870,22 +821,38 @@ function handleSaveTask(e) {
   renderApp();
 }
 
+// Helper: Sync Web App URL from input box to memory & localStorage
+function syncGasUrlFromInput() {
+  const input = document.getElementById('gas-url-input');
+  if (input) {
+    const urlVal = input.value.trim();
+    if (urlVal) {
+      gasWebAppUrl = urlVal;
+      localStorage.setItem(STATE_KEY_GAS_URL, gasWebAppUrl);
+    }
+  }
+  return gasWebAppUrl;
+}
+
 // ==========================================
 // GOOGLE SHEETS SYNC (PUSH & PULL)
 // ==========================================
 async function pushDataToGoogleSheets() {
+  syncGasUrlFromInput();
+
   if (!gasWebAppUrl) {
-    showToast('Google Apps Script URL belum diisi. Buka Settings.', 'warning');
+    showToast('Google Apps Script URL is not set. Open Settings.', 'warning');
     openSettingsModal();
     return;
   }
 
-  showToast('Meng-upload data ke Google Sheets...', 'info');
+  showToast('Uploading Tasks & Worship data to Google Sheets...', 'info');
 
   try {
     const payload = {
       action: 'upload_all',
       tasks: tasks,
+      ibadah: ibadahData,
       timestamp: new Date().toISOString()
     };
 
@@ -898,69 +865,117 @@ async function pushDataToGoogleSheets() {
 
     const result = await response.json();
     if (result && result.status === 'success') {
-      showToast('Upload Sukses! Data tersimpan di Google Sheets.', 'success');
+      showToast('Upload successful! Tasks & Worship data saved.', 'success');
     } else {
-      showToast(result.message || 'Upload selesai', 'success');
+      showToast(result.message || 'Upload complete', 'success');
     }
   } catch (error) {
     console.error('GAS Push Error:', error);
-    showToast('Gagal terhubung ke Google Sheets. Periksa URL Web App GAS.', 'error');
+    showToast('Failed to connect to Google Sheets. Check GAS Web App URL.', 'error');
   }
 }
 
+function sanitizeTaskTime(timeStr) {
+  if (!timeStr) return '08:00';
+  const str = String(timeStr).trim();
+  if (/^\d{1,2}:\d{2}$/.test(str)) {
+    const parts = str.split(':');
+    return `${String(parts[0]).padStart(2, '0')}:${parts[1]}`;
+  }
+  const match = str.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+  if (match) {
+    return `${String(match[1]).padStart(2, '0')}:${match[2]}`;
+  }
+  return '08:00';
+}
+
+function sanitizeTaskDate(dateStr) {
+  if (!dateStr) return getTodayDateString();
+  const str = String(dateStr).trim();
+  const match = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (match) return match[0];
+  return str;
+}
+
 async function pullDataFromGoogleSheets() {
+  syncGasUrlFromInput();
+
   if (!gasWebAppUrl) {
-    showToast('Google Apps Script URL belum diisi. Buka Settings.', 'warning');
+    showToast('Google Apps Script URL is not set. Open Settings.', 'warning');
     openSettingsModal();
     return;
   }
 
-  showToast('Mengambil data dari Google Sheets...', 'info');
+  showToast('Fetching Tasks & Worship data from Google Sheets...', 'info');
 
   try {
-    const fetchUrl = `${gasWebAppUrl}?action=get_tasks&t=${Date.now()}`;
+    const fetchUrl = `${gasWebAppUrl}?action=get_all&t=${Date.now()}`;
     const response = await fetch(fetchUrl);
     const result = await response.json();
 
-    if (result && result.status === 'success' && Array.isArray(result.tasks)) {
-      tasks = result.tasks;
-      saveTasksToStorage();
+    if (result && result.status === 'success') {
+      let taskCount = 0;
+      let ibadahDaysCount = 0;
+
+      if (Array.isArray(result.tasks)) {
+        tasks = result.tasks.map(t => ({
+          ...t,
+          date: sanitizeTaskDate(t.date),
+          startTime: sanitizeTaskTime(t.startTime),
+          endTime: sanitizeTaskTime(t.endTime)
+        }));
+        saveTasksToStorage();
+        taskCount = tasks.length;
+      }
+
+      if (result.ibadah && typeof result.ibadah === 'object') {
+        ibadahData = result.ibadah;
+        saveIbadahDataToStorage();
+        ibadahDaysCount = Object.keys(ibadahData).length;
+      }
+
       renderApp();
-      showToast(`Download Sukses! ${tasks.length} task dimuat.`, 'success');
+      showToast(`Download successful! ${taskCount} tasks & ${ibadahDaysCount} worship days loaded.`, 'success');
     } else {
-      showToast('Data dari Google Sheets kosong.', 'warning');
+      showToast('Google Sheets data is empty.', 'warning');
     }
   } catch (error) {
     console.error('GAS Pull Error:', error);
-    showToast('Gagal mendownload data dari Google Sheets.', 'error');
+    showToast('Failed to download data from Google Sheets.', 'error');
   }
 }
 
 function openSettingsModal() {
-  document.getElementById('gas-url-input').value = gasWebAppUrl;
+  const input = document.getElementById('gas-url-input');
+  if (input) {
+    input.value = gasWebAppUrl || localStorage.getItem(STATE_KEY_GAS_URL) || '';
+  }
   document.getElementById('settings-modal').classList.remove('hidden');
 }
 
 function saveSettings() {
-  const url = document.getElementById('gas-url-input').value.trim();
-  gasWebAppUrl = url;
-  localStorage.setItem(STATE_KEY_GAS_URL, gasWebAppUrl);
+  syncGasUrlFromInput();
   document.getElementById('settings-modal').classList.add('hidden');
-  showToast('Pengaturan tersimpan!', 'success');
+  showToast('Settings saved!', 'success');
 }
 
 function resetStorageData() {
   showConfirmModal({
     title: 'Reset Local Cache',
-    message: 'Are you sure you want to reset all local data and reload demo tasks?',
+    message: 'Are you sure you want to clear all local tasks and worship data?',
     confirmText: 'Reset',
     iconClass: 'fa-rotate-right',
     onConfirm: () => {
       localStorage.removeItem(STATE_KEY_TASKS);
+      localStorage.removeItem(STATE_KEY_IBADAH);
+      tasks = [];
+      ibadahData = {};
+      saveTasksToStorage();
+      saveIbadahDataToStorage();
       initStorage();
       renderApp();
       document.getElementById('settings-modal').classList.add('hidden');
-      showToast('Local data reset successfully.', 'info');
+      showToast('All local task and worship cache cleared successfully.', 'info');
     }
   });
 }
@@ -1082,27 +1097,32 @@ function initEventListeners() {
     });
   }
 
-  const fCat = document.getElementById('filter-category');
-  if (fCat) fCat.addEventListener('change', renderTasksList);
-  const fStat = document.getElementById('filter-status');
-  if (fStat) fStat.addEventListener('change', renderTasksList);
-
   const taskCategorySelect = document.getElementById('task-category');
   if (taskCategorySelect) {
     taskCategorySelect.addEventListener('change', updateCategorySelectColor);
   }
 
-  document.getElementById('add-task-btn').addEventListener('click', openAddTaskModal);
+  const addTaskBtn = document.getElementById('add-task-btn');
+  if (addTaskBtn) addTaskBtn.addEventListener('click', openAddTaskModal);
 
-  document.getElementById('close-task-modal').addEventListener('click', () => {
-    document.getElementById('task-modal').classList.add('hidden');
-    resetAllRowPositions();
-  });
-  document.getElementById('cancel-task-btn').addEventListener('click', () => {
-    document.getElementById('task-modal').classList.add('hidden');
-    resetAllRowPositions();
-  });
-  document.getElementById('task-form').addEventListener('submit', handleSaveTask);
+  const closeTaskModalBtn = document.getElementById('close-task-modal');
+  if (closeTaskModalBtn) {
+    closeTaskModalBtn.addEventListener('click', () => {
+      document.getElementById('task-modal').classList.add('hidden');
+      resetAllRowPositions();
+    });
+  }
+
+  const cancelTaskBtn = document.getElementById('cancel-task-btn');
+  if (cancelTaskBtn) {
+    cancelTaskBtn.addEventListener('click', () => {
+      document.getElementById('task-modal').classList.add('hidden');
+      resetAllRowPositions();
+    });
+  }
+
+  const taskForm = document.getElementById('task-form');
+  if (taskForm) taskForm.addEventListener('submit', handleSaveTask);
 
   // Confirm Modal Listeners
   const closeConfirmBtn = document.getElementById('close-confirm-modal');
@@ -1120,14 +1140,19 @@ function initEventListeners() {
     });
   }
 
-  const openSettingsBtn = document.getElementById('open-settings-btn');
-  if (openSettingsBtn) openSettingsBtn.addEventListener('click', openSettingsModal);
-
-  const sidebarSettingsBtn = document.getElementById('sidebar-settings-btn');
-  if (sidebarSettingsBtn) sidebarSettingsBtn.addEventListener('click', openSettingsModal);
+  // Settings Modal Listeners
+  const gasUrlInput = document.getElementById('gas-url-input');
+  if (gasUrlInput) {
+    gasUrlInput.addEventListener('input', syncGasUrlFromInput);
+    gasUrlInput.addEventListener('change', syncGasUrlFromInput);
+  }
 
   const closeSettingsBtn = document.getElementById('close-settings-modal');
+  const cancelSettingsBtn = document.getElementById('cancel-settings-btn');
   if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', () => {
+    document.getElementById('settings-modal').classList.add('hidden');
+  });
+  if (cancelSettingsBtn) cancelSettingsBtn.addEventListener('click', () => {
     document.getElementById('settings-modal').classList.add('hidden');
   });
 
@@ -1136,15 +1161,6 @@ function initEventListeners() {
 
   const resetStorageBtn = document.getElementById('reset-storage-btn');
   if (resetStorageBtn) resetStorageBtn.addEventListener('click', resetStorageData);
-
-  const quickPushBtn = document.getElementById('quick-push-btn');
-  if (quickPushBtn) quickPushBtn.addEventListener('click', pushDataToGoogleSheets);
-
-  const quickPullBtn = document.getElementById('quick-pull-btn');
-  if (quickPullBtn) quickPullBtn.addEventListener('click', pullDataFromGoogleSheets);
-
-  const sidebarSyncBtn = document.getElementById('sidebar-sync-btn');
-  if (sidebarSyncBtn) sidebarSyncBtn.addEventListener('click', openSettingsModal);
 
   const pushDataBtn = document.getElementById('push-data-btn');
   if (pushDataBtn) pushDataBtn.addEventListener('click', pushDataToGoogleSheets);
@@ -1250,4 +1266,824 @@ function escapeHtml(str) {
       "'": '&#039;'
     }[m];
   });
+}
+
+// ==========================================
+// IBADAH (WORSHIP TRACKER) ENGINE & TAB NAVIGATION
+// ==========================================
+
+const PRAYER_CONFIG = [
+  { key: 'tahajud', name: 'Tahajud', icon: 'fa-moon', defaultStart: '03:00' },
+  { key: 'fajr', name: 'Fajr', icon: 'fa-cloud-sun', defaultStart: '04:30' },
+  { key: 'dhuha', name: 'Dhuha', icon: 'fa-sun', defaultStart: '06:30' },
+  { key: 'dhuhr', name: 'Dhuhr', icon: 'fa-sun-plant-wilt', defaultStart: '12:00' },
+  { key: 'asr', name: 'Asr', icon: 'fa-cloud-sun', defaultStart: '15:15' },
+  { key: 'maghrib', name: 'Maghrib', icon: 'fa-cloud-moon', defaultStart: '18:00' },
+  { key: 'isya', name: 'Isya', icon: 'fa-star-and-crescent', defaultStart: '19:15' },
+  { key: 'taubat', name: 'Taubat', icon: 'fa-hands-praying', defaultStart: '20:30' },
+  { key: 'hajat', name: 'Hajat', icon: 'fa-hand-holding-heart', defaultStart: '21:30' }
+];
+
+function showPrayerFocusEffect(rowEl) {
+  const backdrop = document.getElementById('focus-backdrop');
+  if (backdrop) backdrop.classList.add('visible');
+  document.querySelectorAll('.ibadah-row').forEach(r => r.classList.remove('is-focused'));
+  if (rowEl) rowEl.classList.add('is-focused');
+}
+
+function clearPrayerFocusEffect() {
+  const backdrop = document.getElementById('focus-backdrop');
+  if (backdrop) backdrop.classList.remove('visible');
+  document.querySelectorAll('.ibadah-row').forEach(r => r.classList.remove('is-focused'));
+}
+
+function initTabNavigation() {
+  const navItems = document.querySelectorAll('.pill-nav-item[data-tab]');
+  navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tabName = item.dataset.tab;
+      if (!tabName || item.classList.contains('disabled')) return;
+
+      triggerHaptic('click');
+      clearPrayerFocusEffect();
+
+      navItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+
+      document.querySelectorAll('.tab-page-view').forEach(view => {
+        view.classList.add('hidden');
+        view.classList.remove('active');
+      });
+
+      const targetView = document.getElementById(`view-${tabName}`);
+      if (targetView) {
+        targetView.classList.remove('hidden');
+        targetView.classList.add('active');
+      }
+
+      if (tabName === 'ibadah') {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        renderIbadahPage();
+      } else if (tabName === 'daily-tasks') {
+        renderApp();
+        autoScrollToActiveTask();
+      }
+    });
+  });
+}
+
+function initIbadahDateLongPressGesture() {
+  const selectedDateEl = document.getElementById('ibadah-selected-date-display');
+  if (!selectedDateEl) return;
+
+  let longPressTimer = null;
+  let isLongPress = false;
+  const LONG_PRESS_DURATION = 400;
+
+  const startPress = () => {
+    isLongPress = false;
+    selectedDateEl.classList.add('holding-date');
+
+    longPressTimer = setTimeout(() => {
+      isLongPress = true;
+      selectedDateEl.classList.remove('holding-date');
+
+      triggerHaptic('holdSuccess');
+
+      currentIbadahDate = getTodayDateString();
+      renderIbadahPage();
+      showToast('Switched Worship tracker to Today', 'info');
+    }, LONG_PRESS_DURATION);
+  };
+
+  const cancelPress = () => {
+    selectedDateEl.classList.remove('holding-date');
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  };
+
+  const endPress = (e) => {
+    cancelPress();
+    // Prevent triggering native date picker on tap!
+    if (e) e.preventDefault();
+  };
+
+  // Touch Events (Mobile)
+  selectedDateEl.addEventListener('touchstart', startPress, { passive: true });
+  selectedDateEl.addEventListener('touchend', endPress);
+  selectedDateEl.addEventListener('touchcancel', cancelPress);
+
+  // Mouse Events (Desktop)
+  selectedDateEl.addEventListener('mousedown', startPress);
+  selectedDateEl.addEventListener('mouseup', endPress);
+  selectedDateEl.addEventListener('mouseleave', cancelPress);
+}
+
+function getIbadahDateRecord(dateStr) {
+  if (!ibadahData[dateStr]) {
+    ibadahData[dateStr] = {
+      prayers: {
+        tahajud: 'Not Prayed',
+        fajr: 'Not Prayed',
+        dhuha: 'Not Prayed',
+        dhuhr: 'Not Prayed',
+        asr: 'Not Prayed',
+        maghrib: 'Not Prayed',
+        isya: 'Not Prayed',
+        taubat: 'Not Prayed',
+        hajat: 'Not Prayed'
+      },
+      quranDuration: 0
+    };
+    saveIbadahDataToStorage();
+  }
+  return ibadahData[dateStr];
+}
+
+function isPrayerTimeWindowArrived(prayerStartStr, dateStr) {
+  const todayStr = getTodayDateString();
+
+  // Past dates are ALWAYS unlocked!
+  if (dateStr < todayStr) return true;
+
+  // Future dates are forbidden
+  if (dateStr > todayStr) return false;
+
+  // For Today: Compare current HH:MM with prayer start time
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const currentTimeStr = `${hh}:${mm}`;
+
+  return currentTimeStr >= prayerStartStr;
+}
+
+function initIbadahEngine() {
+  initIbadahDateLongPressGesture();
+
+  const prevBtn = document.getElementById('ibadah-prev-day-btn');
+  const nextBtn = document.getElementById('ibadah-next-day-btn');
+  const datePicker = document.getElementById('ibadah-date-picker-input');
+  const backdrop = document.getElementById('focus-backdrop');
+
+  if (backdrop) {
+    backdrop.addEventListener('click', () => {
+      clearPrayerFocusEffect();
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      clearPrayerFocusEffect();
+      changeIbadahDate(-1);
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      clearPrayerFocusEffect();
+      const todayStr = getTodayDateString();
+      if (currentIbadahDate < todayStr) {
+        changeIbadahDate(1);
+      }
+    });
+  }
+
+  if (datePicker) {
+    datePicker.addEventListener('change', (e) => {
+      clearPrayerFocusEffect();
+      if (e.target.value) {
+        const todayStr = getTodayDateString();
+        if (e.target.value <= todayStr) {
+          currentIbadahDate = e.target.value;
+          renderIbadahPage();
+        } else {
+          showToast('Cannot select future dates for Worship tracker', 'warning');
+          e.target.value = currentIbadahDate;
+        }
+      }
+    });
+  }
+
+  // Good Habit Quran Stepper (+1 / -1 minute)
+  const quranPlusBtn = document.getElementById('quran-plus-btn');
+  const quranMinusBtn = document.getElementById('quran-minus-btn');
+  const quranInput = document.getElementById('quran-duration-input');
+
+  if (quranPlusBtn) {
+    quranPlusBtn.addEventListener('click', () => adjustQuranDuration(1));
+  }
+  if (quranMinusBtn) {
+    quranMinusBtn.addEventListener('click', () => adjustQuranDuration(-1));
+  }
+  if (quranInput) {
+    quranInput.addEventListener('change', (e) => {
+      const val = parseInt(e.target.value, 10) || 0;
+      setQuranDuration(val);
+    });
+  }
+}
+
+function changeIbadahDate(daysOffset) {
+  triggerHaptic('click');
+  const todayStr = getTodayDateString();
+  const [y, m, d] = currentIbadahDate.split('-').map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  dateObj.setDate(dateObj.getDate() + daysOffset);
+
+  const newY = dateObj.getFullYear();
+  const newM = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const newD = String(dateObj.getDate()).padStart(2, '0');
+  const newDateStr = `${newY}-${newM}-${newD}`;
+
+  // Rule: Cannot navigate to future dates beyond Today!
+  if (newDateStr > todayStr) {
+    return;
+  }
+
+  currentIbadahDate = newDateStr;
+  renderIbadahPage();
+}
+
+function setIbadahPrayerStatus(prayerKey, newStatus) {
+  triggerHaptic('click');
+  clearPrayerFocusEffect();
+  const rec = getIbadahDateRecord(currentIbadahDate);
+  rec.prayers[prayerKey] = newStatus;
+  saveIbadahDataToStorage();
+  renderIbadahPage();
+  showToast(`Prayer status updated to ${newStatus}`, 'info');
+}
+
+function adjustQuranDuration(offset) {
+  triggerHaptic('snap');
+  const rec = getIbadahDateRecord(currentIbadahDate);
+  let newDuration = Math.max(0, (rec.quranDuration || 0) + offset);
+  rec.quranDuration = newDuration;
+  saveIbadahDataToStorage();
+
+  const quranInput = document.getElementById('quran-duration-input');
+  if (quranInput) quranInput.value = newDuration;
+}
+
+function setQuranDuration(val) {
+  const rec = getIbadahDateRecord(currentIbadahDate);
+  rec.quranDuration = Math.max(0, val);
+  saveIbadahDataToStorage();
+}
+
+function renderIbadahPage() {
+  const dateLabel = document.getElementById('ibadah-date-label');
+  const datePicker = document.getElementById('ibadah-date-picker-input');
+  const nextBtn = document.getElementById('ibadah-next-day-btn');
+  const liveDateEl = document.getElementById('ibadah-live-date');
+  const liveClockEl = document.getElementById('ibadah-live-clock');
+
+  const todayStr = getTodayDateString();
+  const isToday = (currentIbadahDate === todayStr);
+
+  if (liveDateEl) liveDateEl.textContent = formatWireframeDateHeader(getTodayDateString());
+  if (liveClockEl) {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    liveClockEl.innerHTML = `${hh}:${mm}<span class="clock-seconds">:${ss}</span>`;
+  }
+
+  if (dateLabel) {
+    dateLabel.textContent = isToday ? 'TODAY' : formatWireframeDateHeader(currentIbadahDate);
+  }
+
+  if (datePicker) {
+    datePicker.value = currentIbadahDate;
+    datePicker.max = todayStr; // Block future date selection in calendar
+  }
+
+  // Restrict Next Arrow on Today
+  if (nextBtn) {
+    if (isToday) {
+      nextBtn.classList.add('disabled-arrow');
+    } else {
+      nextBtn.classList.remove('disabled-arrow');
+    }
+  }
+
+  // Render Prayers List
+  const container = document.getElementById('ibadah-prayers-container');
+  if (container) {
+    container.innerHTML = '';
+    const rec = getIbadahDateRecord(currentIbadahDate);
+
+    PRAYER_CONFIG.forEach(prayer => {
+      const currentStatus = rec.prayers[prayer.key] || 'Not Prayed';
+      const isWindowArrived = isPrayerTimeWindowArrived(prayer.defaultStart, currentIbadahDate);
+
+      let statusClass = 'status-not-prayed';
+      if (currentStatus === "Qada'") statusClass = 'status-qada';
+      else if (currentStatus === "Ada'") statusClass = 'status-ada';
+      else if (currentStatus === "Jama'ah") statusClass = 'status-jamaah';
+
+      const row = document.createElement('div');
+      row.className = 'ibadah-row prayer-row';
+
+      let selectHtml = '';
+      if (!isWindowArrived) {
+        // Locked State: Time window has not arrived yet!
+        selectHtml = `
+          <select class="ibadah-status-select is-locked" disabled title="Time window not arrived yet (${prayer.defaultStart})">
+            <option selected>🔒 Locked</option>
+          </select>
+        `;
+      } else {
+        selectHtml = `
+          <select class="ibadah-status-select ${statusClass}" onchange="setIbadahPrayerStatus('${prayer.key}', this.value)">
+            <option value="Not Prayed" ${currentStatus === 'Not Prayed' ? 'selected' : ''}>Not Prayed</option>
+            <option value="Qada'" ${currentStatus === "Qada'" ? 'selected' : ''}>Qada'</option>
+            <option value="Ada'" ${currentStatus === "Ada'" ? 'selected' : ''}>Ada'</option>
+            <option value="Jama'ah" ${currentStatus === "Jama'ah" ? 'selected' : ''}>Jama'ah</option>
+          </select>
+        `;
+      }
+
+      row.innerHTML = `
+        <div class="ibadah-col-prayer">
+          <div class="prayer-icon-circle"><i class="fa-solid ${prayer.icon}"></i></div>
+          <span class="prayer-name-text">${prayer.name}</span>
+        </div>
+        <div class="ibadah-col-status">
+          ${selectHtml}
+        </div>
+      `;
+
+      // Attach Focus & Blur listeners for Focusing Blur Backdrop
+      const selectEl = row.querySelector('.ibadah-status-select');
+      if (selectEl && !selectEl.disabled) {
+        selectEl.addEventListener('focus', () => showPrayerFocusEffect(row));
+        selectEl.addEventListener('click', () => showPrayerFocusEffect(row));
+        selectEl.addEventListener('blur', () => {
+          setTimeout(clearPrayerFocusEffect, 150);
+        });
+      }
+
+      container.appendChild(row);
+    });
+  }
+
+  // Render Good Habits (Read Quran)
+  const quranInput = document.getElementById('quran-duration-input');
+  if (quranInput) {
+    const rec = getIbadahDateRecord(currentIbadahDate);
+    quranInput.value = rec.quranDuration || 0;
+  }
+
+  // Update Floating Summary Button visibility
+  updateFloatingSummaryButtonState();
+}
+
+// ==========================================
+// FLOATING SUMMARY BUTTON & WORSHIP SUMMARY PAGE ENGINE
+// ==========================================
+function initFloatingSummaryButton() {
+  const floatBtn = document.getElementById('ibadah-floating-summary-btn');
+  const backBtn = document.getElementById('back-to-ibadah-btn');
+
+  if (floatBtn) {
+    floatBtn.addEventListener('click', () => {
+      triggerHaptic('click');
+      openWorshipSummaryPage();
+    });
+  }
+
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      triggerHaptic('click');
+      closeWorshipSummaryPage();
+    });
+  }
+
+  const handleScroll = () => {
+    updateFloatingSummaryButtonState();
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  document.addEventListener('scroll', handleScroll, { passive: true });
+}
+
+function updateFloatingSummaryButtonState() {
+  const floatBtn = document.getElementById('ibadah-floating-summary-btn');
+  if (!floatBtn) return;
+
+  const activeTab = document.querySelector('.pill-nav-item.active');
+  const isIbadahViewVisible = document.getElementById('view-ibadah') && !document.getElementById('view-ibadah').classList.contains('hidden');
+
+  if (isIbadahViewVisible && window.scrollY <= 25) {
+    floatBtn.classList.remove('hidden-float');
+  } else {
+    floatBtn.classList.add('hidden-float');
+  }
+}
+
+function openWorshipSummaryPage() {
+  const floatBtn = document.getElementById('ibadah-floating-summary-btn');
+  if (floatBtn) floatBtn.classList.add('hidden-float');
+
+  document.querySelectorAll('.tab-page-view').forEach(v => {
+    v.classList.add('hidden');
+    v.classList.remove('active');
+  });
+
+  const summaryView = document.getElementById('view-ibadah-summary');
+  if (summaryView) {
+    summaryView.classList.remove('hidden');
+    summaryView.classList.add('active');
+  }
+
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  renderWorshipSummaryPage();
+}
+
+function closeWorshipSummaryPage() {
+  document.querySelectorAll('.tab-page-view').forEach(v => {
+    v.classList.add('hidden');
+    v.classList.remove('active');
+  });
+
+  const ibadahView = document.getElementById('view-ibadah');
+  if (ibadahView) {
+    ibadahView.classList.remove('hidden');
+    ibadahView.classList.add('active');
+  }
+
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  renderIbadahPage();
+}
+
+// Generate last 7 date strings (YYYY-MM-DD)
+function getLast7DaysDates() {
+  const dates = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    dates.push({
+      dateStr: `${y}-${m}-${day}`,
+      dayNum: d.getDate(),
+      isToday: (i === 0)
+    });
+  }
+  return dates;
+}
+
+let isPeriodSelectorInitialized = false;
+
+function initReportPeriodSelector() {
+  if (isPeriodSelectorInitialized) return;
+  isPeriodSelectorInitialized = true;
+
+  const weeklyBtn = document.getElementById('period-btn-weekly');
+  const monthlyBtn = document.getElementById('period-btn-monthly');
+  const yearlyBtn = document.getElementById('period-btn-yearly');
+  const buttons = [weeklyBtn, monthlyBtn, yearlyBtn];
+
+  buttons.forEach(btn => {
+    if (btn) {
+      btn.addEventListener('click', () => {
+        triggerHaptic('click');
+        const period = btn.dataset.period;
+        if (!period) return;
+
+        currentReportPeriod = period;
+        buttons.forEach(b => {
+          if (b) b.classList.remove('active');
+        });
+        btn.classList.add('active');
+
+        renderWorshipSummaryPage();
+      });
+    }
+  });
+}
+
+function renderWorshipSummaryPage() {
+  const dates = getLast7DaysDates();
+
+  // 1. Render 7-Day Heatmap Matrix Grid (All 9 Prayers)
+  render7DayHeatmapMatrix(dates);
+
+  // 2. Render Weekly, Monthly, and Yearly Performance Reports
+  renderPerformanceReports();
+}
+
+function render7DayHeatmapMatrix(dates) {
+  const container = document.getElementById('ibadah-heatmap-grid');
+  if (!container) return;
+
+  let tableHtml = `<table class="heatmap-grid-table"><thead><tr>`;
+
+  // Th headers for the 7 dates
+  dates.forEach(dObj => {
+    const label = dObj.isToday ? 'Today' : String(dObj.dayNum);
+    const todayClass = dObj.isToday ? 'th-today' : '';
+    tableHtml += `<th class="${todayClass}">${label}</th>`;
+  });
+  tableHtml += `<th class="th-prayer-name">Prayers</th></tr></thead><tbody>`;
+
+  // Rows for ALL 9 Prayers (Tahajud, Fajr, Dhuha, Dhuhr, Asr, Maghrib, Isya, Taubat, Hajat)
+  PRAYER_CONFIG.forEach(prayer => {
+    tableHtml += `<tr>`;
+    dates.forEach(dObj => {
+      // Read ONLY actual saved user data from ibadahData
+      const rec = ibadahData[dObj.dateStr];
+      const status = (rec && rec.prayers && rec.prayers[prayer.key]) ? rec.prayers[prayer.key] : 'Not Prayed';
+
+      let tileClass = 'tile-not-prayed';
+      if (status === "Qada'") tileClass = 'tile-qada';
+      else if (status === "Ada'") tileClass = 'tile-ada';
+      else if (status === "Jama'ah") tileClass = 'tile-jamaah';
+
+      tableHtml += `
+        <td class="heatmap-cell">
+          <div class="heatmap-tile ${tileClass}" title="${prayer.name} (${dObj.dateStr}): ${status}"></div>
+        </td>
+      `;
+    });
+
+    tableHtml += `<th class="th-prayer-name">${prayer.name}</th></tr>`;
+  });
+
+  tableHtml += `</tbody></table>`;
+  container.innerHTML = tableHtml;
+}
+
+let currentReportPeriod = 'weekly'; // 'weekly' (7d), 'monthly' (30d), 'yearly' (365d)
+
+const FARD_PRAYERS_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isya'];
+const SUNNAH_PRAYERS_KEYS = ['tahajud', 'dhuha', 'taubat', 'hajat'];
+
+function getPeriodDates(daysCount) {
+  const dates = [];
+  const today = new Date();
+  for (let i = daysCount - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    dates.push({
+      dateStr: `${y}-${m}-${day}`,
+      dayNum: d.getDate(),
+      isToday: (i === 0)
+    });
+  }
+  return dates;
+}
+
+function renderPerformanceReports() {
+  initReportPeriodSelector();
+
+  let daysCount = 7;
+  if (currentReportPeriod === 'monthly') daysCount = 30;
+  else if (currentReportPeriod === 'yearly') daysCount = 365;
+
+  const dates = getPeriodDates(daysCount);
+
+  // ==========================================
+  // 1. MANDATORY (FARD) PRAYERS METRICS
+  // ==========================================
+  const totalFardScheduled = daysCount * FARD_PRAYERS_KEYS.length;
+  let fardJamaah = 0;
+  let fardAda = 0;
+  let fardQada = 0;
+  let fardNotPrayed = 0;
+
+  // ==========================================
+  // 2. SUNNAH PRAYERS METRICS
+  // ==========================================
+  const totalSunnahScheduled = daysCount * SUNNAH_PRAYERS_KEYS.length;
+  const sunnahCounts = {
+    tahajud: 0,
+    dhuha: 0,
+    taubat: 0,
+    hajat: 0
+  };
+
+  let totalQuranMins = 0;
+
+  dates.forEach(dObj => {
+    const rec = ibadahData[dObj.dateStr];
+    if (rec) {
+      totalQuranMins += (rec.quranDuration || 0);
+
+      // Calculate Fard Prayers
+      FARD_PRAYERS_KEYS.forEach(key => {
+        const status = (rec.prayers && rec.prayers[key]) ? rec.prayers[key] : 'Not Prayed';
+        if (status === "Jama'ah") fardJamaah++;
+        else if (status === "Ada'") fardAda++;
+        else if (status === "Qada'") fardQada++;
+        else fardNotPrayed++;
+      });
+
+      // Calculate Sunnah Prayers
+      SUNNAH_PRAYERS_KEYS.forEach(key => {
+        const status = (rec.prayers && rec.prayers[key]) ? rec.prayers[key] : 'Not Prayed';
+        if (status !== 'Not Prayed') {
+          sunnahCounts[key]++;
+        }
+      });
+    } else {
+      fardNotPrayed += FARD_PRAYERS_KEYS.length;
+    }
+  });
+
+  const totalFardFulfilled = fardJamaah + fardAda + fardQada;
+  const fardOverallPct = Math.round((totalFardFulfilled / totalFardScheduled) * 100);
+
+  const fardJamaahPct = Math.round((fardJamaah / totalFardScheduled) * 100);
+  const fardAdaPct = Math.round((fardAda / totalFardScheduled) * 100);
+  const fardQadaPct = Math.round((fardQada / totalFardScheduled) * 100);
+  const fardNotPrayedPct = Math.round((fardNotPrayed / totalFardScheduled) * 100);
+
+  // Render Fard DOM Card
+  const fBadge = document.getElementById('fard-overall-badge');
+  const fFill = document.getElementById('fard-progress-fill');
+  const fGrid = document.getElementById('fard-stats-grid');
+
+  if (fBadge) fBadge.textContent = `${totalFardFulfilled}/${totalFardScheduled} (${fardOverallPct}%)`;
+  if (fFill) fFill.style.width = `${fardOverallPct}%`;
+  if (fGrid) {
+    fGrid.innerHTML = `
+      <div class="stat-metric-box">
+        <span class="stat-metric-val">${fardJamaah}</span>
+        <span class="stat-metric-sub">${fardJamaahPct}%</span>
+        <span class="stat-metric-lbl">Jama'ah</span>
+      </div>
+      <div class="stat-metric-box">
+        <span class="stat-metric-val">${fardAda}</span>
+        <span class="stat-metric-sub">${fardAdaPct}%</span>
+        <span class="stat-metric-lbl">Ada' (On Time)</span>
+      </div>
+      <div class="stat-metric-box">
+        <span class="stat-metric-val">${fardQada}</span>
+        <span class="stat-metric-sub">${fardQadaPct}%</span>
+        <span class="stat-metric-lbl">Qada' (Late)</span>
+      </div>
+      <div class="stat-metric-box">
+        <span class="stat-metric-val">${fardNotPrayed}</span>
+        <span class="stat-metric-sub">${fardNotPrayedPct}%</span>
+        <span class="stat-metric-lbl">Not Prayed</span>
+      </div>
+    `;
+  }
+
+  // Render Sunnah DOM Card
+  let totalSunnahFulfilled = 0;
+  Object.values(sunnahCounts).forEach(cnt => totalSunnahFulfilled += cnt);
+  const sunnahOverallPct = Math.round((totalSunnahFulfilled / totalSunnahScheduled) * 100);
+
+  const sBadge = document.getElementById('sunnah-overall-badge');
+  const sFill = document.getElementById('sunnah-progress-fill');
+  const sGrid = document.getElementById('sunnah-stats-grid');
+
+  if (sBadge) sBadge.textContent = `${totalSunnahFulfilled}/${totalSunnahScheduled} (${sunnahOverallPct}%)`;
+  if (sFill) sFill.style.width = `${sunnahOverallPct}%`;
+  if (sGrid) {
+    sGrid.innerHTML = `
+      <div class="stat-metric-box">
+        <span class="stat-metric-val">${sunnahCounts.tahajud}</span>
+        <span class="stat-metric-sub">${Math.round((sunnahCounts.tahajud / daysCount) * 100)}%</span>
+        <span class="stat-metric-lbl">Tahajud</span>
+      </div>
+      <div class="stat-metric-box">
+        <span class="stat-metric-val">${sunnahCounts.dhuha}</span>
+        <span class="stat-metric-sub">${Math.round((sunnahCounts.dhuha / daysCount) * 100)}%</span>
+        <span class="stat-metric-lbl">Dhuha</span>
+      </div>
+      <div class="stat-metric-box">
+        <span class="stat-metric-val">${sunnahCounts.taubat}</span>
+        <span class="stat-metric-sub">${Math.round((sunnahCounts.taubat / daysCount) * 100)}%</span>
+        <span class="stat-metric-lbl">Taubat</span>
+      </div>
+      <div class="stat-metric-box">
+        <span class="stat-metric-val">${sunnahCounts.hajat}</span>
+        <span class="stat-metric-sub">${Math.round((sunnahCounts.hajat / daysCount) * 100)}%</span>
+        <span class="stat-metric-lbl">Hajat</span>
+      </div>
+    `;
+  }
+
+  // Render Quran Duration DOM Card
+  const qBadge = document.getElementById('quran-time-badge');
+  const qSummary = document.getElementById('quran-stats-summary');
+  const avgQuranDaily = Math.round(totalQuranMins / daysCount);
+
+  if (qBadge) qBadge.textContent = `${totalQuranMins} Minutes Total`;
+  if (qSummary) {
+    qSummary.innerHTML = `
+      <div class="quran-stat-item">
+        <span class="quran-stat-val">${totalQuranMins} Mins</span>
+        <span class="quran-stat-lbl">Total Time Spent</span>
+      </div>
+      <div class="quran-stat-item">
+        <span class="quran-stat-val">${avgQuranDaily} Mins/Day</span>
+        <span class="quran-stat-lbl">Daily Average</span>
+      </div>
+      <div class="quran-stat-item">
+        <span class="quran-stat-val">${daysCount} Days</span>
+        <span class="quran-stat-lbl">Tracked Period</span>
+      </div>
+    `;
+  }
+}
+
+// Attach Floating Summary Scroll Listeners on DOM load
+document.addEventListener('DOMContentLoaded', () => {
+  initFloatingSummaryButton();
+});
+
+// ==========================================
+// FLOATING CLOUD SYNC FAB MENU & SPEED DIAL ENGINE
+// ==========================================
+function initFabCloudMenu() {
+  const fabBtn = document.getElementById('fab-cloud-btn');
+  const fabMenu = document.getElementById('fab-cloud-menu');
+  const fabWrapper = document.getElementById('fab-cloud-wrapper');
+  const pushBtn = document.getElementById('fab-push-btn');
+  const pullBtn = document.getElementById('fab-pull-btn');
+  const settingsBtn = document.getElementById('fab-settings-btn');
+  const backdrop = document.getElementById('focus-backdrop');
+
+  if (!fabBtn || !fabMenu || !fabWrapper) return;
+
+  const toggleMenu = () => {
+    triggerHaptic('click');
+    const isOpen = !fabMenu.classList.contains('hidden');
+
+    if (isOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  };
+
+  const openMenu = () => {
+    fabMenu.classList.remove('hidden');
+    fabWrapper.classList.add('is-open');
+    if (backdrop) backdrop.classList.add('visible');
+  };
+
+  const closeMenu = () => {
+    fabMenu.classList.add('hidden');
+    fabWrapper.classList.remove('is-open');
+    if (backdrop) backdrop.classList.remove('visible');
+  };
+
+  fabBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      triggerHaptic('click');
+      closeMenu();
+      openSettingsModal();
+    });
+  }
+
+  if (pushBtn) {
+    pushBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      triggerHaptic('click');
+      closeMenu();
+      pushDataToGoogleSheets();
+    });
+  }
+
+  if (pullBtn) {
+    pullBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      triggerHaptic('click');
+      closeMenu();
+      pullDataFromGoogleSheets();
+    });
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener('click', () => {
+      if (!fabMenu.classList.contains('hidden')) {
+        closeMenu();
+      }
+    });
+  }
 }
