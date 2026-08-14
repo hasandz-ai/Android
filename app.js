@@ -316,7 +316,7 @@ function updateActiveTaskBanner() {
   // 3. Idle / Free time (No Active & No Upcoming Task)
   bannerCard.className = 'flat-section active-banner-section';
   if (headerTitleEl) headerTitleEl.textContent = 'Upcoming activities :';
-  titleEl.textContent = 'No Active Activity Right Now';
+  titleEl.textContent = 'No More Activity';
   if (statusText) statusText.textContent = 'Free Time';
   if (durationContainer) {
     durationContainer.innerHTML = `<span id="banner-countdown-text">All tasks for today are completed or not scheduled yet.</span>`;
@@ -1158,7 +1158,7 @@ function initStickyBannerScroll() {
 
   const handleScroll = () => {
     const rect = banner.getBoundingClientRect();
-    if (window.scrollY > 40 || rect.top <= 32) {
+    if (window.scrollY > 20 || rect.top <= 16) {
       banner.classList.add('is-floating');
     } else {
       banner.classList.remove('is-floating');
