@@ -4,8 +4,8 @@
   "description": "Personal Habit Tracker & Daily Task Scheduler PWA with Google Sheets Backend",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#6366f1",
+  "background_color": "#0a111a",
+  "theme_color": "#0a111a",
   "orientation": "portrait-primary",
   "icons": [
     {

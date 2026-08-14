@@ -3,12 +3,12 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Personal Habit Tracker & Task Scheduler</title>
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0a111a">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -58,8 +58,10 @@
         </div>
         <div class="banner-footer-row">
           <div class="banner-duration" id="banner-duration">
-            <i class="fa-regular fa-clock"></i> Duration left: <span id="banner-countdown-text">Calculating...</span>
+            <span class="banner-duration-label"><i class="fa-regular fa-clock"></i> Duration left:</span><span id="banner-countdown-text">Calculating...</span>
           </div>
+        </div>
+        <div class="banner-action-bottom">
           <button class="btn btn-success btn-sm" id="banner-quick-done">
             <i class="fa-solid fa-check"></i> Complete
           </button>

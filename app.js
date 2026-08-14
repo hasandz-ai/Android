@@ -65,7 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initClockAndBanner();
   initPwaInstall();
   initEventListeners();
+  initStickyBannerScroll();
   renderApp();
+  autoScrollToActiveTask();
 });
 
 // Format Date YYYY-MM-DD
@@ -240,7 +242,7 @@ function updateActiveTaskBanner() {
   const titleEl = document.getElementById('banner-title');
   const statusBadge = document.getElementById('banner-status-badge');
   const statusText = document.getElementById('banner-status-text');
-  const durationText = document.getElementById('banner-countdown-text');
+  const durationContainer = document.getElementById('banner-duration');
   const quickDoneBtn = document.getElementById('banner-quick-done');
   const headerTitleEl = bannerCard ? bannerCard.querySelector('.banner-header-title') : null;
 
@@ -270,11 +272,15 @@ function updateActiveTaskBanner() {
     const endMinutes = endH * 60 + endM;
     const remainingMin = endMinutes - currentMinutes;
 
-    durationText.textContent = remainingMin > 0 ? `${remainingMin} minutes left (${activeTask.startTime} - ${activeTask.endTime})` : `Time Ended (${activeTask.startTime} - ${activeTask.endTime})`;
+    const remainingText = remainingMin > 0 ? `${remainingMin} minutes left (${activeTask.startTime} - ${activeTask.endTime})` : `Time Ended (${activeTask.startTime} - ${activeTask.endTime})`;
+    if (durationContainer) {
+      durationContainer.innerHTML = `<span class="banner-duration-label"><i class="fa-regular fa-clock"></i> Duration left:</span><span id="banner-countdown-text">${remainingText}</span>`;
+    }
 
     if (quickDoneBtn) {
       quickDoneBtn.style.display = 'inline-flex';
       quickDoneBtn.onclick = () => {
+        triggerHaptic('heavyClick');
         activeTask.status = 'Done';
         saveTasksToStorage();
         renderApp();
@@ -299,17 +305,22 @@ function updateActiveTaskBanner() {
     const startMinutes = startH * 60 + startM;
     const diffMin = startMinutes - currentMinutes;
 
-    durationText.textContent = `Starts in ${diffMin} minutes (${upcomingTask.startTime} - ${upcomingTask.endTime})`;
+    const upcomingText = `Starts in ${diffMin} minutes (${upcomingTask.startTime} - ${upcomingTask.endTime})`;
+    if (durationContainer) {
+      durationContainer.innerHTML = `<span class="banner-duration-label"><i class="fa-regular fa-clock"></i> Duration left:</span><span id="banner-countdown-text">${upcomingText}</span>`;
+    }
     if (quickDoneBtn) quickDoneBtn.style.display = 'none';
     return;
   }
 
-  // 3. Idle / Free time
+  // 3. Idle / Free time (No Active & No Upcoming Task)
   bannerCard.className = 'flat-section active-banner-section';
   if (headerTitleEl) headerTitleEl.textContent = 'Upcoming activities :';
   titleEl.textContent = 'No Active Activity Right Now';
   if (statusText) statusText.textContent = 'Free Time';
-  durationText.textContent = 'All tasks for today are completed or not scheduled yet.';
+  if (durationContainer) {
+    durationContainer.innerHTML = `<span id="banner-countdown-text">All tasks for today are completed or not scheduled yet.</span>`;
+  }
   if (quickDoneBtn) quickDoneBtn.style.display = 'none';
 }
 
@@ -406,7 +417,7 @@ function renderTasksList() {
       </div>
 
       <div class="col-status">
-        <select class="form-select-sm task-status-select" onchange="changeTaskStatus('${task.id}', this.value)">
+        <select class="form-select-sm task-status-select status-val-${task.status.toLowerCase()}" onchange="changeTaskStatus('${task.id}', this.value)">
           <option value="Pending" ${task.status === 'Pending' ? 'selected' : ''}>Pending</option>
           <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
           <option value="Overdue" ${task.status === 'Overdue' ? 'selected' : ''}>Overdue</option>
@@ -426,11 +437,13 @@ function initSwipeGestures(rowEl, taskId) {
   let startY = 0;
   let currentX = 0;
   let isSwiping = false;
+  let thresholdTriggered = false;
 
   rowEl.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     isSwiping = false;
+    thresholdTriggered = false;
     rowEl.style.transition = 'none';
   }, { passive: true });
 
@@ -455,16 +468,28 @@ function initSwipeGestures(rowEl, taskId) {
       } else {
         rowEl.classList.remove('swiping-right', 'swiping-left');
       }
+
+      // Vibration Stage 1: Trigger vibration when swipe threshold (65px) is crossed
+      if (Math.abs(clampedX) >= 65 && !thresholdTriggered) {
+        thresholdTriggered = true;
+        triggerHaptic('snap');
+      } else if (Math.abs(clampedX) < 65 && thresholdTriggered) {
+        thresholdTriggered = false;
+      }
     }
   }, { passive: true });
 
   rowEl.addEventListener('touchend', () => {
     rowEl.style.transition = 'transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.22s ease';
     if (currentX > 65) {
+      // Vibration Stage 2: Trigger vibration when action releases to open edit modal
+      triggerHaptic('click');
       rowEl.style.transform = 'translateX(0)';
       rowEl.classList.remove('swiping-right', 'swiping-left');
       openEditTaskModal(taskId);
     } else if (currentX < -65) {
+      // Vibration Stage 2: Trigger vibration when action releases to open delete confirmation
+      triggerHaptic('heavyClick');
       rowEl.style.transform = 'translateX(-100%)';
       setTimeout(() => {
         deleteTask(taskId);
@@ -476,6 +501,7 @@ function initSwipeGestures(rowEl, taskId) {
     startX = 0;
     currentX = 0;
     isSwiping = false;
+    thresholdTriggered = false;
   });
 }
 
@@ -715,6 +741,23 @@ function setTimePickerValue(startStr, endStr) {
   }, 50);
 }
 
+function updateCategorySelectColor() {
+  const categorySelect = document.getElementById('task-category');
+  if (!categorySelect) return;
+
+  const val = categorySelect.value;
+  let bg = '#c2410c';
+  if (val === 'Worship') bg = '#0284c7';
+  else if (val === 'Exercise') bg = '#b45309';
+  else if (val === 'Must Do') bg = '#c2410c';
+  else if (val === 'Play') bg = '#7e22ce';
+  else if (val === 'Essentials') bg = '#be185d';
+
+  categorySelect.style.backgroundColor = bg;
+  categorySelect.style.color = '#ffffff';
+  categorySelect.style.fontWeight = '800';
+}
+
 function openAddTaskModal() {
   triggerHaptic('click');
   resetAllRowPositions();
@@ -724,6 +767,8 @@ function openAddTaskModal() {
   document.getElementById('task-form').reset();
   document.getElementById('task-id').value = '';
   document.getElementById('task-status').value = 'Pending';
+  document.getElementById('task-category').value = 'Must Do';
+  updateCategorySelectColor();
   setTimePickerValue('08:00', '08:01');
   document.getElementById('task-modal').classList.remove('hidden');
 }
@@ -740,6 +785,7 @@ function openEditTaskModal(taskId) {
   document.getElementById('task-id').value = task.id;
   document.getElementById('task-name').value = task.name;
   document.getElementById('task-category').value = task.category;
+  updateCategorySelectColor();
   document.getElementById('task-status').value = task.status || 'Pending';
   setTimePickerValue(task.startTime, task.endTime);
   document.getElementById('task-notes').value = task.notes || '';
@@ -1032,6 +1078,11 @@ function initEventListeners() {
   const fStat = document.getElementById('filter-status');
   if (fStat) fStat.addEventListener('change', renderTasksList);
 
+  const taskCategorySelect = document.getElementById('task-category');
+  if (taskCategorySelect) {
+    taskCategorySelect.addEventListener('change', updateCategorySelectColor);
+  }
+
   document.getElementById('add-task-btn').addEventListener('click', openAddTaskModal);
 
   document.getElementById('close-task-modal').addEventListener('click', () => {
@@ -1091,6 +1142,56 @@ function initEventListeners() {
 
   const pullDataBtn = document.getElementById('pull-data-btn');
   if (pullDataBtn) pullDataBtn.addEventListener('click', pullDataFromGoogleSheets);
+
+  const navDailyTasks = document.querySelector('[data-tab="daily-tasks"]');
+  if (navDailyTasks) {
+    navDailyTasks.addEventListener('click', (e) => {
+      triggerHaptic('click');
+      autoScrollToActiveTask();
+    });
+  }
+}
+
+function initStickyBannerScroll() {
+  const banner = document.getElementById('active-task-banner');
+  if (!banner) return;
+
+  const handleScroll = () => {
+    const rect = banner.getBoundingClientRect();
+    if (window.scrollY > 40 || rect.top <= 32) {
+      banner.classList.add('is-floating');
+    } else {
+      banner.classList.remove('is-floating');
+    }
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  document.addEventListener('scroll', handleScroll, { passive: true });
+  handleScroll();
+}
+
+function autoScrollToActiveTask() {
+  if (currentSelectedDate !== getTodayDateString()) return;
+
+  // Start from top of task view
+  window.scrollTo({ top: 0, behavior: 'auto' });
+
+  setTimeout(() => {
+    const activeRow = document.querySelector('.task-table-row.active-now');
+    if (!activeRow) return;
+
+    const rowRect = activeRow.getBoundingClientRect();
+    const rowAbsoluteTop = window.scrollY + rowRect.top;
+    const viewportHeight = window.innerHeight;
+
+    // Position active task row comfortably above bottom pill navbar (~45% down screen)
+    const targetScrollY = Math.max(0, rowAbsoluteTop - (viewportHeight * 0.45));
+
+    window.scrollTo({
+      top: targetScrollY,
+      behavior: 'smooth'
+    });
+  }, 350);
 }
 
 function changeDate(daysOffset) {
