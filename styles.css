@@ -2101,3 +2101,90 @@ textarea.form-control {
 .hidden {
   display: none !important;
 }
+
+/* ==========================================
+ * READONLY LOCKED URL INPUT & LOCK BADGE
+ * ========================================== */
+.url-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.readonly-url-input {
+  background: rgba(15, 23, 42, 0.6) !important;
+  color: var(--text-primary) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  padding-right: 38px !important;
+  cursor: not-allowed !important;
+  opacity: 0.9;
+  user-select: all;
+}
+
+.btn-copy-url {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--c-amber);
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.18s ease;
+}
+
+.btn-copy-url:hover {
+  background: var(--c-amber);
+  color: #000000;
+  border-color: var(--c-amber);
+}
+
+/* ==========================================
+ * CONFIRMATION CHECKBOX MODAL STYLING
+ * ========================================== */
+.confirm-checkbox-group {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.checkbox-container input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--c-amber);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.checkbox-text-label {
+  line-height: 1.3;
+}
+
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  filter: grayscale(0.5);
+}

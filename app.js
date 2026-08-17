@@ -6,12 +6,13 @@
 const STATE_KEY_TASKS = 'pts_tasks_v1';
 const STATE_KEY_GAS_URL = 'pts_gas_url_v1';
 const STATE_KEY_IBADAH = 'pts_ibadah_v1';
+const LOCKED_GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz-STcvV8kMGP04ZLuNcX3W3QuSU5q2XJnA9ScSquq8vgBBtcMjlhUw3IFM8LWl5sw/exec';
 
 let tasks = [];
 let ibadahData = {};
 let currentSelectedDate = getTodayDateString();
 let currentIbadahDate = getTodayDateString();
-let gasWebAppUrl = '';
+let gasWebAppUrl = LOCKED_GAS_WEB_APP_URL;
 let deferredInstallPrompt = null;
 
 // ==========================================
@@ -127,9 +128,13 @@ function initStorage() {
     }
   }
 
-  gasWebAppUrl = localStorage.getItem(STATE_KEY_GAS_URL) || '';
+  gasWebAppUrl = LOCKED_GAS_WEB_APP_URL;
+  localStorage.setItem(STATE_KEY_GAS_URL, LOCKED_GAS_WEB_APP_URL);
   const gasInput = document.getElementById('gas-url-input');
-  if (gasInput) gasInput.value = gasWebAppUrl;
+  if (gasInput) {
+    gasInput.value = LOCKED_GAS_WEB_APP_URL;
+    gasInput.readOnly = true;
+  }
 }
 
 function saveTasksToStorage() {
@@ -478,15 +483,46 @@ function resetAllRowPositions() {
 
 let onConfirmActionCallback = null;
 
-function showConfirmModal({ title, message, confirmText = 'Delete', iconClass = 'fa-triangle-exclamation', onConfirm }) {
+function showConfirmModal({
+  title,
+  message,
+  confirmText = 'Delete',
+  confirmBtnClass = 'btn-danger',
+  iconClass = 'fa-triangle-exclamation',
+  requireCheckbox = false,
+  checkboxText = 'I confirm this action',
+  onConfirm
+}) {
   const modal = document.getElementById('confirm-modal');
   const titleEl = document.getElementById('confirm-modal-title');
   const messageEl = document.getElementById('confirm-modal-message');
   const actionBtn = document.getElementById('action-confirm-btn');
+  const checkboxGroup = document.getElementById('confirm-checkbox-group');
+  const checkboxInput = document.getElementById('confirm-modal-checkbox');
+  const checkboxLabel = document.getElementById('confirm-checkbox-label');
 
   if (titleEl) titleEl.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${title}`;
   if (messageEl) messageEl.textContent = message;
-  if (actionBtn) actionBtn.innerHTML = `<i class="fa-solid fa-trash"></i> ${confirmText}`;
+
+  if (actionBtn) {
+    actionBtn.className = `btn ${confirmBtnClass}`;
+    actionBtn.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${confirmText}`;
+  }
+
+  if (requireCheckbox && checkboxGroup && checkboxInput) {
+    checkboxGroup.classList.remove('hidden');
+    checkboxInput.checked = false;
+    if (checkboxLabel) checkboxLabel.textContent = checkboxText;
+    if (actionBtn) actionBtn.disabled = true;
+
+    checkboxInput.onchange = () => {
+      triggerHaptic('click');
+      if (actionBtn) actionBtn.disabled = !checkboxInput.checked;
+    };
+  } else {
+    if (checkboxGroup) checkboxGroup.classList.add('hidden');
+    if (actionBtn) actionBtn.disabled = false;
+  }
 
   onConfirmActionCallback = onConfirm;
   if (modal) modal.classList.remove('hidden');
@@ -495,6 +531,10 @@ function showConfirmModal({ title, message, confirmText = 'Delete', iconClass = 
 function closeConfirmModal() {
   const modal = document.getElementById('confirm-modal');
   if (modal) modal.classList.add('hidden');
+  const checkboxInput = document.getElementById('confirm-modal-checkbox');
+  if (checkboxInput) checkboxInput.checked = false;
+  const actionBtn = document.getElementById('action-confirm-btn');
+  if (actionBtn) actionBtn.disabled = false;
   onConfirmActionCallback = null;
   resetAllRowPositions();
 }
@@ -823,13 +863,12 @@ function handleSaveTask(e) {
 
 // Helper: Sync Web App URL from input box to memory & localStorage
 function syncGasUrlFromInput() {
+  gasWebAppUrl = LOCKED_GAS_WEB_APP_URL;
+  localStorage.setItem(STATE_KEY_GAS_URL, LOCKED_GAS_WEB_APP_URL);
   const input = document.getElementById('gas-url-input');
   if (input) {
-    const urlVal = input.value.trim();
-    if (urlVal) {
-      gasWebAppUrl = urlVal;
-      localStorage.setItem(STATE_KEY_GAS_URL, gasWebAppUrl);
-    }
+    input.value = LOCKED_GAS_WEB_APP_URL;
+    input.readOnly = true;
   }
   return gasWebAppUrl;
 }
@@ -948,7 +987,8 @@ async function pullDataFromGoogleSheets() {
 function openSettingsModal() {
   const input = document.getElementById('gas-url-input');
   if (input) {
-    input.value = gasWebAppUrl || localStorage.getItem(STATE_KEY_GAS_URL) || '';
+    input.value = LOCKED_GAS_WEB_APP_URL;
+    input.readOnly = true;
   }
   document.getElementById('settings-modal').classList.remove('hidden');
 }
@@ -1141,6 +1181,29 @@ function initEventListeners() {
   }
 
   // Settings Modal Listeners
+  const copyGasUrlBtn = document.getElementById('copy-gas-url-btn');
+  if (copyGasUrlBtn) {
+    copyGasUrlBtn.addEventListener('click', () => {
+      triggerHaptic('click');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(LOCKED_GAS_WEB_APP_URL)
+          .then(() => {
+            showToast('Web App URL copied to clipboard!', 'success');
+          })
+          .catch(() => {
+            showToast('Web App URL copied to clipboard!', 'success');
+          });
+      } else {
+        const input = document.getElementById('gas-url-input');
+        if (input) {
+          input.select();
+          document.execCommand('copy');
+          showToast('Web App URL copied to clipboard!', 'success');
+        }
+      }
+    });
+  }
+
   const gasUrlInput = document.getElementById('gas-url-input');
   if (gasUrlInput) {
     gasUrlInput.addEventListener('input', syncGasUrlFromInput);
@@ -1272,16 +1335,19 @@ function escapeHtml(str) {
 // IBADAH (WORSHIP TRACKER) ENGINE & TAB NAVIGATION
 // ==========================================
 
+const FARD_PRAYERS_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isya'];
+const SUNNAH_PRAYERS_KEYS = ['tahajud', 'dhuha', 'taubat', 'hajat'];
+
 const PRAYER_CONFIG = [
-  { key: 'tahajud', name: 'Tahajud', icon: 'fa-moon', defaultStart: '03:00' },
-  { key: 'fajr', name: 'Fajr', icon: 'fa-cloud-sun', defaultStart: '04:30' },
-  { key: 'dhuha', name: 'Dhuha', icon: 'fa-sun', defaultStart: '06:30' },
-  { key: 'dhuhr', name: 'Dhuhr', icon: 'fa-sun-plant-wilt', defaultStart: '12:00' },
-  { key: 'asr', name: 'Asr', icon: 'fa-cloud-sun', defaultStart: '15:15' },
-  { key: 'maghrib', name: 'Maghrib', icon: 'fa-cloud-moon', defaultStart: '18:00' },
-  { key: 'isya', name: 'Isya', icon: 'fa-star-and-crescent', defaultStart: '19:15' },
-  { key: 'taubat', name: 'Taubat', icon: 'fa-hands-praying', defaultStart: '20:30' },
-  { key: 'hajat', name: 'Hajat', icon: 'fa-hand-holding-heart', defaultStart: '21:30' }
+  { key: 'tahajud', name: 'Tahajud', icon: 'fa-moon', defaultStart: '03:00', category: 'sunnah' },
+  { key: 'fajr', name: 'Fajr', icon: 'fa-cloud-sun', defaultStart: '04:15', category: 'fard' },
+  { key: 'dhuha', name: 'Dhuha', icon: 'fa-sun', defaultStart: '06:30', category: 'sunnah' },
+  { key: 'dhuhr', name: 'Dhuhr', icon: 'fa-sun-plant-wilt', defaultStart: '12:00', category: 'fard' },
+  { key: 'asr', name: 'Asr', icon: 'fa-cloud-sun', defaultStart: '15:00', category: 'fard' },
+  { key: 'maghrib', name: 'Maghrib', icon: 'fa-cloud-moon', defaultStart: '17:30', category: 'fard' },
+  { key: 'isya', name: 'Isya', icon: 'fa-star-and-crescent', defaultStart: '19:00', category: 'fard' },
+  { key: 'taubat', name: 'Taubat', icon: 'fa-hands-praying', defaultStart: '20:00', category: 'sunnah' },
+  { key: 'hajat', name: 'Hajat', icon: 'fa-hand-holding-heart', defaultStart: '20:00', category: 'sunnah' }
 ];
 
 function showPrayerFocusEffect(rowEl) {
@@ -1601,7 +1667,16 @@ function renderIbadahPage() {
             <option selected>🔒 Locked</option>
           </select>
         `;
+      } else if (prayer.category === 'sunnah') {
+        // Sunnah prayers only have options: "Not Prayed" and "Ada'"
+        selectHtml = `
+          <select class="ibadah-status-select ${statusClass}" onchange="setIbadahPrayerStatus('${prayer.key}', this.value)">
+            <option value="Not Prayed" ${currentStatus === 'Not Prayed' ? 'selected' : ''}>Not Prayed</option>
+            <option value="Ada'" ${currentStatus === "Ada'" ? 'selected' : ''}>Ada'</option>
+          </select>
+        `;
       } else {
+        // Mandatory (Fard) prayers have options: "Not Prayed", "Qada'", "Ada'", "Jama'ah"
         selectHtml = `
           <select class="ibadah-status-select ${statusClass}" onchange="setIbadahPrayerStatus('${prayer.key}', this.value)">
             <option value="Not Prayed" ${currentStatus === 'Not Prayed' ? 'selected' : ''}>Not Prayed</option>
@@ -1826,9 +1901,6 @@ function render7DayHeatmapMatrix(dates) {
 }
 
 let currentReportPeriod = 'weekly'; // 'weekly' (7d), 'monthly' (30d), 'yearly' (365d)
-
-const FARD_PRAYERS_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isya'];
-const SUNNAH_PRAYERS_KEYS = ['tahajud', 'dhuha', 'taubat', 'hajat'];
 
 function getPeriodDates(daysCount) {
   const dates = [];
@@ -2066,7 +2138,18 @@ function initFabCloudMenu() {
       e.stopPropagation();
       triggerHaptic('click');
       closeMenu();
-      pushDataToGoogleSheets();
+      showConfirmModal({
+        title: 'Upload to Google Sheets',
+        message: 'Are you sure you want to upload all local tasks & worship records to Google Sheets?',
+        confirmText: 'Upload Now',
+        confirmBtnClass: 'btn-success',
+        iconClass: 'fa-cloud-arrow-up',
+        requireCheckbox: true,
+        checkboxText: 'I confirm uploading local data to Google Sheets',
+        onConfirm: () => {
+          pushDataToGoogleSheets();
+        }
+      });
     });
   }
 
@@ -2075,7 +2158,18 @@ function initFabCloudMenu() {
       e.stopPropagation();
       triggerHaptic('click');
       closeMenu();
-      pullDataFromGoogleSheets();
+      showConfirmModal({
+        title: 'Download from Google Sheets',
+        message: 'Are you sure you want to download and overwrite local data from Google Sheets?',
+        confirmText: 'Download Now',
+        confirmBtnClass: 'btn-info',
+        iconClass: 'fa-cloud-arrow-down',
+        requireCheckbox: true,
+        checkboxText: 'I confirm downloading and updating data from Google Sheets',
+        onConfirm: () => {
+          pullDataFromGoogleSheets();
+        }
+      });
     });
   }
 

@@ -422,21 +422,14 @@
         <div class="settings-section">
           <div class="form-group">
             <label for="gas-url-input"><i class="fa-solid fa-link"></i> Web App URL (GAS Deployment)</label>
-            <input type="url" id="gas-url-input" class="form-control"
-              placeholder="https://script.google.com/macros/s/.../exec">
-            <small class="form-help">Paste your deployed Google Apps Script <code>Code.gs</code> Web App URL to sync data online.</small>
-          </div>
-        </div>
-
-        <div class="settings-section sync-actions-card">
-          <div class="section-sublabel"><i class="fa-solid fa-arrows-rotate"></i> Manual Cloud Actions</div>
-          <div class="btn-group-row">
-            <button class="btn btn-success flex-1" id="push-data-btn">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Push (Upload)
-            </button>
-            <button class="btn btn-info flex-1" id="pull-data-btn">
-              <i class="fa-solid fa-cloud-arrow-down"></i> Pull (Download)
-            </button>
+            <div class="url-input-wrapper">
+              <input type="url" id="gas-url-input" class="form-control readonly-url-input"
+                value="https://script.google.com/macros/s/AKfycbz-STcvV8kMGP04ZLuNcX3W3QuSU5q2XJnA9ScSquq8vgBBtcMjlhUw3IFM8LWl5sw/exec" readonly>
+              <button type="button" class="btn-copy-url" id="copy-gas-url-btn" title="Copy Web App URL to clipboard">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+            <small class="form-help"><i class="fa-solid fa-circle-info"></i> Pre-configured Web App URL for Google Sheets sync. Tap copy to copy link.</small>
           </div>
         </div>
 
@@ -461,7 +454,7 @@
     </div>
   </div>
 
-  <!-- MODAL: CONFIRM ACTION (DELETE / RESET) -->
+  <!-- MODAL: CONFIRM ACTION (DELETE / RESET / CLOUD SYNC) -->
   <div class="modal-overlay hidden" id="confirm-modal">
     <div class="modal-card modal-confirm">
       <div class="modal-header">
@@ -470,6 +463,13 @@
       </div>
       <div class="confirm-modal-body">
         <p id="confirm-modal-message">Are you sure you want to delete this task?</p>
+        <div class="confirm-checkbox-group hidden" id="confirm-checkbox-group">
+          <label class="checkbox-container">
+            <input type="checkbox" id="confirm-modal-checkbox">
+            <span class="checkmark"></span>
+            <span class="checkbox-text-label" id="confirm-checkbox-label">I confirm this action</span>
+          </label>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost" id="cancel-confirm-btn">Cancel</button>
