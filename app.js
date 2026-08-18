@@ -6,14 +6,27 @@
 const STATE_KEY_TASKS = 'pts_tasks_v1';
 const STATE_KEY_GAS_URL = 'pts_gas_url_v1';
 const STATE_KEY_IBADAH = 'pts_ibadah_v1';
+const STATE_KEY_NOFAP = 'pts_nofap_v1';
 const LOCKED_GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz-STcvV8kMGP04ZLuNcX3W3QuSU5q2XJnA9ScSquq8vgBBtcMjlhUw3IFM8LWl5sw/exec';
 
 let tasks = [];
 let ibadahData = {};
+let nofapData = null;
 let currentSelectedDate = getTodayDateString();
 let currentIbadahDate = getTodayDateString();
 let gasWebAppUrl = LOCKED_GAS_WEB_APP_URL;
 let deferredInstallPrompt = null;
+
+const NOFAP_BADGES = [
+  { id: 'seedling', title: 'Seedling', days: 1, icon: 'fa-seedling' },
+  { id: 'iron_will', title: 'Iron Will', days: 3, icon: 'fa-shield-halved' },
+  { id: 'bronze_warrior', title: 'Bronze Warrior', days: 7, icon: 'fa-shield-cat' },
+  { id: 'silver_guardian', title: 'Silver Guardian', days: 14, icon: 'fa-shield' },
+  { id: 'gold_champion', title: 'Gold Champion', days: 30, icon: 'fa-trophy' },
+  { id: 'diamond_titan', title: 'Diamond Titan', days: 60, icon: 'fa-gem' },
+  { id: 'master_conqueror', title: 'Master Conqueror', days: 90, icon: 'fa-crown' },
+  { id: 'legendary_sovereign', title: 'Legendary Sovereign', days: 180, icon: 'fa-fire-flame-curved' }
+];
 
 // ==========================================
 // HAPTIC FEEDBACK ENGINE & TUNING CONFIG
@@ -72,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initStickyBannerScroll();
   initTabNavigation();
   initIbadahEngine();
+  initNoFapEngine();
   initFabCloudMenu();
   renderApp();
   autoScrollToActiveTask();
@@ -98,10 +112,6 @@ function formatWireframeDateHeader(dateStr) {
   return `${dayName}, ${day}/${month}/${yy}`;
 }
 
-// Format Full Human Date (DDDDD, DD/MM/YY)
-function formatFullHumanDate(dateStr) {
-  return formatWireframeDateHeader(dateStr);
-}
 
 // Initialize Local Storage
 function initStorage() {
@@ -128,6 +138,19 @@ function initStorage() {
     }
   }
 
+  const storedNoFap = localStorage.getItem(STATE_KEY_NOFAP);
+  if (storedNoFap) {
+    try {
+      nofapData = JSON.parse(storedNoFap);
+      if (typeof recalculateAllNoFapHistoryStreaks === 'function') recalculateAllNoFapHistoryStreaks();
+    } catch (e) {
+      console.error('Failed to parse NoFap data:', e);
+      initDefaultNoFapData();
+    }
+  } else {
+    initDefaultNoFapData();
+  }
+
   gasWebAppUrl = LOCKED_GAS_WEB_APP_URL;
   localStorage.setItem(STATE_KEY_GAS_URL, LOCKED_GAS_WEB_APP_URL);
   const gasInput = document.getElementById('gas-url-input');
@@ -137,12 +160,27 @@ function initStorage() {
   }
 }
 
+function initDefaultNoFapData() {
+  nofapData = {
+    startDate: new Date().toISOString(),
+    longestStreakDays: 0,
+    totalCheckins: 0,
+    lastCheckinDate: null,
+    history: []
+  };
+  saveNoFapDataToStorage();
+}
+
 function saveTasksToStorage() {
   localStorage.setItem(STATE_KEY_TASKS, JSON.stringify(tasks));
 }
 
 function saveIbadahDataToStorage() {
   localStorage.setItem(STATE_KEY_IBADAH, JSON.stringify(ibadahData));
+}
+
+function saveNoFapDataToStorage() {
+  localStorage.setItem(STATE_KEY_NOFAP, JSON.stringify(nofapData));
 }
 
 // ==========================================
@@ -162,7 +200,7 @@ function updateClock() {
   const mm = String(now.getMinutes()).padStart(2, '0');
   const ss = String(now.getSeconds()).padStart(2, '0');
   const timeHtml = `${hh}:${mm}<span class="clock-seconds">:${ss}</span>`;
-  const dateText = formatFullHumanDate(getTodayDateString());
+  const dateText = formatWireframeDateHeader(getTodayDateString());
 
   const clockEl = document.getElementById('live-clock');
   const dateEl = document.getElementById('live-date');
@@ -173,6 +211,11 @@ function updateClock() {
   const ibadahDateEl = document.getElementById('ibadah-live-date');
   if (ibadahClockEl) ibadahClockEl.innerHTML = timeHtml;
   if (ibadahDateEl) ibadahDateEl.textContent = dateText;
+
+  const nofapClockEl = document.getElementById('nofap-live-clock');
+  const nofapDateEl = document.getElementById('nofap-live-date');
+  if (nofapClockEl) nofapClockEl.innerHTML = timeHtml;
+  if (nofapDateEl) nofapDateEl.textContent = dateText;
 }
 
 // Active Task Banner (Card 2)
@@ -271,6 +314,8 @@ function renderApp() {
   renderTasksList();
   renderStatistics();
   updateActiveTaskBanner();
+  if (typeof renderIbadahPage === 'function') renderIbadahPage();
+  if (typeof renderNoFapPage === 'function') renderNoFapPage();
 }
 
 function renderDateNavigator() {
@@ -885,13 +930,14 @@ async function pushDataToGoogleSheets() {
     return;
   }
 
-  showToast('Uploading Tasks & Worship data to Google Sheets...', 'info');
+  showToast('Uploading Tasks, Worship & Streak Tracker data to Google Sheets...', 'info');
 
   try {
     const payload = {
       action: 'upload_all',
       tasks: tasks,
       ibadah: ibadahData,
+      nofap: nofapData,
       timestamp: new Date().toISOString()
     };
 
@@ -904,7 +950,7 @@ async function pushDataToGoogleSheets() {
 
     const result = await response.json();
     if (result && result.status === 'success') {
-      showToast('Upload successful! Tasks & Worship data saved.', 'success');
+      showToast('Upload successful! Tasks, Worship & Streak Tracker data saved.', 'success');
     } else {
       showToast(result.message || 'Upload complete', 'success');
     }
@@ -945,7 +991,7 @@ async function pullDataFromGoogleSheets() {
     return;
   }
 
-  showToast('Fetching Tasks & Worship data from Google Sheets...', 'info');
+  showToast('Fetching Tasks, Worship & Streak Tracker data from Google Sheets...', 'info');
 
   try {
     const fetchUrl = `${gasWebAppUrl}?action=get_all&t=${Date.now()}`;
@@ -973,8 +1019,14 @@ async function pullDataFromGoogleSheets() {
         ibadahDaysCount = Object.keys(ibadahData).length;
       }
 
+      if (result.nofap && typeof result.nofap === 'object') {
+        nofapData = result.nofap;
+        if (typeof recalculateAllNoFapHistoryStreaks === 'function') recalculateAllNoFapHistoryStreaks();
+        saveNoFapDataToStorage();
+      }
+
       renderApp();
-      showToast(`Download successful! ${taskCount} tasks & ${ibadahDaysCount} worship days loaded.`, 'success');
+      showToast(`Download successful! ${taskCount} tasks, ${ibadahDaysCount} worship days & Streak Tracker loaded.`, 'success');
     } else {
       showToast('Google Sheets data is empty.', 'warning');
     }
@@ -1002,20 +1054,23 @@ function saveSettings() {
 function resetStorageData() {
   showConfirmModal({
     title: 'Reset Local Cache',
-    message: 'Are you sure you want to clear all local tasks and worship data?',
+    message: 'Are you sure you want to clear all local tasks, worship, and streak tracker data?',
     confirmText: 'Reset',
     iconClass: 'fa-rotate-right',
     onConfirm: () => {
       localStorage.removeItem(STATE_KEY_TASKS);
       localStorage.removeItem(STATE_KEY_IBADAH);
+      localStorage.removeItem(STATE_KEY_NOFAP);
       tasks = [];
       ibadahData = {};
+      initDefaultNoFapData();
       saveTasksToStorage();
       saveIbadahDataToStorage();
+      saveNoFapDataToStorage();
       initStorage();
       renderApp();
       document.getElementById('settings-modal').classList.add('hidden');
-      showToast('All local task and worship cache cleared successfully.', 'info');
+      showToast('All local task, worship, and streak tracker cache cleared successfully.', 'info');
     }
   });
 }
@@ -1374,8 +1429,12 @@ function initTabNavigation() {
       triggerHaptic('click');
       clearPrayerFocusEffect();
 
-      navItems.forEach(i => i.classList.remove('active'));
+      navItems.forEach(i => {
+        i.classList.remove('active');
+        if (typeof i.blur === 'function') i.blur();
+      });
       item.classList.add('active');
+      if (typeof item.blur === 'function') item.blur();
 
       document.querySelectorAll('.tab-page-view').forEach(view => {
         view.classList.add('hidden');
@@ -1394,6 +1453,9 @@ function initTabNavigation() {
       } else if (tabName === 'daily-tasks') {
         renderApp();
         autoScrollToActiveTask();
+      } else if (tabName === 'nofap') {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        renderNoFapPage();
       }
     });
   });
@@ -2180,4 +2242,542 @@ function initFabCloudMenu() {
       }
     });
   }
+}
+
+// ==========================================
+// STREAK & SELF-MASTERY (NOFAP) ENGINE
+// ==========================================
+
+function parseToTimestamp(dateVal) {
+  if (!dateVal) return 0;
+  if (dateVal instanceof Date) return dateVal.getTime();
+  if (typeof dateVal === 'number') return dateVal;
+
+  const str = String(dateVal).trim();
+
+  // Match YYYY-MM-DD or ISO string e.g. "2026-08-16" or "2026-08-16T15:00:00"
+  const matchYmd = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (matchYmd) {
+    const year = parseInt(matchYmd[1], 10);
+    const month = parseInt(matchYmd[2], 10) - 1;
+    const day = parseInt(matchYmd[3], 10);
+
+    const timeMatch = str.match(/T(\d{2}):(\d{2}):(\d{2})/);
+    if (timeMatch) {
+      const hh = parseInt(timeMatch[1], 10);
+      const mm = parseInt(timeMatch[2], 10);
+      const ss = parseInt(timeMatch[3], 10);
+      return new Date(year, month, day, hh, mm, ss).getTime();
+    }
+    return new Date(year, month, day).getTime();
+  }
+
+  // Match DD/MM/YY or DD/MM/YYYY (e.g. "SUN, 16/08/26" or "16/08/2026")
+  const matchDmy = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (matchDmy) {
+    let day = parseInt(matchDmy[1], 10);
+    let month = parseInt(matchDmy[2], 10) - 1;
+    let year = parseInt(matchDmy[3], 10);
+    if (year < 100) year += 2000;
+    return new Date(year, month, day).getTime();
+  }
+
+  const t = new Date(str).getTime();
+  return isNaN(t) ? 0 : t;
+}
+
+function formatShortDddDate(isoOrDateStr) {
+  if (!isoOrDateStr) return '-';
+  const ts = parseToTimestamp(isoOrDateStr);
+  if (!ts) return String(isoOrDateStr);
+  const d = new Date(ts);
+  const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const dayName = days[d.getDay()];
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${dayName}, ${dd}/${mm}/${yy}`;
+}
+
+function getNoFapElapsedMs() {
+  if (!nofapData || !nofapData.startDate) return 0;
+  const startMs = parseToTimestamp(nofapData.startDate);
+  const nowMs = Date.now();
+  return Math.max(0, nowMs - startMs);
+}
+
+function getNoFapCurrentStreakDays() {
+  const elapsedMs = getNoFapElapsedMs();
+  return Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+}
+
+function updateNoFapLiveTimer() {
+  const elapsedMs = getNoFapElapsedMs();
+  const totalSeconds = Math.floor(elapsedMs / 1000);
+  const days = Math.floor(totalSeconds / (3600 * 24));
+  const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const daysEl = document.getElementById('nofap-days-count');
+  if (daysEl) daysEl.textContent = days;
+
+  const breakdownEl = document.getElementById('nofap-time-breakdown');
+  if (breakdownEl) {
+    const hh = String(hours).padStart(2, '0');
+    const mm = String(minutes).padStart(2, '0');
+    const ss = String(seconds).padStart(2, '0');
+    breakdownEl.textContent = `${hh}h ${mm}m ${ss}s`;
+  }
+
+  if (nofapData && days > (nofapData.longestStreakDays || 0)) {
+    nofapData.longestStreakDays = days;
+    saveNoFapDataToStorage();
+  }
+}
+
+function hasLogForDate(dateStr) {
+  if (!nofapData || !nofapData.history) return false;
+  return nofapData.history.some(item => item.date === dateStr);
+}
+
+function recalculateAllNoFapHistoryStreaks() {
+  if (!nofapData) return;
+  if (!nofapData.history) nofapData.history = [];
+
+  // 1. Re-calculate Total Check-ins and Last Check-in Date strictly from history logs
+  const checkinLogs = nofapData.history
+    .filter(item => item.type === 'checkin' && item.date)
+    .sort((a, b) => parseToTimestamp(b.date) - parseToTimestamp(a.date));
+
+  nofapData.totalCheckins = checkinLogs.length;
+  nofapData.lastCheckinDate = checkinLogs.length > 0 ? checkinLogs[0].date : null;
+
+  // 2. Filter all reset/relapse items
+  const resetItems = nofapData.history.filter(item => item.type === 'reset' && item.date);
+
+  // 3. Sort chronologically ascending (oldest date first) using robust parseToTimestamp
+  resetItems.sort((a, b) => parseToTimestamp(a.date) - parseToTimestamp(b.date));
+
+  // 4. Re-calculate streak achieved prior to each relapse date
+  for (let i = 0; i < resetItems.length; i++) {
+    if (i === 0) {
+      resetItems[i].streakDays = resetItems[i].streakDays || 0;
+    } else {
+      const prevMs = parseToTimestamp(resetItems[i - 1].date);
+      const currMs = parseToTimestamp(resetItems[i].date);
+      const diffDays = Math.max(0, Math.floor((currMs - prevMs) / (1000 * 60 * 60 * 24)));
+      resetItems[i].streakDays = diffDays;
+    }
+  }
+
+  // 5. Update current active startDate to the latest relapse date (newest date)
+  if (resetItems.length > 0) {
+    const latestRelapse = resetItems[resetItems.length - 1];
+    nofapData.startDate = latestRelapse.date;
+  } else if (!nofapData.startDate) {
+    nofapData.startDate = new Date().toISOString();
+  }
+
+  // 6. Calculate live current streak
+  const currentStreak = getNoFapCurrentStreakDays();
+  let maxDays = currentStreak;
+
+  // 7. Find max streak across history and live streak
+  nofapData.history.forEach(item => {
+    if (item.type === 'reset' && typeof item.streakDays === 'number') {
+      if (item.streakDays > maxDays) {
+        maxDays = item.streakDays;
+      }
+    }
+  });
+
+  nofapData.longestStreakDays = maxDays;
+
+  // 8. Sort history back in reverse chronological order (newest date first for UI presentation)
+  nofapData.history.sort((a, b) => parseToTimestamp(b.date) - parseToTimestamp(a.date));
+}
+
+function initNoFapEngine() {
+  setInterval(updateNoFapLiveTimer, 1000);
+
+  const checkinBtn = document.getElementById('nofap-checkin-btn');
+  if (checkinBtn) {
+    checkinBtn.addEventListener('click', openNoFapCheckinModal);
+  }
+
+  const resetBtn = document.getElementById('nofap-reset-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', openNoFapResetModal);
+  }
+
+  const addHistoryBtn = document.getElementById('nofap-add-history-btn');
+  if (addHistoryBtn) {
+    addHistoryBtn.addEventListener('click', openNoFapHistoryModal);
+  }
+
+  // Check-in Modal
+  const closeCheckinModalBtn = document.getElementById('close-nofap-checkin-modal');
+  const cancelCheckinBtn = document.getElementById('cancel-nofap-checkin-btn');
+  if (closeCheckinModalBtn) closeCheckinModalBtn.addEventListener('click', closeNoFapCheckinModal);
+  if (cancelCheckinBtn) cancelCheckinBtn.addEventListener('click', closeNoFapCheckinModal);
+
+  const checkinForm = document.getElementById('nofap-checkin-form');
+  if (checkinForm) {
+    checkinForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const noteInput = document.getElementById('nofap-checkin-note');
+      const note = noteInput ? noteInput.value : '';
+      submitNoFapCheckin(note);
+      closeNoFapCheckinModal();
+    });
+  }
+
+  // Reset Modal
+  const closeResetModalBtn = document.getElementById('close-nofap-reset-modal');
+  const cancelResetBtn = document.getElementById('cancel-nofap-reset-btn');
+  if (closeResetModalBtn) closeResetModalBtn.addEventListener('click', closeNoFapResetModal);
+  if (cancelResetBtn) cancelResetBtn.addEventListener('click', closeNoFapResetModal);
+
+  const resetForm = document.getElementById('nofap-reset-form');
+  if (resetForm) {
+    resetForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const reasonInput = document.getElementById('nofap-reset-reason');
+      const reason = reasonInput ? reasonInput.value : '';
+      resetNoFapStreak(reason);
+      closeNoFapResetModal();
+    });
+  }
+
+  // History Modal (Past Relapse Only)
+  const closeHistoryModalBtn = document.getElementById('close-nofap-history-modal');
+  const cancelHistoryBtn = document.getElementById('cancel-nofap-history-btn');
+  if (closeHistoryModalBtn) closeHistoryModalBtn.addEventListener('click', closeNoFapHistoryModal);
+  if (cancelHistoryBtn) cancelHistoryBtn.addEventListener('click', closeNoFapHistoryModal);
+
+  const historyForm = document.getElementById('nofap-history-form');
+  if (historyForm) {
+    historyForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const dateEl = document.getElementById('nofap-history-date');
+      const dateStr = dateEl ? dateEl.value : '';
+
+      const noteEl = document.getElementById('nofap-history-note');
+      const note = noteEl ? noteEl.value : '';
+
+      if (submitNoFapHistoryLog(dateStr, note)) {
+        closeNoFapHistoryModal();
+      }
+    });
+  }
+}
+
+function openNoFapCheckinModal() {
+  const today = getTodayDateString();
+  if (nofapData.lastCheckinDate === today) {
+    showToast(`You have already checked in for today (${formatShortDddDate(today)})!`, 'info');
+    return;
+  }
+  const modal = document.getElementById('nofap-checkin-modal');
+  const noteInput = document.getElementById('nofap-checkin-note');
+  if (noteInput) noteInput.value = '';
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeNoFapCheckinModal() {
+  const modal = document.getElementById('nofap-checkin-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function submitNoFapCheckin(note = '') {
+  const today = getTodayDateString();
+  const currentDays = getNoFapCurrentStreakDays();
+
+  nofapData.totalCheckins = (nofapData.totalCheckins || 0) + 1;
+  nofapData.lastCheckinDate = today;
+
+  const logItem = {
+    type: 'checkin',
+    date: today,
+    streakDays: currentDays,
+    note: note.trim() || 'Daily check-in completed'
+  };
+
+  if (!nofapData.history) nofapData.history = [];
+  nofapData.history.unshift(logItem);
+
+  saveNoFapDataToStorage();
+
+  triggerHaptic('heavyClick');
+  showToast(`Daily check-in complete! Streak: ${currentDays} Days 🔥`, 'success');
+  renderNoFapPage();
+}
+
+function openNoFapResetModal() {
+  const modal = document.getElementById('nofap-reset-modal');
+  const reasonInput = document.getElementById('nofap-reset-reason');
+  if (reasonInput) reasonInput.value = '';
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeNoFapResetModal() {
+  const modal = document.getElementById('nofap-reset-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function resetNoFapStreak(reason = '') {
+  const nowIso = new Date().toISOString();
+
+  const resetLog = {
+    type: 'reset',
+    date: nowIso,
+    streakDays: 0,
+    reason: reason.trim() || 'Streak reset'
+  };
+
+  if (!nofapData.history) nofapData.history = [];
+  nofapData.history.unshift(resetLog);
+
+  nofapData.lastCheckinDate = null;
+  recalculateAllNoFapHistoryStreaks();
+
+  saveNoFapDataToStorage();
+
+  triggerHaptic('heavyClick');
+  showToast('Streak reset logged. Every setback is a step towards mastery!', 'warning');
+  renderNoFapPage();
+}
+
+function openNoFapHistoryModal() {
+  const modal = document.getElementById('nofap-history-modal');
+  const dateInput = document.getElementById('nofap-history-date');
+  const noteInput = document.getElementById('nofap-history-note');
+
+  const today = getTodayDateString();
+  if (dateInput) {
+    dateInput.value = today;
+    dateInput.max = today;
+  }
+  if (noteInput) noteInput.value = '';
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeNoFapHistoryModal() {
+  const modal = document.getElementById('nofap-history-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function submitNoFapHistoryLog(dateStr, note) {
+  if (!dateStr) {
+    showToast('Please select a valid relapse date', 'warning');
+    return false;
+  }
+
+  const today = getTodayDateString();
+  if (dateStr > today) {
+    showToast('Cannot log a relapse for a future date!', 'warning');
+    return false;
+  }
+
+  const logDate = (dateStr === today) ? new Date().toISOString() : dateStr;
+
+  const logItem = {
+    type: 'reset',
+    date: logDate,
+    streakDays: 0,
+    reason: note.trim() || 'Past streak reset'
+  };
+
+  if (!nofapData.history) nofapData.history = [];
+  nofapData.history.push(logItem);
+
+  recalculateAllNoFapHistoryStreaks();
+  saveNoFapDataToStorage();
+
+  triggerHaptic('heavyClick');
+  showToast(`Past relapse log saved for ${formatShortDddDate(logDate)}!`, 'warning');
+  renderNoFapPage();
+  return true;
+}
+
+function renderNoFapPage() {
+  if (!nofapData) return;
+  updateNoFapLiveTimer();
+
+  const currentDays = getNoFapCurrentStreakDays();
+
+  // 1. Stats
+  const longestEl = document.getElementById('nofap-longest-count');
+  if (longestEl) longestEl.textContent = `${nofapData.longestStreakDays || 0} Days`;
+
+  const checkinsEl = document.getElementById('nofap-total-checkins');
+  if (checkinsEl) checkinsEl.textContent = nofapData.totalCheckins || 0;
+
+  const startedEl = document.getElementById('nofap-started-date');
+  if (startedEl) {
+    startedEl.textContent = formatShortDddDate(nofapData.startDate);
+  }
+
+  // 2. Next Milestone Progress
+  let nextBadge = NOFAP_BADGES.find(b => b.days > currentDays);
+  if (!nextBadge) {
+    nextBadge = NOFAP_BADGES[NOFAP_BADGES.length - 1];
+  }
+
+  const targetDays = nextBadge.days;
+  const targetTitleEl = document.getElementById('nofap-next-milestone-title');
+  if (targetTitleEl) targetTitleEl.textContent = `${nextBadge.title} (${targetDays} Days)`;
+
+  const progressTextEl = document.getElementById('nofap-progress-text');
+  if (progressTextEl) progressTextEl.textContent = `${currentDays} / ${targetDays} Days`;
+
+  const percent = Math.min(100, Math.round((currentDays / targetDays) * 100));
+  const percentEl = document.getElementById('nofap-progress-percent');
+  if (percentEl) percentEl.textContent = `${percent}%`;
+
+  const fillEl = document.getElementById('nofap-milestone-fill');
+  if (fillEl) fillEl.style.width = `${percent}%`;
+
+  // 3. Badges Grid
+  const badgesGrid = document.getElementById('nofap-badges-grid');
+  if (badgesGrid) {
+    badgesGrid.innerHTML = NOFAP_BADGES.map(badge => {
+      const isUnlocked = currentDays >= badge.days;
+      const statusText = isUnlocked ? 'Unlocked' : 'Locked';
+      const cardClass = isUnlocked ? 'badge-card badge-unlocked' : 'badge-card badge-locked';
+
+      return `
+        <div class="${cardClass}">
+          <div class="badge-icon-box">
+            <i class="fa-solid ${badge.icon}"></i>
+          </div>
+          <div class="badge-title">${badge.title}</div>
+          <div class="badge-req">${badge.days} ${badge.days === 1 ? 'Day' : 'Days'}</div>
+          <div class="badge-status-pill">${statusText}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 4. History List
+  const historyList = document.getElementById('nofap-history-list');
+  if (historyList) {
+    if (!nofapData.history || nofapData.history.length === 0) {
+      historyList.innerHTML = `
+        <div class="empty-state">
+          <i class="fa-solid fa-shield-halved"></i>
+          <p>No activity logs yet. Keep pushing your limits!</p>
+        </div>
+      `;
+    } else {
+      historyList.innerHTML = nofapData.history.map((item, index) => {
+        const isCheckin = item.type === 'checkin';
+        const iconClass = isCheckin ? 'fa-circle-check' : 'fa-rotate-left';
+        const badgeClass = isCheckin ? 'history-icon-badge history-type-checkin' : 'history-icon-badge history-type-reset';
+        const titleText = isCheckin ? 'Check-in' : 'Streak Reset';
+        const noteText = isCheckin ? (item.note || 'Daily check-in completed') : (item.reason || 'Streak reset');
+        const formattedDate = formatShortDddDate(item.date);
+
+        return `
+          <div class="nofap-history-item" data-index="${index}">
+            <div class="swipe-indicator swipe-delete"><i class="fa-solid fa-trash-can"></i> Delete</div>
+            <div class="history-left">
+              <div class="${badgeClass}">
+                <i class="fa-solid ${iconClass}"></i>
+              </div>
+              <div class="history-info">
+                <div class="history-date">${titleText} • ${formattedDate}</div>
+                <div class="history-reason">${escapeHtml(noteText)}</div>
+              </div>
+            </div>
+            <div class="history-right-group">
+              <div class="history-streak-badge">${item.streakDays || 0} Days</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Initialize touch swipe gestures for each history item
+      const itemElements = historyList.querySelectorAll('.nofap-history-item');
+      itemElements.forEach((el) => {
+        const idx = parseInt(el.dataset.index, 10);
+        initNoFapHistorySwipe(el, idx);
+      });
+    }
+  }
+}
+
+function deleteNoFapHistoryLog(index) {
+  if (!nofapData || !nofapData.history || index < 0 || index >= nofapData.history.length) return;
+
+  nofapData.history.splice(index, 1);
+  recalculateAllNoFapHistoryStreaks();
+  saveNoFapDataToStorage();
+
+  triggerHaptic('heavyClick');
+  showToast('Streak log entry deleted', 'warning');
+  renderNoFapPage();
+}
+
+function initNoFapHistorySwipe(itemEl, index) {
+  let startX = 0;
+  let startY = 0;
+  let currentX = 0;
+  let isSwiping = false;
+  let thresholdTriggered = false;
+
+  itemEl.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isSwiping = false;
+    thresholdTriggered = false;
+    itemEl.style.transition = 'none';
+  }, { passive: true });
+
+  itemEl.addEventListener('touchmove', (e) => {
+    const diffX = e.touches[0].clientX - startX;
+    const diffY = e.touches[0].clientY - startY;
+
+    if (!isSwiping && Math.abs(diffY) > Math.abs(diffX)) return;
+
+    if (diffX < -10) {
+      isSwiping = true;
+      currentX = diffX;
+      const clampedX = Math.max(-120, Math.min(0, diffX));
+      itemEl.style.transform = `translateX(${clampedX}px)`;
+
+      if (clampedX < -25) {
+        itemEl.classList.add('swiping-left');
+      } else {
+        itemEl.classList.remove('swiping-left');
+      }
+
+      if (Math.abs(clampedX) >= 65 && !thresholdTriggered) {
+        thresholdTriggered = true;
+        triggerHaptic('snap');
+      } else if (Math.abs(clampedX) < 65 && thresholdTriggered) {
+        thresholdTriggered = false;
+      }
+    }
+  }, { passive: true });
+
+  itemEl.addEventListener('touchend', () => {
+    itemEl.style.transition = 'transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)';
+    if (currentX < -65) {
+      triggerHaptic('heavyClick');
+      itemEl.style.transform = 'translateX(-100%)';
+      setTimeout(() => {
+        deleteNoFapHistoryLog(index);
+      }, 200);
+    } else {
+      itemEl.style.transform = 'translateX(0)';
+      itemEl.classList.remove('swiping-left');
+    }
+    startX = 0;
+    currentX = 0;
+    isSwiping = false;
+    thresholdTriggered = false;
+  });
 }

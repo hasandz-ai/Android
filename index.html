@@ -298,24 +298,132 @@
               </div>
             </div>
           </div>
-
         </section>
       </div>
 
-    </main>
+      <!-- TAB VIEW 4: STREAK & SELF-MASTERY (NOFAP) TRACKER -->
+      <div class="tab-page-view hidden" id="view-nofap">
+          <!-- SECTION 1: HEADER SECTION -->
+          <section class="flat-section header-section">
+            <div class="header-top-row">
+              <div class="date-box">
+                <h2 id="nofap-live-date">THURSDAY, 13/08/26</h2>
+              </div>
+              <div class="time-box text-right">
+                <h2 id="nofap-live-clock">08:27<span class="clock-seconds">:58</span></h2>
+              </div>
+            </div>
+          </section>
 
-    <!-- UNIFIED PILL NAVIGATION BAR -->
-    <nav class="pill-navbar" id="pill-navbar">
-      <a href="#daily-tasks" class="pill-nav-item active" data-tab="daily-tasks" title="Daily Tasks">
-        <i class="fa-solid fa-calendar-day"></i>
-      </a>
-      <a href="#ibadah" class="pill-nav-item" data-tab="ibadah" title="Worship (Ibadah)">
-        <i class="fa-solid fa-mosque"></i>
-      </a>
-      <a href="#exercise" class="pill-nav-item disabled" title="Exercise (Soon)">
-        <i class="fa-solid fa-dumbbell"></i>
-      </a>
-    </nav>
+          <!-- SECTION 2: HERO STREAK CARD -->
+          <section class="flat-section nofap-hero-section">
+            <div class="nofap-hero-card">
+              <div class="nofap-hero-badge">
+                <i class="fa-solid fa-fire nofap-flame-icon"></i>
+              </div>
+
+              <div class="nofap-hero-main">
+                <div class="nofap-label">CURRENT STREAK</div>
+                <div class="nofap-counter-display">
+                  <span class="nofap-days-num" id="nofap-days-count">0</span>
+                  <span class="nofap-days-unit">DAYS</span>
+                </div>
+                <div class="nofap-time-breakdown" id="nofap-time-breakdown">
+                  00h 00m 00s
+                </div>
+              </div>
+
+              <!-- Stats Grid -->
+              <div class="nofap-stats-grid">
+                <div class="nofap-stat-box">
+                  <div class="nofap-stat-val" id="nofap-longest-count">0 Days</div>
+                  <div class="nofap-stat-lbl"><i class="fa-solid fa-trophy"></i> Longest Record</div>
+                </div>
+                <div class="nofap-stat-box">
+                  <div class="nofap-stat-val" id="nofap-total-checkins">0</div>
+                  <div class="nofap-stat-lbl"><i class="fa-solid fa-circle-check"></i> Check-ins</div>
+                </div>
+                <div class="nofap-stat-box">
+                  <div class="nofap-stat-val" id="nofap-started-date">-</div>
+                  <div class="nofap-stat-lbl"><i class="fa-solid fa-calendar-check"></i> Streak Started</div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="nofap-actions-row">
+                <button class="btn btn-primary btn-nofap-checkin" id="nofap-checkin-btn">
+                  <i class="fa-solid fa-circle-check"></i> Check-in Today
+                </button>
+                <button class="btn btn-nofap-reset" id="nofap-reset-btn" title="Relapsed / Reset Streak">
+                  <i class="fa-solid fa-rotate-left"></i>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 3: MILESTONE PROGRESS CARD -->
+          <section class="flat-section nofap-progress-section">
+            <div class="nofap-progress-card">
+              <div class="progress-card-header">
+                <div class="progress-card-title">
+                  <i class="fa-solid fa-bullseye"></i> Next Ambition Milestone
+                </div>
+                <div class="progress-card-target" id="nofap-next-milestone-title">Iron Will (3 Days)</div>
+              </div>
+              <div class="nofap-progress-bar-wrapper">
+                <div class="nofap-progress-fill" id="nofap-milestone-fill" style="width: 0%;"></div>
+              </div>
+              <div class="progress-card-footer">
+                <span id="nofap-progress-text">0 / 3 Days</span>
+                <span id="nofap-progress-percent">0%</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 4: ACHIEVEMENT BADGES GRID -->
+          <section class="flat-section nofap-badges-section">
+            <div class="card-section-header">
+              <div class="section-title"><i class="fa-solid fa-award"></i> Ambition Badges</div>
+              <div class="section-subtitle">Unlock badges as your streak grows longer</div>
+            </div>
+
+            <div class="nofap-badges-grid" id="nofap-badges-grid">
+              <!-- Dynamic Badges rendered via JS -->
+            </div>
+          </section>
+
+          <!-- SECTION 5: STREAK HISTORY & RELAPSE LOGS -->
+          <section class="flat-section nofap-history-section">
+            <div class="card-section-header history-header-flex">
+              <div>
+                <div class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Streak Log History</div>
+                <div class="section-subtitle">Reflections and previous records (Swipe left to delete)</div>
+              </div>
+              <button class="btn btn-outline-sm btn-add-history" id="nofap-add-history-btn">
+                <i class="fa-solid fa-rotate-left"></i> Add Past Relapse
+              </button>
+            </div>
+
+            <div class="nofap-history-list" id="nofap-history-list">
+              <!-- Dynamic Log entries rendered via JS -->
+            </div>
+          </section>
+        </div>
+
+      </main>
+
+      <!-- UNIFIED PILL NAVIGATION BAR -->
+      <nav class="pill-navbar" id="pill-navbar">
+        <a href="#daily-tasks" class="pill-nav-item active" data-tab="daily-tasks" title="Daily Tasks">
+          <i class="fa-solid fa-calendar-day"></i>
+        </a>
+        <a href="#ibadah" class="pill-nav-item" data-tab="ibadah" title="Worship (Ibadah)">
+          <i class="fa-solid fa-mosque"></i>
+        </a>
+        <a href="#nofap" class="pill-nav-item" data-tab="nofap" title="Streak Tracker">
+          <i class="fa-solid fa-fire-flame-curved"></i>
+        </a>
+      </nav>
 
     <!-- FLOATING CLOUD SYNC FAB MENU (Bottom Right Corner) -->
     <div class="fab-cloud-wrapper" id="fab-cloud-wrapper">
@@ -477,6 +585,91 @@
           <i class="fa-solid fa-trash"></i> Delete
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DAILY CHECK-IN & NOTE -->
+  <div class="modal-overlay hidden" id="nofap-checkin-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-circle-check"></i> Daily Streak Check-in</h3>
+        <button class="btn-close" id="close-nofap-checkin-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="nofap-checkin-form">
+        <div class="form-group">
+          <p class="reset-modal-desc">
+            Mark another day of victory! Add an optional note or reflection on your mindset and progress today.
+          </p>
+        </div>
+        <div class="form-group">
+          <label for="nofap-checkin-note">Check-in Note / Reflection (Optional)</label>
+          <textarea id="nofap-checkin-note" class="form-control" placeholder="e.g. Worked out, stayed productive, feeling energized..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="cancel-nofap-checkin-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="confirm-nofap-checkin-btn">
+            <i class="fa-solid fa-circle-check"></i> Confirm Check-in
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: STREAK RESET & REFLECTION LOG -->
+  <div class="modal-overlay hidden" id="nofap-reset-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-rotate-left"></i> Streak Reset & Reflection</h3>
+        <button class="btn-close" id="close-nofap-reset-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="nofap-reset-form">
+        <div class="form-group">
+          <p class="reset-modal-desc">
+            Resetting your streak is a stepping stone to mastery. Reflect on your triggers to build resilience and come back stronger.
+          </p>
+        </div>
+        <div class="form-group">
+          <label for="nofap-reset-reason">Reflection Note / Trigger (Optional)</label>
+          <textarea id="nofap-reset-reason" class="form-control" placeholder="e.g. Late night browsing, feeling stressed, tired..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="cancel-nofap-reset-btn">Cancel</button>
+          <button type="submit" class="btn btn-danger" id="confirm-nofap-reset-btn">
+            <i class="fa-solid fa-rotate-left"></i> Reset Streak to Day 0
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD PAST RELAPSE LOG -->
+  <div class="modal-overlay hidden" id="nofap-history-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-rotate-left"></i> Add Past Relapse Log</h3>
+        <button class="btn-close" id="close-nofap-history-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="nofap-history-form">
+        <div class="form-group">
+          <p class="reset-modal-desc">
+            Record a past relapse date to keep your streak history accurate. Your live streak will automatically count from your most recent relapse.
+          </p>
+        </div>
+        <div class="form-group">
+          <label for="nofap-history-date">Relapse Date</label>
+          <input type="date" id="nofap-history-date" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="nofap-history-note">Reflection / Trigger Note (Optional)</label>
+          <textarea id="nofap-history-note" class="form-control" placeholder="e.g. Late night browsing, feeling stressed, tired..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="cancel-nofap-history-btn">Cancel</button>
+          <button type="submit" class="btn btn-danger" id="confirm-nofap-history-btn">
+            <i class="fa-solid fa-plus"></i> Save Past Relapse
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

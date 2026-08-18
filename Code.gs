@@ -3,7 +3,7 @@
  * Deploy Instructions:
  * 1. Open Google Sheet -> Extensions -> Apps Script
  * 2. Paste this Code.gs script
- * 3. Click "Deploy" -> "New deployment" -> Select "Web app"
+ * 3. Click "Deploy" -> "New deployment" -> Select "Web app" (or "Manage deployments" -> Edit -> New Version)
  * 4. Execute as: "Me"
  * 5. Who has access: "Anyone"
  * 6. Copy Web App URL into PWA Settings
@@ -11,6 +11,7 @@
 
 const SHEET_NAME_DAILY_TASKS = 'DailyTasks';
 const SHEET_NAME_WORSHIP = 'WorshipTracker';
+const SHEET_NAME_NOFAP = 'StreakTracker';
 
 function doGet(e) {
   try {
@@ -68,10 +69,35 @@ function doGet(e) {
       };
     }
 
+    // 3. Read Streak Tracker (NoFap) Sheet Data
+    let nofapSheet = ss.getSheetByName(SHEET_NAME_NOFAP);
+    if (!nofapSheet) nofapSheet = initNoFapSheet(ss);
+
+    const nofapDataRows = nofapSheet.getDataRange().getValues();
+    let nofapObj = null;
+    if (nofapDataRows.length > 1 && nofapDataRows[1][0]) {
+      const row = nofapDataRows[1];
+      let historyArr = [];
+      try {
+        if (row[4]) historyArr = JSON.parse(row[4]);
+      } catch (err) {
+        historyArr = [];
+      }
+
+      nofapObj = {
+        startDate: String(row[0]),
+        longestStreakDays: Number(row[1]) || 0,
+        totalCheckins: Number(row[2]) || 0,
+        lastCheckinDate: row[3] ? formatDateValue(row[3]) : null,
+        history: historyArr
+      };
+    }
+
     return createJsonResponse({
       status: 'success',
       tasks: tasks,
       ibadah: ibadahObj,
+      nofap: nofapObj,
       timestamp: new Date().toISOString()
     });
 
@@ -143,9 +169,31 @@ function doPost(e) {
       worshipSheet.getRange(2, 1, worshipRows.length, 12).setValues(worshipRows);
     }
 
+    // 3. Sync Streak Tracker to 'StreakTracker' Sheet
+    let nofapSheet = ss.getSheetByName(SHEET_NAME_NOFAP);
+    if (!nofapSheet) nofapSheet = initNoFapSheet(ss);
+
+    const nofap = postData.nofap;
+    if (nofap) {
+      const lastNofapRow = nofapSheet.getLastRow();
+      if (lastNofapRow > 1) {
+        nofapSheet.getRange(2, 1, lastNofapRow - 1, 6).clearContent();
+      }
+
+      const nofapRow = [[
+        "'" + (nofap.startDate || new Date().toISOString()),
+        Number(nofap.longestStreakDays) || 0,
+        Number(nofap.totalCheckins) || 0,
+        nofap.lastCheckinDate ? "'" + formatDateValue(nofap.lastCheckinDate) : '',
+        JSON.stringify(nofap.history || []),
+        new Date().toISOString()
+      ]];
+      nofapSheet.getRange(2, 1, 1, 6).setValues(nofapRow);
+    }
+
     return createJsonResponse({
       status: 'success',
-      message: `Successfully synchronized ${tasks.length} tasks and ${dateKeys.length} worship records to Google Sheets`,
+      message: `Successfully synchronized ${tasks.length} tasks, ${dateKeys.length} worship records, and Streak Tracker data to Google Sheets`,
       timestamp: new Date().toISOString()
     });
 
@@ -176,6 +224,19 @@ function initWorshipSheet(ss) {
   const headers = ['Date', 'Tahajud', 'Fajr', 'Dhuha', 'Dhuhr', 'Asr', 'Maghrib', 'Isya', 'Taubat', 'Hajat', 'Quran Mins', 'Updated At'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#fb8b24').setFontColor('#000000');
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+// Helper: Initialize Streak Tracker Sheet Tab
+function initNoFapSheet(ss) {
+  let sheet = ss.getSheetByName(SHEET_NAME_NOFAP);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME_NOFAP);
+  }
+  const headers = ['Start Date', 'Longest Record (Days)', 'Total Check-ins', 'Last Check-in Date', 'History Log JSON', 'Updated At'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#9a031e').setFontColor('#ffffff');
   sheet.setFrozenRows(1);
   return sheet;
 }
