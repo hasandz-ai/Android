@@ -793,21 +793,33 @@
   <div class="modal-overlay hidden" id="exercise-gemini-modal">
     <div class="modal-card modal-card-lg">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Gemini AI Program Generator</h3>
+        <h3><i class="fa-solid fa-file-import"></i> Import Gemini AI Schedule</h3>
         <button class="btn-close" id="close-exercise-gemini-modal"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <div class="gemini-info-box">
-          <p><strong>How to create a custom workout plan with Gemini AI:</strong></p>
-          <ol>
-            <li>Click <strong>Copy Gemini Prompt</strong> below to copy a pre-formatted prompt tailored for Gemini.</li>
-            <li>Paste it into <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini AI</a> to generate your schedule.</li>
-            <li>Paste Gemini's JSON response in the box below and tap <strong>Apply Plan</strong>!</li>
+          <div style="font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; color: var(--c-sky);">
+            <i class="fa-solid fa-circle-info"></i> How to Import Custom Plan from Gemini AI
+          </div>
+          <ol style="margin: 4px 0 0 18px; color: var(--text-main); font-size: 12.5px; line-height: 1.55;">
+            <li>Copy your customized prompt from <strong>Exercise Settings</strong> (or tap <strong>Copy Prompt</strong> below).</li>
+            <li>Paste it into <a href="https://gemini.google.com" target="_blank" rel="noopener" style="color: var(--c-sky); text-decoration: underline;">Gemini AI</a> to generate your JSON workout schedule.</li>
+            <li>Paste Gemini's JSON response array into the box below and tap <strong>Apply Plan</strong>!</li>
           </ol>
         </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <button type="button" class="btn btn-outline-sm" onclick="copyGeminiPrompt()" style="font-size: 11.5px; padding: 6px 12px; gap: 6px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Copy Prompt
+          </button>
+          <a href="https://gemini.google.com" target="_blank" rel="noopener" class="btn btn-ghost-sm" style="font-size: 11.5px; padding: 6px 12px; gap: 6px; text-decoration: none; display: inline-flex; align-items: center;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Gemini AI
+          </a>
+        </div>
+
         <div class="form-group">
           <label for="gemini-json-input">Paste Gemini JSON Response Here</label>
-          <textarea id="gemini-json-input" class="form-control code-textarea" rows="8" placeholder='[&#10;  {&#10;    "week": 1,&#10;    "day": "Monday",&#10;    "date": "2025-12-08",&#10;    "category": "Interval",&#10;    "menu": "Interval : 8x200, Pace : RPE 8 - 9",&#10;    "status": "Pending",&#10;    "note": ""&#10;  }&#10;]'></textarea>
+          <textarea id="gemini-json-input" class="form-control code-textarea" rows="8" placeholder='[&#10;  {&#10;    "week": 1,&#10;    "day": "Monday",&#10;    "date": "2026-09-07",&#10;    "category": "Interval",&#10;    "menu": "Interval : 8x200m, Pace : RPE 8 - 9, Recovery : Jog/Walk 200m",&#10;    "status": "Pending",&#10;    "note": ""&#10;  }&#10;]'></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -830,8 +842,14 @@
         <input type="hidden" id="exercise-edit-id">
         <input type="hidden" id="exercise-edit-is-new" value="false">
         <div class="form-group">
-          <label for="exercise-edit-date">Workout Date & Day</label>
-          <input type="text" id="exercise-edit-date" class="form-control">
+          <label for="exercise-edit-date">Workout Date (DDDDD, DD/MM/YY)</label>
+          <div class="modal-date-picker-group" style="position: relative; display: flex; align-items: center; width: 100%;">
+            <input type="text" id="exercise-edit-date-display" class="form-control" placeholder="e.g. Thursday, 20/08/26" readonly style="cursor: pointer; padding-right: 42px; user-select: none;">
+            <input type="date" id="exercise-edit-date" class="hidden-date-input" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+            <span class="date-picker-icon-btn" style="position: absolute; right: 14px; pointer-events: none; color: var(--c-amber); font-size: 16px; z-index: 1;">
+              <i class="fa-solid fa-calendar-days"></i>
+            </span>
+          </div>
         </div>
         <div class="form-group">
           <label for="exercise-edit-category">Category</label>
@@ -885,10 +903,10 @@
   <div class="modal-overlay hidden" id="exercise-settings-modal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-sliders"></i> Exercise Settings</h3>
+        <h3><i class="fa-solid fa-sliders"></i> Exercise Settings & AI Prompt</h3>
         <button class="btn-close" id="close-exercise-settings-modal" onclick="closeExerciseSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; max-height: calc(80vh - 120px); overflow-y: auto; padding-right: 4px;">
         
         <!-- Program Customization -->
         <div class="form-group">
@@ -896,9 +914,74 @@
           <input type="text" id="exercise-settings-program-title" class="form-control" placeholder="e.g. Road to Pelari Kalcer">
         </div>
 
-        <div class="form-group" style="margin-top: 16px;">
+        <!-- 1. Program Start Date -->
+        <div class="form-group">
+          <label for="exercise-settings-start-date">1. Program Start Date (DDDDD, DD/MM/YY)</label>
+          <div class="modal-date-picker-group" style="position: relative; display: flex; align-items: center; width: 100%;">
+            <input type="text" id="exercise-settings-start-date-display" class="form-control" placeholder="e.g. Monday, 08/12/25" readonly style="cursor: pointer; padding-right: 42px; user-select: none;">
+            <input type="date" id="exercise-settings-start-date" class="hidden-date-input" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+            <span class="date-picker-icon-btn" style="position: absolute; right: 14px; pointer-events: none; color: var(--c-amber); font-size: 16px; z-index: 1;">
+              <i class="fa-solid fa-calendar-days"></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- 2. Program Length (Weeks) -->
+        <div class="form-group">
+          <label for="exercise-settings-program-weeks">2. Program Length (Weeks)</label>
+          <select id="exercise-settings-program-weeks" class="form-control">
+            <option value="4">4 Weeks (Sprint / Refresh)</option>
+            <option value="8">8 Weeks (Short Build)</option>
+            <option value="12" selected>12 Weeks (Standard Training Cycle)</option>
+            <option value="16">16 Weeks (Marathon Preparation)</option>
+            <option value="20">20 Weeks (Extended Base & Build)</option>
+            <option value="24">24 Weeks (Semi-Annual Cycle)</option>
+          </select>
+        </div>
+
+        <!-- 3. Target Goal -->
+        <div class="form-group">
+          <label for="exercise-settings-program-goal">3. Target Goal / Race Distance</label>
+          <select id="exercise-settings-program-goal" class="form-control">
+            <option value="Half Marathon (21K) & Endurance" selected>Half Marathon (21K) & Endurance</option>
+            <option value="5K / 10K Speed & Personal Best">5K / 10K Speed & Personal Best</option>
+            <option value="Full Marathon (42K) Finisher">Full Marathon (42K) Finisher</option>
+            <option value="General Aerobic Base & Hybrid Strength">General Aerobic Base & Hybrid Strength</option>
+            <option value="Weight Loss & Fat Burning Pace">Weight Loss & Fat Burning Pace</option>
+          </select>
+        </div>
+
+        <!-- 4. Fitness Level / Pace -->
+        <div class="form-group">
+          <label for="exercise-settings-fitness-level">4. Fitness Level / Current Pace</label>
+          <select id="exercise-settings-fitness-level" class="form-control">
+            <option value="Beginner (First-time runner / Return from injury)">Beginner (First-time runner / Return from injury)</option>
+            <option value="Intermediate (Pace 6:00 - 7:30 min/km)" selected>Intermediate (Pace 6:00 - 7:30 min/km)</option>
+            <option value="Advanced (Pace Sub-5:00 min/km)">Advanced (Pace Sub-5:00 min/km)</option>
+          </select>
+        </div>
+
+        <!-- 5. Training Frequency -->
+        <div class="form-group">
+          <label for="exercise-settings-days-per-week">5. Training Frequency</label>
+          <select id="exercise-settings-days-per-week" class="form-control">
+            <option value="6 Days (Mon-Sat, Sun Rest)" selected>6 Days (Mon-Sat, Sun Rest)</option>
+            <option value="5 Days (Mon-Fri, Weekend Rest/LSD)">5 Days (Mon-Fri, Weekend Rest/LSD)</option>
+            <option value="4 Days (Interval, Tempo, LSD, Strength)">4 Days (Interval, Tempo, LSD, Strength)</option>
+            <option value="3 Days (Run, Run, LSD)">3 Days (Run, Run, LSD)</option>
+          </select>
+        </div>
+
+        <!-- 6. Custom Notes / Preferences -->
+        <div class="form-group">
+          <label for="exercise-settings-custom-notes">6. Custom Notes & Focus (Optional)</label>
+          <textarea id="exercise-settings-custom-notes" class="form-control" rows="2" placeholder="e.g. Include core & upper body strength on Tuesdays, low impact recovery..."></textarea>
+        </div>
+
+        <!-- Gemini AI Tools Section -->
+        <div class="form-group" style="margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px;">
           <label>Gemini AI Plan Tools</label>
-          <p class="section-subtitle" style="margin-bottom: 10px;">Copy prompt or import generated JSON schedule from Gemini AI.</p>
+          <p class="section-subtitle" style="margin-bottom: 10px;">Copy customized prompt or import generated JSON schedule from Gemini AI.</p>
           <div class="exercise-settings-actions">
             <button class="btn btn-primary-sm" id="modal-btn-copy-gemini-prompt" onclick="copyGeminiPrompt()" style="width: 100%; justify-content: center; margin-bottom: 8px;">
               <i class="fa-solid fa-wand-magic-sparkles"></i> Copy Gemini Prompt
@@ -909,10 +992,11 @@
           </div>
         </div>
 
-        <div class="form-group" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
+        <!-- Reset Section -->
+        <div class="form-group" style="margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px;">
           <label>Reset Program Schedule</label>
           <p class="section-subtitle" style="margin-bottom: 10px;">Reset workout plan to default 12-Week program.</p>
-          <button class="btn btn-ghost-sm" id="modal-btn-reset-exercise-plan" onclick="resetExercisePlan()" style="width: 100%; justify-content: center; color: var(--c-crimson); border-color: rgba(154, 3, 30, 0.4) !important;">
+          <button class="btn" id="modal-btn-reset-exercise-plan" onclick="resetExercisePlan()" style="width: 100%; justify-content: center;">
             <i class="fa-solid fa-rotate-left"></i> Reset to Default Program
           </button>
         </div>

@@ -4,7 +4,7 @@ from playwright.sync_api import sync_playwright
 edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 file_url = "file:///d:/Hala/Random/Play/Android/index.html#exercise"
 
-print("Running Playwright verification for Single Click Mode & Pill Hiding...")
+print("Running Playwright verification for Inverted Reset Button & Confirmation Stacking...")
 
 with sync_playwright() as p:
     browser = p.chromium.launch(executable_path=edge_path, headless=True)
@@ -21,52 +21,29 @@ with sync_playwright() as p:
     page.evaluate("""() => {
         const el = document.querySelector('a[href="#exercise"]') || document.querySelector('[data-tab="exercise"]');
         if (el) el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-
-        // Mark first workout as TODAY
-        if (exerciseData.workouts && exerciseData.workouts.length > 0) {
-            exerciseData.workouts[0].date = getTodayDateString();
-            saveExerciseDataToStorage();
-            renderExercisePage();
-        }
     }""")
     time.sleep(1.5)
 
-    # 2. Scroll down 1200px past active card
-    print("Scrolling down 1200px past active workout card...")
-    page.evaluate("window.scrollTo(0, 1200)")
-    time.sleep(1)
-    page.evaluate("updateFloatingSummaryButtonState()")
-    time.sleep(0.5)
-
-    pill_mode_mid = page.evaluate("document.getElementById('exercise-floating-settings-btn').dataset.mode")
-    print(f" -> When scrolled mid-page: Pill mode = '{pill_mode_mid}'")
-    page.screenshot(path="scratch_mid_scroll_active_button_only.png")
-
-    # 3. Click Active Workout pill (verify modal does NOT open)
-    print("Clicking Active Workout pill...")
+    # 2. Click Exercise Settings floating pill
     page.click("#exercise-floating-settings-btn")
-    time.sleep(1.5)
-    page.evaluate("updateFloatingSummaryButtonState()")
+    time.sleep(1)
+
+    # Scroll inside modal body to show Reset Program section
+    page.evaluate("""() => {
+        const modalBody = document.querySelector('#exercise-settings-modal .modal-body');
+        if (modalBody) modalBody.scrollTop = modalBody.scrollHeight;
+    }""")
     time.sleep(0.5)
 
-    is_modal_visible = page.evaluate("""() => {
-        const modal = document.getElementById('exercise-settings-modal');
-        return modal && !modal.classList.contains('hidden');
-    }""")
-    is_pill_hidden = page.evaluate("""() => {
-        const pill = document.getElementById('exercise-floating-settings-btn');
-        return pill && pill.classList.contains('hidden-float');
-    }""")
-    is_sticky_hidden = page.evaluate("""() => {
-        const hero = document.getElementById('today-workout-hero');
-        return hero && hero.classList.contains('hidden-sticky');
-    }""")
+    # Capture modal with inverted Reset Button
+    page.screenshot(path="scratch_inverted_reset_button_verified.png")
 
-    print(f" -> Did Exercise Settings modal open? {is_modal_visible} (Should be False!)")
-    print(f" -> Upon arriving at active card: Is floating pill hidden? {is_pill_hidden} (Should be True!)")
-    print(f" -> Upon arriving at active card: Is sticky top banner hidden? {is_sticky_hidden} (Should be True!)")
+    # 3. Click Reset to Default Program button
+    page.click("#modal-btn-reset-exercise-plan")
+    time.sleep(0.8)
 
-    page.screenshot(path="scratch_active_card_arrival_clean_screen.png")
+    # Capture confirmation modal displaying directly in front
+    page.screenshot(path="scratch_reset_confirm_modal_front_verified.png")
 
     browser.close()
     print("Verification completed successfully!")

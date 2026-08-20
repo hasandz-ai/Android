@@ -1886,8 +1886,17 @@ function initFloatingSummaryButton() {
 }
 
 function handleExerciseFloatingBtnClick(e) {
-  if (e) e.stopPropagation();
+  if (e) {
+    e.stopPropagation();
+    if (e.currentTarget && typeof e.currentTarget.blur === 'function') {
+      e.currentTarget.blur();
+    }
+  }
   const btn = document.getElementById('exercise-floating-settings-btn');
+  if (btn && typeof btn.blur === 'function') {
+    btn.blur();
+  }
+
   if (!btn) return;
 
   if (btn.dataset.mode === 'active') {
@@ -1957,8 +1966,10 @@ function updateFloatingSummaryButtonState() {
     if (isAtTop) {
       // Top of page: Show "Exercise Settings" pill, full hero banner
       exerciseFloatBtn.classList.remove('hidden-float');
-      exerciseFloatBtn.innerHTML = '<i class="fa-solid fa-sliders"></i> Exercise Settings';
-      exerciseFloatBtn.dataset.mode = 'settings';
+      if (exerciseFloatBtn.dataset.mode !== 'settings') {
+        exerciseFloatBtn.innerHTML = '<i class="fa-solid fa-sliders"></i><span>Exercise Settings</span>';
+        exerciseFloatBtn.dataset.mode = 'settings';
+      }
 
       if (heroCard) {
         heroCard.classList.remove('is-floating');
@@ -1975,8 +1986,10 @@ function updateFloatingSummaryButtonState() {
     } else {
       // Scrolled past top, Active card NOT in view: Show "Active Workout" pill & sticky top banner!
       exerciseFloatBtn.classList.remove('hidden-float');
-      exerciseFloatBtn.innerHTML = '<i class="fa-solid fa-crosshair"></i> Active Workout';
-      exerciseFloatBtn.dataset.mode = 'active';
+      if (exerciseFloatBtn.dataset.mode !== 'active') {
+        exerciseFloatBtn.innerHTML = '<i class="fa-solid fa-person-running"></i><span>Active Workout</span>';
+        exerciseFloatBtn.dataset.mode = 'active';
+      }
 
       if (heroCard) {
         heroCard.classList.add('is-floating');
@@ -3093,6 +3106,76 @@ function initExerciseEngine() {
 
   const editForm = document.getElementById('exercise-edit-form');
   if (editForm) editForm.addEventListener('submit', handleSaveExerciseEdit);
+
+  const dateInput = document.getElementById('exercise-edit-date');
+  const dateDisplay = document.getElementById('exercise-edit-date-display');
+  if (dateInput && dateDisplay) {
+    const updateDisplay = () => {
+      if (dateInput.value) {
+        dateDisplay.value = formatWorkoutModalDate(dateInput.value);
+      }
+    };
+    dateInput.addEventListener('change', updateDisplay);
+    dateInput.addEventListener('input', updateDisplay);
+  }
+
+  const settingsDateInput = document.getElementById('exercise-settings-start-date');
+  const settingsDateDisplay = document.getElementById('exercise-settings-start-date-display');
+  if (settingsDateInput && settingsDateDisplay) {
+    const updateSettingsDateDisplay = () => {
+      if (settingsDateInput.value) {
+        settingsDateDisplay.value = formatWorkoutModalDate(settingsDateInput.value);
+      }
+    };
+    settingsDateInput.addEventListener('change', updateSettingsDateDisplay);
+    settingsDateInput.addEventListener('input', updateSettingsDateDisplay);
+  }
+}
+
+function formatWorkoutModalDate(dateStr) {
+  if (!dateStr) return '';
+  if (dateStr.includes('/')) return dateStr;
+
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    const dateObj = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+    if (!isNaN(dateObj.getTime())) {
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayName = days[dateObj.getDay()];
+      const yy = year.slice(-2);
+      return `${dayName}, ${day}/${month}/${yy}`;
+    }
+  }
+  return dateStr;
+}
+
+function parseWorkoutModalDate(formattedStr) {
+  if (!formattedStr) return { isoDate: getTodayDateString(), dayName: 'Monday' };
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(formattedStr.trim())) {
+    const isoDate = formattedStr.trim();
+    const [y, m, d] = isoDate.split('-');
+    const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+    const dayName = !isNaN(dateObj.getTime()) ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dateObj.getDay()] : 'Monday';
+    return { isoDate, dayName };
+  }
+
+  const match = formattedStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (match) {
+    let day = match[1].padStart(2, '0');
+    let month = match[2].padStart(2, '0');
+    let year = match[3];
+    if (year.length === 2) {
+      year = '20' + year;
+    }
+    const isoDate = `${year}-${month}-${day}`;
+    const dateObj = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+    const dayName = !isNaN(dateObj.getTime()) ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dateObj.getDay()] : 'Monday';
+    return { isoDate, dayName };
+  }
+
+  return { isoDate: getTodayDateString(), dayName: 'Monday' };
 }
 
 function sortExerciseWorkouts() {
@@ -3335,7 +3418,7 @@ function renderExerciseWorkoutList() {
       <div class="workout-card-wrapper" data-id="${item.id}">
         <div class="swipe-indicator swipe-edit"><i class="fa-solid fa-pen"></i> Edit</div>
         <div class="swipe-indicator swipe-delete"><i class="fa-solid fa-trash"></i> Delete</div>
-        <div class="workout-card ${isToday ? 'active-workout is-today' : ''}" id="workout-card-${item.id}">
+        <div class="workout-card ${catClass} ${isToday ? 'active-workout is-today' : ''}" id="workout-card-${item.id}">
           <div class="workout-card-header">
             <div class="workout-date-group">
               <span class="workout-week-tag">W${item.week}</span>
@@ -3371,14 +3454,6 @@ function renderExerciseWorkoutList() {
   listContainer.querySelectorAll('.workout-card-wrapper').forEach(wrapper => {
     initWorkoutSwipeGesture(wrapper, wrapper.dataset.id);
   });
-
-  // Auto-scroll to active today workout card if viewing active program
-  setTimeout(() => {
-    const activeCard = listContainer.querySelector('.workout-card.active-workout');
-    if (activeCard) {
-      activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, 250);
 }
 
 function initWorkoutSwipeGesture(rowEl, id) {
@@ -3515,9 +3590,15 @@ function openExerciseEditModal(id) {
   const titleEl = document.getElementById('modal-exercise-edit-title');
   if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Workout Entry';
 
+  const targetDate = workout.date || getTodayDateString();
   document.getElementById('exercise-edit-id').value = workout.id;
   document.getElementById('exercise-edit-is-new').value = 'false';
-  document.getElementById('exercise-edit-date').value = workout.date || getTodayDateString();
+
+  const dateInput = document.getElementById('exercise-edit-date');
+  const dateDisplay = document.getElementById('exercise-edit-date-display');
+  if (dateInput) dateInput.value = targetDate;
+  if (dateDisplay) dateDisplay.value = formatWorkoutModalDate(targetDate);
+
   document.getElementById('exercise-edit-category').value = workout.category || 'Interval';
   document.getElementById('exercise-edit-menu').value = workout.menu || '';
 
@@ -3536,15 +3617,11 @@ function handleSaveExerciseEdit(e) {
 
   const category = document.getElementById('exercise-edit-category').value;
   const menu = document.getElementById('exercise-edit-menu').value.trim() || 'Custom Workout';
-  const dateVal = document.getElementById('exercise-edit-date').value.trim() || getTodayDateString();
 
-  let dayName = 'Monday';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
-    const d = new Date(dateVal + 'T00:00:00');
-    if (!isNaN(d.getTime())) {
-      dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
-    }
-  }
+  const dateInput = document.getElementById('exercise-edit-date');
+  const dateDisplay = document.getElementById('exercise-edit-date-display');
+  const rawDateVal = (dateInput && dateInput.value) ? dateInput.value : (dateDisplay ? dateDisplay.value : '');
+  const { isoDate, dayName } = parseWorkoutModalDate(rawDateVal);
 
   if (isNew) {
     const weekNum = (exerciseData && exerciseData.selectedWeek && exerciseData.selectedWeek !== 'ALL') ? parseInt(exerciseData.selectedWeek) : 1;
@@ -3553,7 +3630,7 @@ function handleSaveExerciseEdit(e) {
       id: id,
       week: weekNum,
       day: dayName,
-      date: dateVal,
+      date: isoDate,
       category: category,
       menu: menu,
       status: 'Pending',
@@ -3566,7 +3643,7 @@ function handleSaveExerciseEdit(e) {
     if (!workout) return;
     workout.category = category;
     workout.menu = menu;
-    workout.date = dateVal;
+    workout.date = isoDate;
     workout.day = dayName;
   }
 
@@ -3603,9 +3680,15 @@ function openAddWorkoutModal() {
   const titleEl = document.getElementById('modal-exercise-edit-title');
   if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-plus"></i> Add New Workout Entry';
 
+  const todayIso = getTodayDateString();
   document.getElementById('exercise-edit-id').value = id;
   document.getElementById('exercise-edit-is-new').value = 'true';
-  document.getElementById('exercise-edit-date').value = getTodayDateString();
+
+  const dateInput = document.getElementById('exercise-edit-date');
+  const dateDisplay = document.getElementById('exercise-edit-date-display');
+  if (dateInput) dateInput.value = todayIso;
+  if (dateDisplay) dateDisplay.value = formatWorkoutModalDate(todayIso);
+
   document.getElementById('exercise-edit-category').value = 'Interval';
   document.getElementById('exercise-edit-menu').value = '';
 
@@ -3614,29 +3697,52 @@ function openAddWorkoutModal() {
 
 function copyGeminiPrompt() {
   triggerHaptic('click');
-  const promptText = `Act as an expert running coach and strength trainer. Generate a structured workout plan in JSON format for me.
-The output MUST be valid JSON (an array of objects) with NO markdown formatting, matching this exact schema:
+
+  const title = (document.getElementById('exercise-settings-program-title')?.value || (exerciseData && exerciseData.programTitle) || 'Road to Pelari Kalcer').trim();
+  const startDateInput = document.getElementById('exercise-settings-start-date')?.value || (exerciseData && exerciseData.programStartDate) || getTodayDateString();
+  const weeks = document.getElementById('exercise-settings-program-weeks')?.value || (exerciseData && exerciseData.programWeeks) || '12';
+  const goal = document.getElementById('exercise-settings-program-goal')?.value || (exerciseData && exerciseData.programGoal) || 'Half Marathon (21K) & Endurance';
+  const level = document.getElementById('exercise-settings-fitness-level')?.value || (exerciseData && exerciseData.fitnessLevel) || 'Intermediate (Pace 6:00 - 7:30 min/km)';
+  const daysPerWeek = document.getElementById('exercise-settings-days-per-week')?.value || (exerciseData && exerciseData.trainingDaysPerWeek) || '6 Days (Mon-Sat, Sun Rest)';
+  const customNotes = (document.getElementById('exercise-settings-custom-notes')?.value || (exerciseData && exerciseData.customNotes) || '').trim();
+
+  const formattedStartDate = formatWorkoutModalDate(startDateInput);
+
+  const promptText = `Act as an expert running coach and strength conditioning trainer. Generate a structured, progressive workout plan in JSON format for me.
+
+Program Parameters:
+- Program Title: "${title}"
+- Program Start Date: ${startDateInput} (${formattedStartDate}) [IMPORTANT: Compute accurate calendar dates ("date": "YYYY-MM-DD") sequentially for each session starting from this date]
+- Program Duration: ${weeks} Weeks
+- Primary Goal: ${goal}
+- Current Fitness Level: ${level}
+- Training Frequency: ${daysPerWeek}
+${customNotes ? `- Custom Notes / Specific Focus: ${customNotes}` : ''}
+
+Output Requirements:
+The output MUST be valid JSON (an array of objects) with NO markdown fences or additional conversational text, matching this exact schema:
 
 [
   {
     "week": 1,
     "day": "Monday",
-    "date": "2025-12-08",
+    "date": "${startDateInput}",
     "category": "Interval",
-    "menu": "Interval : 8x200, Pace : RPE 8 - 9, Recovery : Jalan 200m.",
+    "menu": "Interval : 8x200m, Pace : RPE 8 - 9, Recovery : Jog/Walk 200m",
     "status": "Pending",
     "note": ""
   }
 ]
 
+Allowed Categories: "Interval", "Strength", "Easy Run", "LSD Run", "Tempo", "Rest".
+
 Requirements:
-1. Generate a 12-week progressive marathon/running & strength plan.
-2. Include Mondays (Intervals), Tuesdays (Strength Push/Pull), Wednesdays (Easy/Tempo), Thursdays (Core), Fridays (LSD Long Runs), Saturdays (Pull/Flexibility), and Sundays (Rest).
-3. Ensure every object has valid "week", "day", "date" (YYYY-MM-DD), "category", "menu", "status" ("Pending"), and "note" ("").`;
+1. Generate complete progressive schedule for all ${weeks} weeks starting from ${startDateInput}.
+2. Ensure every object has valid "week" (integer 1 to ${weeks}), "day" (Monday-Sunday), "date" (YYYY-MM-DD corresponding to the actual calendar day), "category" (from allowed list), "menu" (actionable training details with pace/sets/reps), "status" ("Pending"), and "note" ("").`;
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(promptText)
-      .then(() => showToast('Gemini AI Prompt copied to clipboard!', 'success'))
+      .then(() => showToast('Gemini AI Prompt with custom parameters copied!', 'success'))
       .catch(() => fallbackCopyPrompt(promptText));
   } else {
     fallbackCopyPrompt(promptText);
@@ -3662,12 +3768,19 @@ function fallbackCopyPrompt(text) {
 
 function openGeminiImportModal() {
   triggerHaptic('click');
+  // Hide settings modal to prevent stacking/backdrop conflict
+  const settingsModal = document.getElementById('exercise-settings-modal');
+  if (settingsModal) settingsModal.classList.add('hidden');
+
   document.getElementById('gemini-json-input').value = '';
   document.getElementById('exercise-gemini-modal').classList.remove('hidden');
 }
 
 function closeGeminiImportModal() {
   document.getElementById('exercise-gemini-modal').classList.add('hidden');
+  // Return to settings modal
+  const settingsModal = document.getElementById('exercise-settings-modal');
+  if (settingsModal) settingsModal.classList.remove('hidden');
 }
 
 function submitGeminiImportJson() {
@@ -3701,7 +3814,9 @@ function submitGeminiImportJson() {
 
     exerciseData.workouts = formattedWorkouts;
     saveExerciseDataToStorage();
-    closeGeminiImportModal();
+    document.getElementById('exercise-gemini-modal').classList.add('hidden');
+    const settingsModal = document.getElementById('exercise-settings-modal');
+    if (settingsModal) settingsModal.classList.add('hidden');
     renderExercisePage();
     showToast(`Successfully imported ${formattedWorkouts.length} workouts from Gemini AI!`, 'success');
   } catch (err) {
@@ -3719,6 +3834,7 @@ function resetExercisePlan() {
     iconClass: 'fa-rotate-right',
     onConfirm: () => {
       initDefaultExerciseData();
+      closeExerciseSettingsModal();
       renderExercisePage();
       showToast('Exercise schedule reset to default 12-Week program.', 'success');
     }
@@ -3727,10 +3843,32 @@ function resetExercisePlan() {
 
 function openExerciseSettingsModal() {
   triggerHaptic('click');
+  if (!exerciseData) exerciseData = {};
+
   const titleInput = document.getElementById('exercise-settings-program-title');
-  if (titleInput) {
-    titleInput.value = exerciseData.programTitle || 'Road to Pelari Kalcer';
-  }
+  if (titleInput) titleInput.value = exerciseData.programTitle || 'Road to Pelari Kalcer';
+
+  const defaultStart = exerciseData.programStartDate || getTodayDateString();
+  const startDateInput = document.getElementById('exercise-settings-start-date');
+  const startDateDisplay = document.getElementById('exercise-settings-start-date-display');
+  if (startDateInput) startDateInput.value = defaultStart;
+  if (startDateDisplay) startDateDisplay.value = formatWorkoutModalDate(defaultStart);
+
+  const weeksSelect = document.getElementById('exercise-settings-program-weeks');
+  if (weeksSelect) weeksSelect.value = exerciseData.programWeeks || '12';
+
+  const goalSelect = document.getElementById('exercise-settings-program-goal');
+  if (goalSelect) goalSelect.value = exerciseData.programGoal || 'Half Marathon (21K) & Endurance';
+
+  const levelSelect = document.getElementById('exercise-settings-fitness-level');
+  if (levelSelect) levelSelect.value = exerciseData.fitnessLevel || 'Intermediate (Pace 6:00 - 7:30 min/km)';
+
+  const daysSelect = document.getElementById('exercise-settings-days-per-week');
+  if (daysSelect) daysSelect.value = exerciseData.trainingDaysPerWeek || '6 Days (Mon-Sat, Sun Rest)';
+
+  const notesText = document.getElementById('exercise-settings-custom-notes');
+  if (notesText) notesText.value = exerciseData.customNotes || '';
+
   const modal = document.getElementById('exercise-settings-modal');
   if (modal) modal.classList.remove('hidden');
 }
@@ -3742,12 +3880,31 @@ function closeExerciseSettingsModal() {
 
 function saveExerciseSettings() {
   triggerHaptic('click');
+  if (!exerciseData) exerciseData = {};
+
   const titleInput = document.getElementById('exercise-settings-program-title');
-  if (titleInput) {
-    exerciseData.programTitle = titleInput.value.trim() || 'Road to Pelari Kalcer';
-  }
+  if (titleInput) exerciseData.programTitle = titleInput.value.trim() || 'Road to Pelari Kalcer';
+
+  const startDateInput = document.getElementById('exercise-settings-start-date');
+  if (startDateInput && startDateInput.value) exerciseData.programStartDate = startDateInput.value;
+
+  const weeksSelect = document.getElementById('exercise-settings-program-weeks');
+  if (weeksSelect) exerciseData.programWeeks = weeksSelect.value;
+
+  const goalSelect = document.getElementById('exercise-settings-program-goal');
+  if (goalSelect) exerciseData.programGoal = goalSelect.value;
+
+  const levelSelect = document.getElementById('exercise-settings-fitness-level');
+  if (levelSelect) exerciseData.fitnessLevel = levelSelect.value;
+
+  const daysSelect = document.getElementById('exercise-settings-days-per-week');
+  if (daysSelect) exerciseData.trainingDaysPerWeek = daysSelect.value;
+
+  const notesText = document.getElementById('exercise-settings-custom-notes');
+  if (notesText) exerciseData.customNotes = notesText.value.trim();
+
   saveExerciseDataToStorage();
   closeExerciseSettingsModal();
   renderExercisePage();
-  showToast('Exercise settings saved!', 'success');
+  showToast('Exercise settings & prompt parameters saved!', 'success');
 }
