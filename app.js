@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initNoFapEngine();
   initExerciseEngine();
   initFabCloudMenu();
+  initAppLockEngine();
   renderApp();
   autoScrollToActiveTask();
 });
@@ -3907,4 +3908,379 @@ function saveExerciseSettings() {
   closeExerciseSettingsModal();
   renderExercisePage();
   showToast('Exercise settings & prompt parameters saved!', 'success');
+}
+
+// ==========================================
+// APP SECURITY & BIOMETRIC APP LOCK ENGINE
+// ==========================================
+
+const APP_LOCK_CONFIG_KEY = 'personal_app_lock_config_v1';
+
+// Hardcoded Obfuscated Mathematical PIN Signature
+// Target formula: (X ^ 0x4B3F7) * 17 + 109 === 7095365
+const MASTER_PIN_SIGNATURE = 7095365;
+const MASTER_PIN_MASK = 0x4B3F7;
+
+function verifyCodePin(pinStr) {
+  if (!pinStr || pinStr.length !== 6) return false;
+  const val = parseInt(pinStr, 10);
+  if (isNaN(val)) return false;
+  return ((val ^ MASTER_PIN_MASK) * 17 + 109) === MASTER_PIN_SIGNATURE;
+}
+
+let appLockConfig = {
+  enabled: true,
+  pinSalt: null,
+  pinHash: null,
+  biometricsEnabled: true,
+  autoLockOnMinimize: true
+};
+
+let enteredPin = '';
+let isAppLocked = false;
+let isVerifyingPin = false;
+
+async function sha256Hex(str) {
+  try {
+    if (window.crypto && window.crypto.subtle) {
+      const enc = new TextEncoder();
+      const buf = enc.encode(str);
+      const digest = await window.crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) {
+    console.warn('Subtle crypto fallback:', e);
+  }
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return 'fb_' + Math.abs(hash).toString(16);
+}
+
+function generateHexSalt(length = 16) {
+  try {
+    if (window.crypto && window.crypto.getRandomValues) {
+      const arr = new Uint8Array(length);
+      window.crypto.getRandomValues(arr);
+      return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) {}
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
+async function hashPinWithSalt(pin, salt) {
+  return await sha256Hex(pin + ':' + salt);
+}
+
+async function initAppLockEngine() {
+  try {
+    const saved = localStorage.getItem(APP_LOCK_CONFIG_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      appLockConfig = { ...appLockConfig, ...parsed };
+    } else {
+      appLockConfig.enabled = true;
+      localStorage.setItem(APP_LOCK_CONFIG_KEY, JSON.stringify(appLockConfig));
+    }
+  } catch (err) {
+    console.error('App Lock config init error:', err);
+  }
+
+  initAppLockKeypadEvents();
+  initAppLockVisibilityListener();
+
+  if (appLockConfig.enabled) {
+    showLockScreen();
+  }
+}
+
+function initAppLockKeypadEvents() {
+  const keypad = document.getElementById('pin-keypad');
+  if (keypad) {
+    keypad.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const key = btn.dataset.key;
+      const action = btn.dataset.action;
+      if (key !== undefined) {
+        handlePinKeyInput(key);
+      } else if (action === 'backspace') {
+        handlePinBackspace();
+      } else if (action === 'clear') {
+        handlePinClear();
+      }
+    });
+  }
+
+  // Physical keyboard support
+  window.addEventListener('keydown', (e) => {
+    if (!isAppLocked) return;
+    if (e.key >= '0' && e.key <= '9') {
+      handlePinKeyInput(e.key);
+    } else if (e.key === 'Backspace') {
+      handlePinBackspace();
+    } else if (e.key === 'Escape') {
+      handlePinClear();
+    }
+  });
+
+  // Settings switch listener
+  const toggleSwitch = document.getElementById('toggle-app-lock');
+  if (toggleSwitch) {
+    toggleSwitch.checked = appLockConfig.enabled;
+    toggleSwitch.addEventListener('change', () => {
+      triggerHaptic('click');
+      appLockConfig.enabled = toggleSwitch.checked;
+      localStorage.setItem(APP_LOCK_CONFIG_KEY, JSON.stringify(appLockConfig));
+      showToast(appLockConfig.enabled ? 'App Lock enabled.' : 'App Lock disabled.', 'info');
+    });
+  }
+}
+
+function initAppLockVisibilityListener() {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && appLockConfig.enabled && !isAppLocked) {
+      showLockScreen();
+    }
+  });
+}
+
+function showLockScreen() {
+  isAppLocked = true;
+  enteredPin = '';
+  updatePinDots();
+
+  const lockScreen = document.getElementById('app-lock-screen');
+  if (lockScreen) {
+    lockScreen.classList.remove('hidden');
+  }
+
+  const statusMsg = document.getElementById('lock-status-msg');
+  if (statusMsg) {
+    statusMsg.textContent = 'Enter 6-Digit PIN or Fingerprint';
+    statusMsg.classList.remove('error');
+  }
+
+  // Attempt non-intrusive biometric trigger on supported environments
+  setTimeout(() => {
+    if (isAppLocked) triggerBiometricUnlock(true);
+  }, 400);
+}
+
+function hideLockScreen() {
+  isAppLocked = false;
+  enteredPin = '';
+  updatePinDots();
+
+  const lockScreen = document.getElementById('app-lock-screen');
+  if (lockScreen) {
+    lockScreen.classList.add('hidden');
+  }
+}
+
+function triggerManualAppLock() {
+  triggerHaptic('click');
+  const settingsModal = document.getElementById('settings-modal');
+  if (settingsModal) settingsModal.classList.add('hidden');
+  showLockScreen();
+}
+
+function updatePinDots() {
+  const dots = document.querySelectorAll('#pin-dots-container .pin-dot');
+  dots.forEach((dot, idx) => {
+    if (idx < enteredPin.length) {
+      dot.classList.add('filled');
+    } else {
+      dot.classList.remove('filled');
+      dot.classList.remove('error');
+    }
+  });
+}
+
+async function handlePinKeyInput(digit) {
+  if (enteredPin.length >= 6 || isVerifyingPin) return;
+  triggerHaptic('click');
+  enteredPin += digit;
+  updatePinDots();
+
+  if (enteredPin.length === 6) {
+    isVerifyingPin = true;
+    await verifyEnteredPin();
+    isVerifyingPin = false;
+  }
+}
+
+function handlePinBackspace() {
+  if (enteredPin.length === 0 || isVerifyingPin) return;
+  triggerHaptic('click');
+  enteredPin = enteredPin.slice(0, -1);
+  updatePinDots();
+}
+
+function handlePinClear() {
+  if (isVerifyingPin) return;
+  triggerHaptic('click');
+  enteredPin = '';
+  updatePinDots();
+}
+
+async function verifyEnteredPin() {
+  try {
+    let isMatch = false;
+
+    // 1. Verify against mathematical code signature (always works anywhere out of the box)
+    if (verifyCodePin(enteredPin)) {
+      isMatch = true;
+    }
+
+    // 2. Or verify against custom user-configured salted hash
+    if (!isMatch && appLockConfig.pinSalt && appLockConfig.pinHash) {
+      const computedHash = await hashPinWithSalt(enteredPin, appLockConfig.pinSalt);
+      if (computedHash === appLockConfig.pinHash) {
+        isMatch = true;
+      }
+    }
+
+    if (isMatch) {
+      triggerHaptic('success');
+      showToast('App unlocked successfully!', 'success');
+      hideLockScreen();
+    } else {
+      triggerHaptic('error');
+      triggerPinErrorAnimation();
+    }
+  } catch (err) {
+    console.error('Error verifying PIN:', err);
+    triggerPinErrorAnimation();
+  }
+}
+
+function triggerPinErrorAnimation() {
+  const container = document.getElementById('pin-dots-container');
+  const dots = document.querySelectorAll('#pin-dots-container .pin-dot');
+  const statusMsg = document.getElementById('lock-status-msg');
+
+  dots.forEach(d => d.classList.add('error'));
+  if (statusMsg) {
+    statusMsg.textContent = 'Incorrect PIN. Try again.';
+    statusMsg.classList.add('error');
+  }
+
+  if (container) {
+    container.classList.add('shake-animation');
+    setTimeout(() => {
+      container.classList.remove('shake-animation');
+      enteredPin = '';
+      updatePinDots();
+      if (statusMsg) {
+        statusMsg.textContent = 'Enter 6-Digit PIN or Fingerprint';
+        statusMsg.classList.remove('error');
+      }
+    }, 650);
+  }
+}
+
+async function triggerBiometricUnlock(isAuto = false) {
+  if (!isAppLocked) return;
+
+  if (!window.PublicKeyCredential) {
+    if (!isAuto) showToast('Biometrics not supported on this browser/protocol.', 'warning');
+    return;
+  }
+
+  try {
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (!available) {
+      if (!isAuto) showToast('Biometric authenticator unavailable on this device.', 'warning');
+      return;
+    }
+
+    const challenge = new Uint8Array(32);
+    window.crypto.getRandomValues(challenge);
+
+    const authOptions = {
+      publicKey: {
+        challenge: challenge,
+        timeout: 60000,
+        userVerification: 'preferred',
+        rpId: window.location.hostname || 'localhost',
+        allowCredentials: []
+      }
+    };
+
+    const credential = await navigator.credentials.get(authOptions);
+    if (credential) {
+      triggerHaptic('success');
+      showToast('Biometric authentication verified!', 'success');
+      hideLockScreen();
+    }
+  } catch (err) {
+    if (!isAuto && err.name !== 'NotAllowedError') {
+      console.log('Biometric authentication note:', err.message);
+    }
+  }
+}
+
+function openChangePinModal() {
+  triggerHaptic('click');
+  const modal = document.getElementById('change-pin-modal');
+  if (modal) {
+    const currInput = document.getElementById('current-pin-input');
+    const newInput = document.getElementById('new-pin-input');
+    const confInput = document.getElementById('confirm-pin-input');
+    if (currInput) currInput.value = '';
+    if (newInput) newInput.value = '';
+    if (confInput) confInput.value = '';
+    modal.classList.remove('hidden');
+  }
+}
+
+function closeChangePinModal() {
+  const modal = document.getElementById('change-pin-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function handleSaveNewPin(e) {
+  if (e) e.preventDefault();
+  triggerHaptic('click');
+
+  const currentPin = (document.getElementById('current-pin-input')?.value || '').trim();
+  const newPin = (document.getElementById('new-pin-input')?.value || '').trim();
+  const confirmPin = (document.getElementById('confirm-pin-input')?.value || '').trim();
+
+  if (!/^\d{6}$/.test(currentPin)) {
+    showToast('Current PIN must be exactly 6 digits.', 'warning');
+    return;
+  }
+
+  // Verify current PIN against salted hash
+  const currentHash = await hashPinWithSalt(currentPin, appLockConfig.pinSalt);
+  if (currentHash !== appLockConfig.pinHash) {
+    showToast('Incorrect current PIN.', 'error');
+    return;
+  }
+
+  if (!/^\d{6}$/.test(newPin)) {
+    showToast('New PIN must be exactly 6 digits.', 'warning');
+    return;
+  }
+
+  if (newPin !== confirmPin) {
+    showToast('New PIN and confirmation PIN do not match.', 'error');
+    return;
+  }
+
+  // Generate new cryptographic salt and hash
+  const newSalt = generateHexSalt();
+  const newHash = await hashPinWithSalt(newPin, newSalt);
+
+  appLockConfig.pinSalt = newSalt;
+  appLockConfig.pinHash = newHash;
+  localStorage.setItem(APP_LOCK_CONFIG_KEY, JSON.stringify(appLockConfig));
+
+  closeChangePinModal();
+  showToast('6-Digit Backup PIN updated successfully!', 'success');
 }

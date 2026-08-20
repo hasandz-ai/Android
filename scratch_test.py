@@ -1,31 +1,20 @@
-import urllib.request
+import time
+from playwright.sync_api import sync_playwright
 
-url = 'http://127.0.0.1:5501/index.html'
-print(f"Connecting to live server at {url}...")
+edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+file_url = "file:///d:/Hala/Random/Play/Android/index.html"
 
-try:
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req) as resp:
-        print("HTTP Status Code:", resp.status)
-        content = resp.read().decode('utf-8')
-        print(f"Total HTML Bytes Served: {len(content)} bytes")
-        
-        checks = {
-            "Daily Tasks View": 'id="view-daily-tasks"',
-            "Worship View": 'id="view-ibadah"',
-            "Streak Tracker View": 'id="view-nofap"',
-            "Exercise View": 'id="view-exercise"',
-            "Exercise Hero Card": 'id="today-workout-hero"',
-            "Exercise Settings Modal": 'id="exercise-settings-modal"',
-            "Toast Container": 'id="toast-container"',
-            "Service Worker v3": 'v=20260819_3'
-        }
-        
-        print("\n--- Live Server Markup Checks ---")
-        for key, val in checks.items():
-            present = val in content
-            status_str = "SUCCESS" if present else "FAILED"
-            print(f"[{status_str}] {key}")
+with sync_playwright() as p:
+    browser = p.chromium.launch(executable_path=edge_path, headless=True)
+    page = browser.new_page()
+    page.goto(file_url, wait_until="domcontentloaded")
+    time.sleep(1)
 
-except Exception as err:
-    print("Connection Error:", err)
+    result = page.evaluate("""() => {
+        const testMatch = verifyCodePin('191919');
+        const num = parseInt('191919', 10);
+        const calc = (num ^ MASTER_PIN_MASK) * 17 + 109;
+        return { testMatch, num, calc, signature: MASTER_PIN_SIGNATURE, mask: MASTER_PIN_MASK };
+    }""")
+    print("JS Test Result:", result)
+    browser.close()

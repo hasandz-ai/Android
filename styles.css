@@ -3682,3 +3682,261 @@ textarea.form-control {
   cursor: not-allowed !important;
   pointer-events: none !important;
 }
+
+/* ==========================================
+   SWITCH TOGGLE STYLES
+   ========================================== */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #1f3047;
+  transition: .3s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  transition: .3s;
+}
+
+input:checked + .slider {
+  background-color: var(--c-amber);
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+  background-color: #000000;
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* ==========================================
+   APP LOCK SCREEN & PIN KEYPAD STYLES
+   ========================================== */
+.app-lock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: #0a111a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.app-lock-screen.hidden {
+  display: none !important;
+}
+
+.lock-screen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
+  gap: 18px;
+}
+
+.lock-screen-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.lock-icon-badge {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  background: #121c29;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(251, 139, 36, 0.25);
+  margin-bottom: 12px;
+}
+
+.lock-app-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+}
+
+.lock-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+}
+
+.lock-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 4px;
+  transition: color 0.2s ease;
+}
+
+.lock-subtitle.error {
+  color: #ef4444 !important;
+  font-weight: 700;
+}
+
+/* 6 PIN Dots */
+.pin-dots-container {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 10px 0;
+  transition: transform 0.1s ease;
+}
+
+.pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #192738;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pin-dot.filled {
+  background: var(--c-amber);
+  border-color: var(--c-amber) !important;
+  transform: scale(1.2);
+  box-shadow: 0 0 12px rgba(251, 139, 36, 0.7);
+}
+
+.pin-dot.error {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.7) !important;
+}
+
+.shake-animation {
+  animation: pinShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes pinShake {
+  10%, 90% { transform: translate3d(-3px, 0, 0); }
+  20%, 80% { transform: translate3d(5px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-7px, 0, 0); }
+  40%, 60% { transform: translate3d(7px, 0, 0); }
+}
+
+/* Biometric Trigger Button */
+.lock-biometric-container {
+  margin-bottom: 2px;
+}
+
+.lock-biometric-btn {
+  background: rgba(251, 139, 36, 0.14);
+  color: var(--c-amber);
+  border: 1px solid rgba(251, 139, 36, 0.35) !important;
+  font-family: var(--font-family);
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lock-biometric-btn:hover,
+.lock-biometric-btn:active {
+  background: var(--c-amber);
+  color: #000000;
+  transform: scale(1.02);
+}
+
+/* Numeric PIN Keypad */
+.pin-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  width: 100%;
+  max-width: 270px;
+}
+
+.pin-key {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #121c29;
+  color: #ffffff;
+  font-family: var(--font-family);
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pin-key:hover {
+  background: #192738;
+}
+
+.pin-key:active {
+  background: var(--c-amber) !important;
+  color: #000000 !important;
+  transform: scale(0.92);
+}
+
+.pin-key.pin-key-action {
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 18px;
+}
+
+.pin-key.pin-key-action:hover {
+  background: #121c29;
+  color: #ffffff;
+}
+
+.pin-key.pin-key-action:active {
+  background: #192738 !important;
+  color: #ffffff !important;
+  transform: scale(0.92);
+}
