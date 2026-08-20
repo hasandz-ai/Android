@@ -1,7 +1,7 @@
 {
-  "name": "Habit & Task Scheduler",
-  "short_name": "TaskScheduler",
-  "description": "Personal Habit Tracker & Daily Task Scheduler PWA with Google Sheets Backend",
+  "name": "Personal App",
+  "short_name": "Personal App",
+  "description": "Personal App - Habit Tracker & Daily Task Scheduler",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a111a",

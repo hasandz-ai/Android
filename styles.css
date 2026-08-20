@@ -95,8 +95,10 @@ body.light-mode {
   }
 }
 
-/* Global Reset & Scrollbar Suppression */
-* {
+/* Global Reset, Scrollbar Suppression & Touch-to-Search Prevention */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -106,6 +108,27 @@ body.light-mode {
   -webkit-tap-highlight-color: transparent;
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Explicitly re-enable text selection for input fields, textareas, and code blocks */
+input,
+textarea,
+select,
+[contenteditable="true"],
+.code-textarea,
+.readonly-url-input,
+.user-selectable,
+.selectable-text {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
 }
 
 *::-webkit-scrollbar,
