@@ -7,11 +7,13 @@ const STATE_KEY_TASKS = 'pts_tasks_v1';
 const STATE_KEY_GAS_URL = 'pts_gas_url_v1';
 const STATE_KEY_IBADAH = 'pts_ibadah_v1';
 const STATE_KEY_NOFAP = 'pts_nofap_v1';
+const STATE_KEY_EXERCISE = 'pts_exercise_v1';
 const LOCKED_GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz-STcvV8kMGP04ZLuNcX3W3QuSU5q2XJnA9ScSquq8vgBBtcMjlhUw3IFM8LWl5sw/exec';
 
 let tasks = [];
 let ibadahData = {};
 let nofapData = null;
+let exerciseData = null;
 let currentSelectedDate = getTodayDateString();
 let currentIbadahDate = getTodayDateString();
 let gasWebAppUrl = LOCKED_GAS_WEB_APP_URL;
@@ -86,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabNavigation();
   initIbadahEngine();
   initNoFapEngine();
+  initExerciseEngine();
   initFabCloudMenu();
   renderApp();
   autoScrollToActiveTask();
@@ -151,6 +154,21 @@ function initStorage() {
     initDefaultNoFapData();
   }
 
+  const storedExercise = localStorage.getItem(STATE_KEY_EXERCISE);
+  if (storedExercise) {
+    try {
+      exerciseData = JSON.parse(storedExercise);
+      if (!exerciseData || !exerciseData.workouts || exerciseData.workouts.length === 0) {
+        initDefaultExerciseData();
+      }
+    } catch (e) {
+      console.error('Failed to parse Exercise data:', e);
+      initDefaultExerciseData();
+    }
+  } else {
+    initDefaultExerciseData();
+  }
+
   gasWebAppUrl = LOCKED_GAS_WEB_APP_URL;
   localStorage.setItem(STATE_KEY_GAS_URL, LOCKED_GAS_WEB_APP_URL);
   const gasInput = document.getElementById('gas-url-input');
@@ -181,6 +199,10 @@ function saveIbadahDataToStorage() {
 
 function saveNoFapDataToStorage() {
   localStorage.setItem(STATE_KEY_NOFAP, JSON.stringify(nofapData));
+}
+
+function saveExerciseDataToStorage() {
+  localStorage.setItem(STATE_KEY_EXERCISE, JSON.stringify(exerciseData));
 }
 
 // ==========================================
@@ -216,6 +238,11 @@ function updateClock() {
   const nofapDateEl = document.getElementById('nofap-live-date');
   if (nofapClockEl) nofapClockEl.innerHTML = timeHtml;
   if (nofapDateEl) nofapDateEl.textContent = dateText;
+
+  const exerciseClockEl = document.getElementById('exercise-live-clock');
+  const exerciseDateEl = document.getElementById('exercise-live-date');
+  if (exerciseClockEl) exerciseClockEl.innerHTML = timeHtml;
+  if (exerciseDateEl) exerciseDateEl.textContent = dateText;
 }
 
 // Active Task Banner (Card 2)
@@ -316,6 +343,7 @@ function renderApp() {
   updateActiveTaskBanner();
   if (typeof renderIbadahPage === 'function') renderIbadahPage();
   if (typeof renderNoFapPage === 'function') renderNoFapPage();
+  if (typeof renderExercisePage === 'function') renderExercisePage();
 }
 
 function renderDateNavigator() {
@@ -520,7 +548,7 @@ function changeTaskStatus(taskId, newStatus) {
 }
 
 function resetAllRowPositions() {
-  document.querySelectorAll('.task-table-row').forEach(row => {
+  document.querySelectorAll('.task-table-row, .workout-card, .workout-card-wrapper').forEach(row => {
     row.style.transform = 'translateX(0)';
     row.classList.remove('swiping-right', 'swiping-left');
   });
@@ -930,7 +958,7 @@ async function pushDataToGoogleSheets() {
     return;
   }
 
-  showToast('Uploading Tasks, Worship & Streak Tracker data to Google Sheets...', 'info');
+  showToast('Uploading Tasks, Worship, Streak & Exercise data to Google Sheets...', 'info');
 
   try {
     const payload = {
@@ -938,6 +966,7 @@ async function pushDataToGoogleSheets() {
       tasks: tasks,
       ibadah: ibadahData,
       nofap: nofapData,
+      exercise: exerciseData,
       timestamp: new Date().toISOString()
     };
 
@@ -950,7 +979,7 @@ async function pushDataToGoogleSheets() {
 
     const result = await response.json();
     if (result && result.status === 'success') {
-      showToast('Upload successful! Tasks, Worship & Streak Tracker data saved.', 'success');
+      showToast('Upload successful! Tasks, Worship, Streak & Exercise data saved.', 'success');
     } else {
       showToast(result.message || 'Upload complete', 'success');
     }
@@ -991,7 +1020,7 @@ async function pullDataFromGoogleSheets() {
     return;
   }
 
-  showToast('Fetching Tasks, Worship & Streak Tracker data from Google Sheets...', 'info');
+  showToast('Fetching Tasks, Worship, Streak & Exercise data from Google Sheets...', 'info');
 
   try {
     const fetchUrl = `${gasWebAppUrl}?action=get_all&t=${Date.now()}`;
@@ -1025,8 +1054,13 @@ async function pullDataFromGoogleSheets() {
         saveNoFapDataToStorage();
       }
 
+      if (result.exercise && typeof result.exercise === 'object') {
+        exerciseData = result.exercise;
+        saveExerciseDataToStorage();
+      }
+
       renderApp();
-      showToast(`Download successful! ${taskCount} tasks, ${ibadahDaysCount} worship days & Streak Tracker loaded.`, 'success');
+      showToast(`Download successful! Sync completed.`, 'success');
     } else {
       showToast('Google Sheets data is empty.', 'warning');
     }
@@ -1054,19 +1088,22 @@ function saveSettings() {
 function resetStorageData() {
   showConfirmModal({
     title: 'Reset Local Cache',
-    message: 'Are you sure you want to clear all local tasks, worship, and streak tracker data?',
+    message: 'Are you sure you want to clear all local tasks, worship, streak tracker, and exercise data?',
     confirmText: 'Reset',
     iconClass: 'fa-rotate-right',
     onConfirm: () => {
       localStorage.removeItem(STATE_KEY_TASKS);
       localStorage.removeItem(STATE_KEY_IBADAH);
       localStorage.removeItem(STATE_KEY_NOFAP);
+      localStorage.removeItem(STATE_KEY_EXERCISE);
       tasks = [];
       ibadahData = {};
       initDefaultNoFapData();
+      initDefaultExerciseData();
       saveTasksToStorage();
       saveIbadahDataToStorage();
       saveNoFapDataToStorage();
+      saveExerciseDataToStorage();
       initStorage();
       renderApp();
       document.getElementById('settings-modal').classList.add('hidden');
@@ -1358,7 +1395,7 @@ function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
 
-  let icon = 'fa-info-circle';
+  let icon = 'fa-circle-info';
   if (type === 'success') icon = 'fa-circle-check';
   if (type === 'error') icon = 'fa-circle-xmark';
   if (type === 'warning') icon = 'fa-triangle-exclamation';
@@ -1368,14 +1405,19 @@ function showToast(message, type = 'info') {
 
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
+    toast.style.transform = 'translateY(10px)';
+    toast.style.transition = 'all 0.3s ease';
+    setTimeout(() => {
+      if (toast && toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 300);
   }, 3000);
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>"']/g, function (m) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>"']/g, function (m) {
     return {
       '&': '&amp;',
       '<': '&lt;',
@@ -1426,6 +1468,14 @@ function initTabNavigation() {
       const tabName = item.dataset.tab;
       if (!tabName || item.classList.contains('disabled')) return;
 
+      // Re-tapping active tab smoothly scrolls to the top of the page!
+      if (item.classList.contains('active')) {
+        triggerHaptic('click');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (typeof item.blur === 'function') item.blur();
+        return;
+      }
+
       triggerHaptic('click');
       clearPrayerFocusEffect();
 
@@ -1456,9 +1506,31 @@ function initTabNavigation() {
       } else if (tabName === 'nofap') {
         window.scrollTo({ top: 0, behavior: 'instant' });
         renderNoFapPage();
+      } else if (tabName === 'exercise') {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        renderExercisePage();
       }
+
+      // Toggle Floating Add Workout FAB button visibility (exercise tab only)
+      updateFabAddWorkoutVisibility(tabName);
     });
   });
+
+  // Check initial tab visibility on app load
+  updateFabAddWorkoutVisibility();
+}
+
+function updateFabAddWorkoutVisibility(explicitTabName) {
+  const activeTab = document.querySelector('.pill-nav-item.active');
+  const currentTab = explicitTabName || (activeTab ? activeTab.dataset.tab : 'daily-tasks');
+  const fabAddWorkout = document.getElementById('fab-add-workout-wrapper');
+  if (fabAddWorkout) {
+    if (currentTab === 'exercise') {
+      fabAddWorkout.classList.remove('hidden-fab');
+    } else {
+      fabAddWorkout.classList.add('hidden-fab');
+    }
+  }
 }
 
 function initIbadahDateLongPressGesture() {
@@ -1813,17 +1885,106 @@ function initFloatingSummaryButton() {
   document.addEventListener('scroll', handleScroll, { passive: true });
 }
 
-function updateFloatingSummaryButtonState() {
-  const floatBtn = document.getElementById('ibadah-floating-summary-btn');
-  if (!floatBtn) return;
+function handleExerciseFloatingBtnClick(e) {
+  if (e) e.stopPropagation();
+  const btn = document.getElementById('exercise-floating-settings-btn');
+  if (!btn) return;
 
-  const activeTab = document.querySelector('.pill-nav-item.active');
-  const isIbadahViewVisible = document.getElementById('view-ibadah') && !document.getElementById('view-ibadah').classList.contains('hidden');
-
-  if (isIbadahViewVisible && window.scrollY <= 25) {
-    floatBtn.classList.remove('hidden-float');
+  if (btn.dataset.mode === 'active') {
+    scrollToActiveWorkout();
   } else {
-    floatBtn.classList.add('hidden-float');
+    openExerciseSettingsModal();
+  }
+}
+
+function scrollToActiveWorkout() {
+  triggerHaptic('click');
+  const activeCard = document.querySelector('.workout-card.active-workout') || document.querySelector('.workout-card.is-today');
+  if (activeCard) {
+    activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    const listEl = document.getElementById('exercise-workout-list');
+    if (listEl) listEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function isElementInViewport(el) {
+  if (!el) return false;
+  const rect = el.getBoundingClientRect();
+  const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+  return (rect.top < windowHeight - 60 && rect.bottom > 60);
+}
+
+function updateFloatingBannerTitle() {
+  const floatingTitleEl = document.getElementById('exercise-floating-banner-title');
+  if (!floatingTitleEl) return;
+
+  const todayStr = getTodayDateString();
+  const workouts = (exerciseData && exerciseData.workouts) ? exerciseData.workouts : [];
+  const todayWorkout = workouts.find(w => w.date === todayStr) || workouts.find(w => w.status === 'Pending');
+
+  if (todayWorkout && todayWorkout.menu) {
+    floatingTitleEl.textContent = todayWorkout.menu;
+  } else {
+    floatingTitleEl.textContent = 'Active Workout Target';
+  }
+}
+
+function updateFloatingSummaryButtonState() {
+  const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  const isAtTop = currentScrollY <= 25;
+
+  // 1. Worship Summary Floating Button (Visible ONLY when page is at the top)
+  const ibadahFloatBtn = document.getElementById('ibadah-floating-summary-btn');
+  if (ibadahFloatBtn) {
+    const isIbadahViewVisible = document.getElementById('view-ibadah') && !document.getElementById('view-ibadah').classList.contains('hidden');
+    if (isIbadahViewVisible && isAtTop) {
+      ibadahFloatBtn.classList.remove('hidden-float');
+    } else {
+      ibadahFloatBtn.classList.add('hidden-float');
+    }
+  }
+
+  // 2. Exercise Floating Controls (Settings vs Active Workout pill & Hero Banner Morph)
+  const exerciseFloatBtn = document.getElementById('exercise-floating-settings-btn');
+  const heroCard = document.getElementById('today-workout-hero');
+  const isExerciseViewVisible = document.getElementById('view-exercise') && !document.getElementById('view-exercise').classList.contains('hidden');
+
+  if (isExerciseViewVisible && exerciseFloatBtn) {
+    const activeListCard = document.querySelector('.workout-card.active-workout') || document.querySelector('.workout-card.is-today');
+    const isActiveListCardInView = isElementInViewport(activeListCard);
+
+    if (isAtTop) {
+      // Top of page: Show "Exercise Settings" pill, full hero banner
+      exerciseFloatBtn.classList.remove('hidden-float');
+      exerciseFloatBtn.innerHTML = '<i class="fa-solid fa-sliders"></i> Exercise Settings';
+      exerciseFloatBtn.dataset.mode = 'settings';
+
+      if (heroCard) {
+        heroCard.classList.remove('is-floating');
+        heroCard.classList.remove('hidden-sticky');
+      }
+    } else if (isActiveListCardInView) {
+      // Arrived at active workout card: HIDE floating pill AND HIDE sticky top banner!
+      exerciseFloatBtn.classList.add('hidden-float');
+
+      if (heroCard) {
+        heroCard.classList.add('is-floating');
+        heroCard.classList.add('hidden-sticky');
+      }
+    } else {
+      // Scrolled past top, Active card NOT in view: Show "Active Workout" pill & sticky top banner!
+      exerciseFloatBtn.classList.remove('hidden-float');
+      exerciseFloatBtn.innerHTML = '<i class="fa-solid fa-crosshair"></i> Active Workout';
+      exerciseFloatBtn.dataset.mode = 'active';
+
+      if (heroCard) {
+        heroCard.classList.add('is-floating');
+        heroCard.classList.remove('hidden-sticky');
+      }
+    }
+  } else if (exerciseFloatBtn) {
+    exerciseFloatBtn.classList.add('hidden-float');
   }
 }
 
@@ -2780,4 +2941,813 @@ function initNoFapHistorySwipe(itemEl, index) {
     isSwiping = false;
     thresholdTriggered = false;
   });
+}
+
+// ==========================================
+// EXERCISE & TRAINING PROGRAM ENGINE
+// ==========================================
+
+const DEFAULT_PELARI_KALCER_PLAN = [
+  // Week 1
+  { id: 'ex-1-1', week: 1, day: 'Monday', date: '2025-12-08', category: 'Interval', menu: 'Interval : 8x200, Pace : RPE 8 - 9, Recovery : Jalan 200m.', status: 'Done', note: 'Finish Strong' },
+  { id: 'ex-1-2', week: 1, day: 'Tuesday', date: '2025-12-09', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Done', note: '' },
+  { id: 'ex-1-3', week: 1, day: 'Wednesday', date: '2025-12-10', category: 'Easy Run', menu: 'Easy Run, Pace : 7.15, 55 min', status: 'Done', note: 'Finish Strong' },
+  { id: 'ex-1-4', week: 1, day: 'Thursday', date: '2025-12-11', category: 'Strength', menu: 'Core & Stability', status: 'Replaced', note: 'Replaced with Badminton' },
+  { id: 'ex-1-5', week: 1, day: 'Friday', date: '2025-12-12', category: 'LSD Run', menu: 'LSD 11k, Pace : 7.15', status: 'Done', note: 'Aboot' },
+  { id: 'ex-1-6', week: 1, day: 'Saturday', date: '2025-12-13', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Swap Day', note: '' },
+  { id: 'ex-1-7', week: 1, day: 'Sunday', date: '2025-12-14', category: 'Rest', menu: 'Rest', status: 'Done', note: '' },
+
+  // Week 2
+  { id: 'ex-2-1', week: 2, day: 'Monday', date: '2025-12-15', category: 'Interval', menu: 'Interval : 8x200, Pace : RPE 8 - 9, Recovery : Jalan 200m.', status: 'Cancel', note: 'Hujan' },
+  { id: 'ex-2-2', week: 2, day: 'Tuesday', date: '2025-12-16', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Done', note: '' },
+  { id: 'ex-2-3', week: 2, day: 'Wednesday', date: '2025-12-17', category: 'Easy Run', menu: 'Easy Run, Pace : 7.15, 55 min', status: 'Done', note: '' },
+  { id: 'ex-2-4', week: 2, day: 'Thursday', date: '2025-12-18', category: 'Strength', menu: 'Core & Stability', status: 'Replaced', note: 'Badminton' },
+  { id: 'ex-2-5', week: 2, day: 'Friday', date: '2025-12-19', category: 'LSD Run', menu: 'LSD 11k, Pace : 7.15', status: 'Cancel', note: '' },
+  { id: 'ex-2-6', week: 2, day: 'Saturday', date: '2025-12-20', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Done', note: '' },
+  { id: 'ex-2-7', week: 2, day: 'Sunday', date: '2025-12-21', category: 'Rest', menu: 'Rest', status: 'Done', note: '' },
+
+  // Week 3
+  { id: 'ex-3-1', week: 3, day: 'Monday', date: '2025-12-22', category: 'Interval', menu: 'Interval : 6x400, Pace : 5.00, Recovery : Jogging Ringan 400m.', status: 'Done', note: '' },
+  { id: 'ex-3-2', week: 3, day: 'Tuesday', date: '2025-12-23', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Cancel', note: '' },
+  { id: 'ex-3-3', week: 3, day: 'Wednesday', date: '2025-12-24', category: 'Easy Run', menu: 'Easy Run, Pace : 7.15, 55 min', status: 'Done', note: '' },
+  { id: 'ex-3-4', week: 3, day: 'Thursday', date: '2025-12-25', category: 'Strength', menu: 'Core & Stability', status: 'Replaced', note: 'Upper Body Pull' },
+  { id: 'ex-3-5', week: 3, day: 'Friday', date: '2025-12-26', category: 'LSD Run', menu: 'LSD 12k, Pace : 7.00', status: 'Done', note: '' },
+  { id: 'ex-3-6', week: 3, day: 'Saturday', date: '2025-12-27', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Cancel', note: '' },
+  { id: 'ex-3-7', week: 3, day: 'Sunday', date: '2025-12-28', category: 'Rest', menu: 'Rest', status: 'Done', note: '' },
+
+  // Week 4
+  { id: 'ex-4-1', week: 4, day: 'Monday', date: '2025-12-29', category: 'Interval', menu: 'Interval : 6x400, Pace : 5.00, Recovery : Jogging Ringan 400m.', status: 'Replaced', note: '' },
+  { id: 'ex-4-2', week: 4, day: 'Tuesday', date: '2025-12-30', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Cancel', note: '5k @29.30' },
+  { id: 'ex-4-3', week: 4, day: 'Wednesday', date: '2025-12-31', category: 'Easy Run', menu: 'Easy Run, Pace : 7.15, 55 min', status: 'Replaced', note: '' },
+  { id: 'ex-4-4', week: 4, day: 'Thursday', date: '2026-01-01', category: 'Strength', menu: 'Core & Stability', status: 'Cancel', note: '' },
+  { id: 'ex-4-5', week: 4, day: 'Friday', date: '2026-01-02', category: 'LSD Run', menu: 'LSD 12k, Pace : 7.00', status: 'Done', note: '' },
+  { id: 'ex-4-6', week: 4, day: 'Saturday', date: '2026-01-03', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Cancel', note: '' },
+  { id: 'ex-4-7', week: 4, day: 'Sunday', date: '2026-01-04', category: 'Rest', menu: 'Rest', status: 'Done', note: '' },
+
+  // Week 5
+  { id: 'ex-5-1', week: 5, day: 'Monday', date: '2026-01-05', category: 'Interval', menu: 'Interval : 4x800, Pace : 6.00, Recovery : Jogging Ringan 400m.', status: 'Replaced', note: '' },
+  { id: 'ex-5-2', week: 5, day: 'Tuesday', date: '2026-01-06', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Cancel', note: '5k @30.00' },
+  { id: 'ex-5-3', week: 5, day: 'Wednesday', date: '2026-01-07', category: 'Easy Run', menu: 'Easy Run, Pace : 7.15, 55 min', status: 'Replaced', note: '' },
+  { id: 'ex-5-4', week: 5, day: 'Thursday', date: '2026-01-08', category: 'Strength', menu: 'Core & Stability', status: 'Cancel', note: '' },
+  { id: 'ex-5-5', week: 5, day: 'Friday', date: '2026-01-09', category: 'LSD Run', menu: 'LSD 14k, Pace : 7.00', status: 'Cancel', note: '' },
+  { id: 'ex-5-6', week: 5, day: 'Saturday', date: '2026-01-10', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Cancel', note: '' },
+  { id: 'ex-5-7', week: 5, day: 'Sunday', date: '2026-01-11', category: 'Rest', menu: 'Rest', status: 'Done', note: '' },
+
+  // Week 6
+  { id: 'ex-6-1', week: 6, day: 'Monday', date: '2026-01-12', category: 'Interval', menu: 'Interval : 4x1000, Pace : 6.00, Recovery : Jogging Ringan 400m.', status: 'Cancel', note: '' },
+  { id: 'ex-6-2', week: 6, day: 'Tuesday', date: '2026-01-13', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Cancel', note: '' },
+  { id: 'ex-6-3', week: 6, day: 'Wednesday', date: '2026-01-14', category: 'Tempo', menu: 'Tempo Run, Pace : 6.15, 25 Min, Warm Up 10 Min, Cooling Down 10 Min', status: 'Cancel', note: '' },
+  { id: 'ex-6-4', week: 6, day: 'Thursday', date: '2026-01-15', category: 'Strength', menu: 'Core & Stability', status: 'Replaced', note: 'Badminton' },
+  { id: 'ex-6-5', week: 6, day: 'Friday', date: '2026-01-16', category: 'LSD Run', menu: 'LSD 16k, Pace : 7.00', status: 'Failed', note: '13.5K @7.45' },
+  { id: 'ex-6-6', week: 6, day: 'Saturday', date: '2026-01-17', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Done', note: '' },
+  { id: 'ex-6-7', week: 6, day: 'Sunday', date: '2026-01-18', category: 'Rest', menu: 'Rest', status: 'Done', note: '' },
+
+  // Week 7
+  { id: 'ex-7-1', week: 7, day: 'Monday', date: '2026-01-19', category: 'Interval', menu: 'Interval : 4x1000, Pace : 6.00, Recovery : Jogging Ringan 400m.', status: 'Done', note: '' },
+  { id: 'ex-7-2', week: 7, day: 'Tuesday', date: '2026-01-20', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Done', note: 'Push Only' },
+  { id: 'ex-7-3', week: 7, day: 'Wednesday', date: '2026-01-21', category: 'Tempo', menu: 'Tempo Run, Pace : 6.15, 25 Min, Warm Up 10 Min, Cooling Down 10 Min', status: 'Done', note: '' },
+  { id: 'ex-7-4', week: 7, day: 'Thursday', date: '2026-01-22', category: 'Strength', menu: 'Core & Stability', status: 'Replaced', note: 'Badminton' },
+  { id: 'ex-7-5', week: 7, day: 'Friday', date: '2026-01-23', category: 'LSD Run', menu: 'LSD 16k, Pace : 7.00', status: 'Done', note: '16K @7.43' },
+  { id: 'ex-7-6', week: 7, day: 'Saturday', date: '2026-01-24', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Done', note: '' },
+  { id: 'ex-7-7', week: 7, day: 'Sunday', date: '2026-01-25', category: 'Rest', menu: 'Rest', status: 'Pending', note: '' },
+
+  // Week 8
+  { id: 'ex-8-1', week: 8, day: 'Monday', date: '2026-01-26', category: 'Interval', menu: 'Interval : 4x1000, Pace : 5.40, Recovery : Jogging Ringan 400m.', status: 'Cancel', note: '' },
+  { id: 'ex-8-2', week: 8, day: 'Tuesday', date: '2026-01-27', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Cancel', note: '' },
+  { id: 'ex-8-3', week: 8, day: 'Wednesday', date: '2026-01-28', category: 'Tempo', menu: 'Tempo Run, Pace : 6.00, 30 Min, Warm Up 10 Min, Cooling Down 10 Min', status: 'Cancel', note: '' },
+  { id: 'ex-8-4', week: 8, day: 'Thursday', date: '2026-01-29', category: 'Strength', menu: 'Core & Stability', status: 'Cancel', note: '' },
+  { id: 'ex-8-5', week: 8, day: 'Friday', date: '2026-01-30', category: 'LSD Run', menu: 'LSD 19k, Pace : 6.45', status: 'Replaced', note: '5K easy' },
+  { id: 'ex-8-6', week: 8, day: 'Saturday', date: '2026-01-31', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Done', note: '' },
+  { id: 'ex-8-7', week: 8, day: 'Sunday', date: '2026-02-01', category: 'Rest', menu: 'Rest', status: 'Done', note: '' },
+
+  // Week 9
+  { id: 'ex-9-1', week: 9, day: 'Monday', date: '2026-02-02', category: 'Interval', menu: 'Interval : 4x1000, Pace : 5.40, Recovery : Jogging Ringan 400m.', status: 'Cancel', note: '' },
+  { id: 'ex-9-2', week: 9, day: 'Tuesday', date: '2026-02-03', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Cancel', note: '' },
+  { id: 'ex-9-3', week: 9, day: 'Wednesday', date: '2026-02-04', category: 'Tempo', menu: 'Tempo Run, Pace : 6.00, 30 Min, Warm Up 10 Min, Cooling Down 10 Min', status: 'Cancel', note: '' },
+  { id: 'ex-9-4', week: 9, day: 'Thursday', date: '2026-02-05', category: 'Strength', menu: 'Core & Stability', status: 'Cancel', note: '' },
+  { id: 'ex-9-5', week: 9, day: 'Friday', date: '2026-02-06', category: 'LSD Run', menu: 'LSD 19k, Pace : 6.45', status: 'Cancel', note: '' },
+  { id: 'ex-9-6', week: 9, day: 'Saturday', date: '2026-02-07', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Cancel', note: '' },
+  { id: 'ex-9-7', week: 9, day: 'Sunday', date: '2026-02-08', category: 'Rest', menu: 'Rest', status: 'Done', note: '' },
+
+  // Week 10
+  { id: 'ex-10-1', week: 10, day: 'Monday', date: '2026-02-09', category: 'Tempo', menu: 'Race Simulation, 5k, Pace : 5.45', status: 'Pending', note: '' },
+  { id: 'ex-10-2', week: 10, day: 'Tuesday', date: '2026-02-10', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Pending', note: '' },
+  { id: 'ex-10-3', week: 10, day: 'Wednesday', date: '2026-02-11', category: 'Easy Run', menu: 'Easy Run, Pace : 7.00, 45 Min', status: 'Pending', note: '' },
+  { id: 'ex-10-4', week: 10, day: 'Thursday', date: '2026-02-12', category: 'Strength', menu: 'Core & Stability', status: 'Pending', note: '' },
+  { id: 'ex-10-5', week: 10, day: 'Friday', date: '2026-02-13', category: 'LSD Run', menu: 'LSD 15k, Pace : 6.30', status: 'Pending', note: '' },
+  { id: 'ex-10-6', week: 10, day: 'Saturday', date: '2026-02-14', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Pending', note: '' },
+  { id: 'ex-10-7', week: 10, day: 'Sunday', date: '2026-02-15', category: 'Rest', menu: 'Rest', status: 'Pending', note: '' },
+
+  // Week 11
+  { id: 'ex-11-1', week: 11, day: 'Monday', date: '2026-02-16', category: 'Interval', menu: 'Interval : 8x400, Pace : 5.00, Recovery : Jalan 400m.', status: 'Pending', note: '' },
+  { id: 'ex-11-2', week: 11, day: 'Tuesday', date: '2026-02-17', category: 'Strength', menu: 'Upper Body (Push) + Lower Body (Strength)', status: 'Pending', note: '' },
+  { id: 'ex-11-3', week: 11, day: 'Wednesday', date: '2026-02-18', category: 'Easy Run', menu: 'Easy Run, Pace : 6.45, 40 Min', status: 'Pending', note: '' },
+  { id: 'ex-11-4', week: 11, day: 'Thursday', date: '2026-02-19', category: 'Strength', menu: 'Core & Stability', status: 'Pending', note: '' },
+  { id: 'ex-11-5', week: 11, day: 'Friday', date: '2026-02-20', category: 'LSD Run', menu: 'LSD 22k, Pace : 6.30', status: 'Pending', note: '' },
+  { id: 'ex-11-6', week: 11, day: 'Saturday', date: '2026-02-21', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Pending', note: '' },
+  { id: 'ex-11-7', week: 11, day: 'Sunday', date: '2026-02-22', category: 'Rest', menu: 'Rest', status: 'Pending', note: '' },
+
+  // Week 12
+  { id: 'ex-12-1', week: 12, day: 'Monday', date: '2026-02-23', category: 'Interval', menu: 'Interval : 4x200, Pace : 9+, Recovery : Jalan 400m.', status: 'Pending', note: '' },
+  { id: 'ex-12-2', week: 12, day: 'Tuesday', date: '2026-02-24', category: 'Strength', menu: 'Upper Body (Push) + Mobility (Light)', status: 'Pending', note: '' },
+  { id: 'ex-12-3', week: 12, day: 'Wednesday', date: '2026-02-25', category: 'Easy Run', menu: 'Easy Run, Pace : 7.00, 25 Min', status: 'Pending', note: '' },
+  { id: 'ex-12-4', week: 12, day: 'Thursday', date: '2026-02-26', category: 'Strength', menu: 'Core & Stability (Very Light)', status: 'Pending', note: '' },
+  { id: 'ex-12-5', week: 12, day: 'Friday', date: '2026-02-27', category: 'LSD Run', menu: 'LSD 24k, Pace : 6.30', status: 'Pending', note: '' },
+  { id: 'ex-12-6', week: 12, day: 'Saturday', date: '2026-02-28', category: 'Strength', menu: 'Upper Body (Pull) + Flexibility', status: 'Pending', note: '' },
+  { id: 'ex-12-7', week: 12, day: 'Sunday', date: '2026-03-01', category: 'Rest', menu: 'Rest', status: 'Pending', note: '' }
+];
+
+function initDefaultExerciseData() {
+  exerciseData = {
+    programTitle: 'Road to Pelari Kalcer',
+    selectedWeek: 'ALL',
+    workouts: DEFAULT_PELARI_KALCER_PLAN
+  };
+  saveExerciseDataToStorage();
+}
+
+function initExerciseEngine() {
+  const btnSettings = document.getElementById('btn-open-exercise-settings');
+  if (btnSettings) btnSettings.addEventListener('click', openExerciseSettingsModal);
+
+  const btnAdd = document.getElementById('btn-add-workout');
+  if (btnAdd) btnAdd.addEventListener('click', openAddWorkoutModal);
+
+  const closeSettingsModal = document.getElementById('close-exercise-settings-modal');
+  if (closeSettingsModal) closeSettingsModal.addEventListener('click', closeExerciseSettingsModal);
+
+  const closeGeminiModal = document.getElementById('close-exercise-gemini-modal');
+  if (closeGeminiModal) closeGeminiModal.addEventListener('click', closeGeminiImportModal);
+
+  const cancelGeminiBtn = document.getElementById('cancel-exercise-gemini-btn');
+  if (cancelGeminiBtn) cancelGeminiBtn.addEventListener('click', closeGeminiImportModal);
+
+  const confirmGeminiBtn = document.getElementById('confirm-exercise-gemini-btn');
+  if (confirmGeminiBtn) confirmGeminiBtn.addEventListener('click', submitGeminiImportJson);
+
+  const closeEditModal = document.getElementById('close-exercise-edit-modal');
+  if (closeEditModal) closeEditModal.addEventListener('click', closeExerciseEditModal);
+
+  const cancelEditBtn = document.getElementById('cancel-exercise-edit-btn');
+  if (cancelEditBtn) cancelEditBtn.addEventListener('click', closeExerciseEditModal);
+
+  const editForm = document.getElementById('exercise-edit-form');
+  if (editForm) editForm.addEventListener('submit', handleSaveExerciseEdit);
+}
+
+function sortExerciseWorkouts() {
+  if (!exerciseData || !exerciseData.workouts) return;
+  exerciseData.workouts.sort((a, b) => {
+    if (a.date && b.date && a.date !== b.date) {
+      return a.date.localeCompare(b.date);
+    }
+    const weekA = parseInt(a.week) || 0;
+    const weekB = parseInt(b.week) || 0;
+    if (weekA !== weekB) return weekA - weekB;
+    return 0;
+  });
+}
+
+function renderExercisePage() {
+  if (!exerciseData || !exerciseData.workouts) {
+    initDefaultExerciseData();
+  }
+
+  sortExerciseWorkouts();
+  renderTodayWorkoutHero();
+  renderExerciseWeekPills();
+  renderExerciseWorkoutList();
+  updateFloatingSummaryButtonState();
+  updateFabAddWorkoutVisibility();
+}
+
+function renderTodayWorkoutHero() {
+  const todayStr = getTodayDateString();
+  const workouts = exerciseData.workouts || [];
+
+  const titleEl = document.getElementById('exercise-program-title');
+  if (titleEl) titleEl.textContent = exerciseData.programTitle || 'Road to Pelari Kalcer';
+
+  // Find exact workout entry for TODAY by date
+  const todayWorkout = workouts.find(w => w.date === todayStr);
+
+  // Find upcoming pending workout (after today or nearest pending)
+  const upcomingWorkout = workouts.find(w => w.status === 'Pending' && (w.date ? w.date >= todayStr : true)) || workouts.find(w => w.status === 'Pending');
+
+  const activeWeekPill = document.getElementById('exercise-active-week-pill');
+  if (activeWeekPill) {
+    const totalWeeks = getTotalProgramWeeks();
+    const currentWeek = todayWorkout ? todayWorkout.week : (upcomingWorkout ? upcomingWorkout.week : 1);
+    activeWeekPill.textContent = `Week ${currentWeek} of ${totalWeeks}`;
+  }
+
+  const dateBadge = document.getElementById('exercise-today-date-badge');
+  if (dateBadge) {
+    dateBadge.textContent = formatShortDddDate(todayStr);
+  }
+
+  const labelEl = document.getElementById('exercise-hero-label');
+  const menuEl = document.getElementById('exercise-today-menu');
+  const heroStatusBox = document.getElementById('exercise-hero-status-box');
+  const heroStatusSelect = document.getElementById('exercise-hero-status-select');
+  const upcomingPreviewEl = document.getElementById('exercise-upcoming-preview');
+  const nextDateTag = document.getElementById('exercise-next-date-tag');
+  const nextMenuEl = document.getElementById('exercise-next-menu');
+
+  // Case 1: Today HAS a workout and it is NOT done yet
+  if (todayWorkout && todayWorkout.status !== 'Done' && (todayWorkout.category || '').toLowerCase() !== 'rest') {
+    if (labelEl) labelEl.innerHTML = `<i class="fa-solid fa-crosshair"></i> TODAY'S WORKOUT TARGET`;
+    if (menuEl) menuEl.textContent = todayWorkout.menu || 'Active Workout';
+    if (heroStatusBox) heroStatusBox.style.display = 'flex';
+    if (heroStatusSelect) heroStatusSelect.value = todayWorkout.status || 'Pending';
+    if (upcomingPreviewEl) upcomingPreviewEl.classList.add('hidden');
+  } 
+  // Case 2: Today's workout is already COMPLETED (status === 'Done')
+  else if (todayWorkout && todayWorkout.status === 'Done') {
+    if (labelEl) labelEl.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #34d399;"></i> TODAY'S TARGET COMPLETED`;
+    if (menuEl) menuEl.innerHTML = `<span style="opacity: 0.85; text-decoration: line-through;">${escapeHtml(todayWorkout.menu)}</span> <span style="font-size: 14px; font-weight: 800; color: #34d399; margin-left: 6px;">Done! 🎉</span>`;
+    if (heroStatusBox) heroStatusBox.style.display = 'flex';
+    if (heroStatusSelect) heroStatusSelect.value = 'Done';
+    
+    // Show upcoming preview if available
+    if (upcomingWorkout && upcomingWorkout.id !== todayWorkout.id) {
+      if (upcomingPreviewEl) upcomingPreviewEl.classList.remove('hidden');
+      if (nextDateTag) nextDateTag.textContent = `W${upcomingWorkout.week} • ${formatShortDddDate(upcomingWorkout.date)}`;
+      if (nextMenuEl) nextMenuEl.textContent = upcomingWorkout.menu;
+    } else if (upcomingPreviewEl) {
+      upcomingPreviewEl.classList.add('hidden');
+    }
+  } 
+  // Case 3: No workout scheduled for today OR Category is 'Rest'
+  else {
+    const isRestCat = todayWorkout && (todayWorkout.category || '').toLowerCase() === 'rest';
+    if (labelEl) labelEl.innerHTML = `<i class="fa-solid fa-mug-hot" style="color: var(--c-amber);"></i> RECOVERY & REST DAY`;
+    if (menuEl) menuEl.textContent = isRestCat && todayWorkout.menu ? todayWorkout.menu : 'Enjoy Your Rest Day! ☕ Rest & Recovery';
+    if (todayWorkout && heroStatusBox) {
+      heroStatusBox.style.display = 'flex';
+      if (heroStatusSelect) heroStatusSelect.value = todayWorkout.status;
+    } else if (heroStatusBox) {
+      heroStatusBox.style.display = 'none';
+    }
+
+    // Show upcoming preview if available
+    if (upcomingWorkout) {
+      if (upcomingPreviewEl) upcomingPreviewEl.classList.remove('hidden');
+      if (nextDateTag) nextDateTag.textContent = `W${upcomingWorkout.week} • ${formatShortDddDate(upcomingWorkout.date)}`;
+      if (nextMenuEl) nextMenuEl.textContent = upcomingWorkout.menu;
+    } else if (upcomingPreviewEl) {
+      upcomingPreviewEl.classList.add('hidden');
+    }
+  }
+
+  // Lock hero status select if target date is in the future
+  if (heroStatusSelect) {
+    const isFutureTarget = todayWorkout && todayWorkout.date && todayWorkout.date > todayStr;
+    if (isFutureTarget) {
+      heroStatusSelect.disabled = true;
+      heroStatusSelect.title = 'Status locked until workout date arrives';
+      heroStatusSelect.classList.add('disabled-future-select');
+    } else {
+      heroStatusSelect.disabled = false;
+      heroStatusSelect.removeAttribute('title');
+      heroStatusSelect.classList.remove('disabled-future-select');
+    }
+  }
+
+  // Calculate Progress Stats
+  const completedCount = workouts.filter(w => w.status === 'Done').length;
+  const totalCount = workouts.length;
+  const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  const pctEl = document.getElementById('exercise-progress-percent');
+  if (pctEl) pctEl.textContent = `${progressPct}%`;
+
+  const heroPctText = document.getElementById('exercise-hero-pct-text');
+  if (heroPctText) heroPctText.textContent = `${progressPct}%`;
+
+  const fillEl = document.getElementById('exercise-hero-progress-fill');
+  if (fillEl) fillEl.style.width = `${progressPct}%`;
+
+  const doneCountEl = document.getElementById('exercise-completed-count');
+  if (doneCountEl) doneCountEl.textContent = `${completedCount} / ${totalCount}`;
+}
+
+function changeTodayWorkoutStatus(newStatus) {
+  const todayStr = getTodayDateString();
+  const workouts = exerciseData.workouts || [];
+  const todayWorkout = workouts.find(w => w.date === todayStr);
+  if (!todayWorkout) return;
+
+  changeWorkoutStatus(todayWorkout.id, newStatus);
+}
+
+function getTotalProgramWeeks() {
+  const workouts = (exerciseData && exerciseData.workouts) ? exerciseData.workouts : [];
+  if (workouts.length === 0) return 12;
+
+  let maxWeek = 1;
+  workouts.forEach(w => {
+    const weekNum = parseInt(w.week, 10);
+    if (!isNaN(weekNum) && weekNum > maxWeek) {
+      maxWeek = weekNum;
+    }
+  });
+  return maxWeek;
+}
+
+function renderExerciseWeekPills() {
+  const pillsContainer = document.getElementById('exercise-week-pills');
+  if (!pillsContainer) return;
+
+  const selectedWeek = exerciseData.selectedWeek || 'ALL';
+  const totalWeeks = getTotalProgramWeeks();
+
+  let html = `<div class="week-pill ${selectedWeek === 'ALL' ? 'active' : ''}" data-week="ALL">All Weeks</div>`;
+  for (let w = 1; w <= totalWeeks; w++) {
+    html += `<div class="week-pill ${selectedWeek == w ? 'active' : ''}" data-week="${w}">Week ${w}</div>`;
+  }
+
+  pillsContainer.innerHTML = html;
+
+  pillsContainer.querySelectorAll('.week-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      triggerHaptic('click');
+      exerciseData.selectedWeek = pill.dataset.week;
+      saveExerciseDataToStorage();
+      renderExerciseWeekPills();
+      renderExerciseWorkoutList();
+    });
+  });
+}
+
+function getCategoryClass(category) {
+  const cat = String(category || '').toLowerCase();
+  if (cat.includes('interval')) return 'cat-interval';
+  if (cat.includes('strength') || cat.includes('push') || cat.includes('pull')) return 'cat-strength';
+  if (cat.includes('easy')) return 'cat-easy-run';
+  if (cat.includes('lsd')) return 'cat-lsd-run';
+  if (cat.includes('tempo') || cat.includes('race')) return 'cat-tempo';
+  return 'cat-rest';
+}
+
+function getStatusClass(status) {
+  const s = String(status || '').toLowerCase();
+  if (s === 'done') return 'workout-status-done';
+  if (s === 'cancel') return 'workout-status-cancel';
+  if (s === 'replaced') return 'workout-status-replaced';
+  if (s === 'failed') return 'workout-status-failed';
+  if (s === 'swap day' || s === 'swap') return 'workout-status-swap';
+  return 'workout-status-pending';
+}
+
+function renderExerciseWorkoutList() {
+  const listContainer = document.getElementById('exercise-workout-list');
+  const subtitleEl = document.getElementById('exercise-matrix-subtitle');
+  if (!listContainer) return;
+
+  const selectedWeek = exerciseData.selectedWeek || 'ALL';
+  let workouts = exerciseData.workouts || [];
+  const totalWeeks = getTotalProgramWeeks();
+
+  if (selectedWeek !== 'ALL') {
+    workouts = workouts.filter(w => String(w.week) === String(selectedWeek));
+    if (subtitleEl) subtitleEl.textContent = `Showing Week ${selectedWeek} workouts (${workouts.length} days)`;
+  } else {
+    if (subtitleEl) subtitleEl.textContent = `Showing all ${totalWeeks} weeks program (${workouts.length} workouts)`;
+  }
+
+  if (workouts.length === 0) {
+    listContainer.innerHTML = `<div class="empty-state">No workouts found for Week ${selectedWeek}.</div>`;
+    return;
+  }
+
+  const todayStr = getTodayDateString();
+
+  let html = '';
+  workouts.forEach(item => {
+    const isToday = item.date === todayStr;
+    const isFuture = item.date && item.date > todayStr;
+    const catClass = getCategoryClass(item.category);
+    const statusClass = getStatusClass(item.status);
+    const dateFormatted = formatShortDddDate(item.date || item.day);
+
+    html += `
+      <div class="workout-card-wrapper" data-id="${item.id}">
+        <div class="swipe-indicator swipe-edit"><i class="fa-solid fa-pen"></i> Edit</div>
+        <div class="swipe-indicator swipe-delete"><i class="fa-solid fa-trash"></i> Delete</div>
+        <div class="workout-card ${isToday ? 'active-workout is-today' : ''}" id="workout-card-${item.id}">
+          <div class="workout-card-header">
+            <div class="workout-date-group">
+              <span class="workout-week-tag">W${item.week}</span>
+              <span class="workout-date-text">${dateFormatted}</span>
+              ${isToday ? '<span class="workout-active-badge"><i class="fa-solid fa-fire"></i> ACTIVE TODAY</span>' : ''}
+            </div>
+            <span class="workout-type-pill ${catClass}">${item.category || 'Workout'}</span>
+          </div>
+          <div class="workout-card-body">
+            ${escapeHtml(item.menu)}
+          </div>
+          <div class="workout-card-footer">
+            <div class="workout-note-text" onclick="editWorkoutNote('${item.id}')" style="cursor: pointer;" title="Tap to add or edit performance note">
+              ${item.note ? `<i class="fa-solid fa-note-sticky"></i> ${escapeHtml(item.note)}` : '<span style="opacity:0.5;">+ Add Note</span>'}
+            </div>
+            <select class="workout-status-select ${statusClass} ${isFuture ? 'disabled-future-select' : ''}" ${isFuture ? 'disabled title="Status locked until workout date arrives"' : ''} onchange="changeWorkoutStatus('${item.id}', this.value)">
+              <option value="Pending" ${item.status === 'Pending' ? 'selected' : ''}>Pending</option>
+              <option value="Done" ${item.status === 'Done' ? 'selected' : ''}>Done</option>
+              <option value="Cancel" ${item.status === 'Cancel' ? 'selected' : ''}>Cancel</option>
+              <option value="Replaced" ${item.status === 'Replaced' ? 'selected' : ''}>Replaced</option>
+              <option value="Failed" ${item.status === 'Failed' ? 'selected' : ''}>Failed</option>
+              <option value="Swap Day" ${item.status === 'Swap Day' ? 'selected' : ''}>Swap Day</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  listContainer.innerHTML = html;
+
+  // Bind Touch Swipe Gestures to each workout card
+  listContainer.querySelectorAll('.workout-card-wrapper').forEach(wrapper => {
+    initWorkoutSwipeGesture(wrapper, wrapper.dataset.id);
+  });
+
+  // Auto-scroll to active today workout card if viewing active program
+  setTimeout(() => {
+    const activeCard = listContainer.querySelector('.workout-card.active-workout');
+    if (activeCard) {
+      activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 250);
+}
+
+function initWorkoutSwipeGesture(rowEl, id) {
+  const cardEl = rowEl.querySelector('.workout-card') || rowEl;
+
+  let startX = 0;
+  let startY = 0;
+  let currentX = 0;
+  let isSwiping = false;
+  let thresholdTriggered = false;
+
+  cardEl.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isSwiping = false;
+    thresholdTriggered = false;
+    cardEl.style.transition = 'none';
+  }, { passive: true });
+
+  cardEl.addEventListener('touchmove', (e) => {
+    const diffX = e.touches[0].clientX - startX;
+    const diffY = e.touches[0].clientY - startY;
+
+    if (!isSwiping && Math.abs(diffY) > Math.abs(diffX)) return;
+
+    if (Math.abs(diffX) > 10) {
+      isSwiping = true;
+      currentX = diffX;
+      const clampedX = Math.max(-120, Math.min(120, diffX));
+      cardEl.style.transform = `translateX(${clampedX}px)`;
+
+      if (clampedX > 25) {
+        rowEl.classList.add('swiping-right');
+        rowEl.classList.remove('swiping-left');
+      } else if (clampedX < -25) {
+        rowEl.classList.add('swiping-left');
+        rowEl.classList.remove('swiping-right');
+      } else {
+        rowEl.classList.remove('swiping-right', 'swiping-left');
+      }
+
+      if (Math.abs(clampedX) >= 65 && !thresholdTriggered) {
+        thresholdTriggered = true;
+        triggerHaptic('snap');
+      } else if (Math.abs(clampedX) < 65 && thresholdTriggered) {
+        thresholdTriggered = false;
+      }
+    }
+  }, { passive: true });
+
+  cardEl.addEventListener('touchend', () => {
+    cardEl.style.transition = 'transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.22s ease';
+    if (currentX > 65) {
+      triggerHaptic('click');
+      cardEl.style.transform = 'translateX(0)';
+      rowEl.classList.remove('swiping-right', 'swiping-left');
+      openExerciseEditModal(id);
+    } else if (currentX < -65) {
+      triggerHaptic('heavyClick');
+      cardEl.style.transform = 'translateX(-100%)';
+      setTimeout(() => {
+        deleteExerciseWorkout(id);
+      }, 200);
+    } else {
+      cardEl.style.transform = 'translateX(0)';
+      rowEl.classList.remove('swiping-right', 'swiping-left');
+    }
+    startX = 0;
+    currentX = 0;
+    isSwiping = false;
+    thresholdTriggered = false;
+  });
+}
+
+function changeWorkoutStatus(id, newStatus) {
+  triggerHaptic('click');
+  const workout = exerciseData.workouts.find(w => w.id === id);
+  if (!workout) return;
+
+  const todayStr = getTodayDateString();
+  if (workout.date && workout.date > todayStr) {
+    showToast('Status is locked until the workout date arrives!', 'warning');
+    renderExerciseWorkoutList();
+    return;
+  }
+
+  workout.status = newStatus;
+  saveExerciseDataToStorage();
+  renderTodayWorkoutHero();
+  renderExerciseWorkoutList();
+  showToast(`Workout status updated to ${newStatus}`, 'success');
+}
+
+function editWorkoutNote(id) {
+  triggerHaptic('click');
+  const workout = exerciseData.workouts.find(w => w.id === id);
+  if (!workout) return;
+
+  const noteIdInput = document.getElementById('exercise-note-id');
+  const noteTextInput = document.getElementById('exercise-note-text');
+  const modal = document.getElementById('exercise-note-modal');
+
+  if (noteIdInput) noteIdInput.value = workout.id;
+  if (noteTextInput) noteTextInput.value = workout.note || '';
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeExerciseNoteModal() {
+  const modal = document.getElementById('exercise-note-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function handleSaveExerciseNote(e) {
+  e.preventDefault();
+  triggerHaptic('click');
+  const id = document.getElementById('exercise-note-id').value;
+  const noteVal = document.getElementById('exercise-note-text').value.trim();
+
+  const workout = exerciseData.workouts.find(w => w.id === id);
+  if (workout) {
+    workout.note = noteVal;
+    saveExerciseDataToStorage();
+    renderExercisePage();
+    closeExerciseNoteModal();
+    showToast(noteVal ? 'Performance note saved!' : 'Performance note cleared.', 'info');
+  }
+}
+
+function openExerciseEditModal(id) {
+  triggerHaptic('click');
+  const workout = exerciseData.workouts.find(w => w.id === id);
+  if (!workout) return;
+
+  const titleEl = document.getElementById('modal-exercise-edit-title');
+  if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Workout Entry';
+
+  document.getElementById('exercise-edit-id').value = workout.id;
+  document.getElementById('exercise-edit-is-new').value = 'false';
+  document.getElementById('exercise-edit-date').value = workout.date || getTodayDateString();
+  document.getElementById('exercise-edit-category').value = workout.category || 'Interval';
+  document.getElementById('exercise-edit-menu').value = workout.menu || '';
+
+  document.getElementById('exercise-edit-modal').classList.remove('hidden');
+}
+
+function closeExerciseEditModal() {
+  document.getElementById('exercise-edit-modal').classList.add('hidden');
+}
+
+function handleSaveExerciseEdit(e) {
+  e.preventDefault();
+  triggerHaptic('click');
+  const id = document.getElementById('exercise-edit-id').value;
+  const isNew = document.getElementById('exercise-edit-is-new').value === 'true';
+
+  const category = document.getElementById('exercise-edit-category').value;
+  const menu = document.getElementById('exercise-edit-menu').value.trim() || 'Custom Workout';
+  const dateVal = document.getElementById('exercise-edit-date').value.trim() || getTodayDateString();
+
+  let dayName = 'Monday';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+    const d = new Date(dateVal + 'T00:00:00');
+    if (!isNaN(d.getTime())) {
+      dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+    }
+  }
+
+  if (isNew) {
+    const weekNum = (exerciseData && exerciseData.selectedWeek && exerciseData.selectedWeek !== 'ALL') ? parseInt(exerciseData.selectedWeek) : 1;
+
+    const newWorkout = {
+      id: id,
+      week: weekNum,
+      day: dayName,
+      date: dateVal,
+      category: category,
+      menu: menu,
+      status: 'Pending',
+      note: ''
+    };
+    if (!exerciseData.workouts) exerciseData.workouts = [];
+    exerciseData.workouts.push(newWorkout);
+  } else {
+    const workout = exerciseData.workouts.find(w => w.id === id);
+    if (!workout) return;
+    workout.category = category;
+    workout.menu = menu;
+    workout.date = dateVal;
+    workout.day = dayName;
+  }
+
+  sortExerciseWorkouts();
+  saveExerciseDataToStorage();
+  closeExerciseEditModal();
+  renderExercisePage();
+  showToast(isNew ? 'New workout entry added successfully!' : 'Workout entry updated successfully!', 'success');
+}
+
+function deleteExerciseWorkout(id) {
+  triggerHaptic('click');
+  const workout = exerciseData.workouts.find(w => w.id === id);
+  if (!workout) return;
+
+  showConfirmModal({
+    title: 'Delete Workout Entry',
+    message: `Are you sure you want to delete "${workout.menu}" (${workout.day || ''})?`,
+    confirmText: 'Delete',
+    iconClass: 'fa-trash',
+    onConfirm: () => {
+      exerciseData.workouts = exerciseData.workouts.filter(w => w.id !== id);
+      saveExerciseDataToStorage();
+      renderExercisePage();
+      showToast('Workout entry deleted.', 'info');
+    }
+  });
+}
+
+function openAddWorkoutModal() {
+  triggerHaptic('click');
+  const id = `ex-custom-${Date.now()}`;
+
+  const titleEl = document.getElementById('modal-exercise-edit-title');
+  if (titleEl) titleEl.innerHTML = '<i class="fa-solid fa-plus"></i> Add New Workout Entry';
+
+  document.getElementById('exercise-edit-id').value = id;
+  document.getElementById('exercise-edit-is-new').value = 'true';
+  document.getElementById('exercise-edit-date').value = getTodayDateString();
+  document.getElementById('exercise-edit-category').value = 'Interval';
+  document.getElementById('exercise-edit-menu').value = '';
+
+  document.getElementById('exercise-edit-modal').classList.remove('hidden');
+}
+
+function copyGeminiPrompt() {
+  triggerHaptic('click');
+  const promptText = `Act as an expert running coach and strength trainer. Generate a structured workout plan in JSON format for me.
+The output MUST be valid JSON (an array of objects) with NO markdown formatting, matching this exact schema:
+
+[
+  {
+    "week": 1,
+    "day": "Monday",
+    "date": "2025-12-08",
+    "category": "Interval",
+    "menu": "Interval : 8x200, Pace : RPE 8 - 9, Recovery : Jalan 200m.",
+    "status": "Pending",
+    "note": ""
+  }
+]
+
+Requirements:
+1. Generate a 12-week progressive marathon/running & strength plan.
+2. Include Mondays (Intervals), Tuesdays (Strength Push/Pull), Wednesdays (Easy/Tempo), Thursdays (Core), Fridays (LSD Long Runs), Saturdays (Pull/Flexibility), and Sundays (Rest).
+3. Ensure every object has valid "week", "day", "date" (YYYY-MM-DD), "category", "menu", "status" ("Pending"), and "note" ("").`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(promptText)
+      .then(() => showToast('Gemini AI Prompt copied to clipboard!', 'success'))
+      .catch(() => fallbackCopyPrompt(promptText));
+  } else {
+    fallbackCopyPrompt(promptText);
+  }
+}
+
+function fallbackCopyPrompt(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  try {
+    document.execCommand('copy');
+    showToast('Gemini AI Prompt copied to clipboard!', 'success');
+  } catch (err) {
+    showToast('Gemini AI Prompt copied to clipboard!', 'success');
+  }
+  document.body.removeChild(textarea);
+}
+
+function openGeminiImportModal() {
+  triggerHaptic('click');
+  document.getElementById('gemini-json-input').value = '';
+  document.getElementById('exercise-gemini-modal').classList.remove('hidden');
+}
+
+function closeGeminiImportModal() {
+  document.getElementById('exercise-gemini-modal').classList.add('hidden');
+}
+
+function submitGeminiImportJson() {
+  triggerHaptic('click');
+  const jsonRaw = document.getElementById('gemini-json-input').value.trim();
+  if (!jsonRaw) {
+    showToast('Please paste valid Gemini JSON response.', 'warning');
+    return;
+  }
+
+  try {
+    // Strip possible markdown code fences if present
+    const cleanJson = jsonRaw.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(cleanJson);
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      showToast('Invalid JSON array structure.', 'error');
+      return;
+    }
+
+    const formattedWorkouts = parsed.map((item, idx) => ({
+      id: `ex-gen-${Date.now()}-${idx}`,
+      week: item.week || 1,
+      day: item.day || 'Monday',
+      date: item.date || getTodayDateString(),
+      category: item.category || 'Interval',
+      menu: item.menu || 'Workout',
+      status: item.status || 'Pending',
+      note: item.note || ''
+    }));
+
+    exerciseData.workouts = formattedWorkouts;
+    saveExerciseDataToStorage();
+    closeGeminiImportModal();
+    renderExercisePage();
+    showToast(`Successfully imported ${formattedWorkouts.length} workouts from Gemini AI!`, 'success');
+  } catch (err) {
+    console.error('Gemini JSON import error:', err);
+    showToast('Failed to parse JSON. Make sure to paste a valid JSON array.', 'error');
+  }
+}
+
+function resetExercisePlan() {
+  triggerHaptic('click');
+  showConfirmModal({
+    title: 'Reset to Default Program',
+    message: 'Reset workout plan to the default 12-Week "Road to Pelari Kalcer" schedule?',
+    confirmText: 'Reset Program',
+    iconClass: 'fa-rotate-right',
+    onConfirm: () => {
+      initDefaultExerciseData();
+      renderExercisePage();
+      showToast('Exercise schedule reset to default 12-Week program.', 'success');
+    }
+  });
+}
+
+function openExerciseSettingsModal() {
+  triggerHaptic('click');
+  const titleInput = document.getElementById('exercise-settings-program-title');
+  if (titleInput) {
+    titleInput.value = exerciseData.programTitle || 'Road to Pelari Kalcer';
+  }
+  const modal = document.getElementById('exercise-settings-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeExerciseSettingsModal() {
+  const modal = document.getElementById('exercise-settings-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function saveExerciseSettings() {
+  triggerHaptic('click');
+  const titleInput = document.getElementById('exercise-settings-program-title');
+  if (titleInput) {
+    exerciseData.programTitle = titleInput.value.trim() || 'Road to Pelari Kalcer';
+  }
+  saveExerciseDataToStorage();
+  closeExerciseSettingsModal();
+  renderExercisePage();
+  showToast('Exercise settings saved!', 'success');
 }

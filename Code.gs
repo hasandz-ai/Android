@@ -12,6 +12,7 @@
 const SHEET_NAME_DAILY_TASKS = 'DailyTasks';
 const SHEET_NAME_WORSHIP = 'WorshipTracker';
 const SHEET_NAME_NOFAP = 'StreakTracker';
+const SHEET_NAME_EXERCISE = 'ExerciseTracker';
 
 function doGet(e) {
   try {
@@ -93,11 +94,33 @@ function doGet(e) {
       };
     }
 
+    // 4. Read Exercise Tracker Sheet Data
+    let exerciseSheet = ss.getSheetByName(SHEET_NAME_EXERCISE);
+    if (!exerciseSheet) exerciseSheet = initExerciseSheet(ss);
+
+    const exerciseDataRows = exerciseSheet.getDataRange().getValues();
+    let exerciseObj = null;
+    if (exerciseDataRows.length > 1 && exerciseDataRows[1][0]) {
+      const row = exerciseDataRows[1];
+      let workoutsArr = [];
+      try {
+        if (row[1]) workoutsArr = JSON.parse(row[1]);
+      } catch (err) {
+        workoutsArr = [];
+      }
+      exerciseObj = {
+        programTitle: String(row[0] || 'Road to Pelari Kalcer'),
+        selectedWeek: 'ALL',
+        workouts: workoutsArr
+      };
+    }
+
     return createJsonResponse({
       status: 'success',
       tasks: tasks,
       ibadah: ibadahObj,
       nofap: nofapObj,
+      exercise: exerciseObj,
       timestamp: new Date().toISOString()
     });
 
@@ -191,9 +214,28 @@ function doPost(e) {
       nofapSheet.getRange(2, 1, 1, 6).setValues(nofapRow);
     }
 
+    // 4. Sync Exercise Tracker to 'ExerciseTracker' Sheet
+    let exerciseSheet = ss.getSheetByName(SHEET_NAME_EXERCISE);
+    if (!exerciseSheet) exerciseSheet = initExerciseSheet(ss);
+
+    const exercise = postData.exercise;
+    if (exercise) {
+      const lastExerciseRow = exerciseSheet.getLastRow();
+      if (lastExerciseRow > 1) {
+        exerciseSheet.getRange(2, 1, lastExerciseRow - 1, 3).clearContent();
+      }
+
+      const exerciseRow = [[
+        String(exercise.programTitle || 'Road to Pelari Kalcer'),
+        JSON.stringify(exercise.workouts || []),
+        new Date().toISOString()
+      ]];
+      exerciseSheet.getRange(2, 1, 1, 3).setValues(exerciseRow);
+    }
+
     return createJsonResponse({
       status: 'success',
-      message: `Successfully synchronized ${tasks.length} tasks, ${dateKeys.length} worship records, and Streak Tracker data to Google Sheets`,
+      message: `Successfully synchronized ${tasks.length} tasks, ${dateKeys.length} worship records, Streak Tracker, and Exercise Tracker data to Google Sheets`,
       timestamp: new Date().toISOString()
     });
 
@@ -237,6 +279,19 @@ function initNoFapSheet(ss) {
   const headers = ['Start Date', 'Longest Record (Days)', 'Total Check-ins', 'Last Check-in Date', 'History Log JSON', 'Updated At'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#9a031e').setFontColor('#ffffff');
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+// Helper: Initialize Exercise Tracker Sheet Tab
+function initExerciseSheet(ss) {
+  let sheet = ss.getSheetByName(SHEET_NAME_EXERCISE);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME_EXERCISE);
+  }
+  const headers = ['Program Title', 'Workouts JSON', 'Updated At'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#0d9488').setFontColor('#ffffff');
   sheet.setFrozenRows(1);
   return sheet;
 }

@@ -25,7 +25,7 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260819_3">
 </head>
 
 <body class="dark-mode">
@@ -410,6 +410,112 @@
           </section>
         </div>
 
+        <!-- TAB VIEW 4: EXERCISE & TRAINING PROGRAM -->
+        <div class="tab-page-view hidden" id="view-exercise">
+
+          <!-- SECTION 1: HEADER SECTION (Current Date & Time) -->
+          <section class="flat-section header-section">
+            <div class="header-top-row">
+              <div class="date-box">
+                <h2 id="exercise-live-date">THURSDAY, 13/08/26</h2>
+              </div>
+              <div class="time-box text-right">
+                <h2 id="exercise-live-clock">08:27<span class="clock-seconds">:58</span></h2>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 2: TODAY'S WORKOUT HERO BANNER (Borderless Flat Material) -->
+          <section class="flat-section exercise-hero-card" id="today-workout-hero">
+            <div class="hero-top-bar">
+              <div class="program-badge">
+                <i class="fa-solid fa-person-running"></i>
+                <span id="exercise-program-title">Road to Pelari Kalcer</span>
+              </div>
+              <div class="active-week-pill" id="exercise-active-week-pill">Week 1 of 12</div>
+            </div>
+
+            <div class="hero-body-content">
+              <div class="hero-label-row">
+                <span class="hero-main-title" id="exercise-hero-label"><i class="fa-solid fa-crosshair"></i> TODAY'S WORKOUT TARGET</span>
+                <span class="hero-date-badge" id="exercise-today-date-badge">TODAY</span>
+              </div>
+              <div class="hero-workout-detail" id="exercise-today-menu">LSD 16k, Pace: 7:00</div>
+
+              <!-- Collapsible Content Wrapper (Collapses smoothly on Sticky Floating Morph) -->
+              <div class="hero-collapsible-wrapper">
+                <!-- Upcoming Activity Preview (Shown on Rest Day or when Completed) -->
+                <div class="hero-upcoming-preview hidden" id="exercise-upcoming-preview">
+                  <div class="upcoming-header">
+                    <i class="fa-solid fa-calendar-day"></i> UPCOMING TARGET <span id="exercise-next-date-tag">TOMORROW</span>
+                  </div>
+                  <div class="upcoming-detail" id="exercise-next-menu">Interval 8x200m</div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="hero-progress-wrapper">
+                  <div class="hero-progress-header">
+                    <span>Program Completion</span>
+                    <span id="exercise-hero-pct-text">0%</span>
+                  </div>
+                  <div class="hero-progress-bar">
+                    <div class="hero-progress-fill" id="exercise-hero-progress-fill" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <div class="hero-stats-row" style="margin-top: 10px;">
+                  <div class="hero-stat-item">
+                    <span class="hero-stat-val" id="exercise-completed-count">0 / 84</span>
+                    <span class="hero-stat-lbl">Workouts</span>
+                  </div>
+                  <div class="hero-stat-item hero-status-box" id="exercise-hero-status-box">
+                    <select class="hero-status-select" id="exercise-hero-status-select" onchange="changeTodayWorkoutStatus(this.value)">
+                      <option value="Pending">Pending</option>
+                      <option value="Done">Done</option>
+                      <option value="Cancel">Cancel</option>
+                      <option value="Replaced">Replaced</option>
+                      <option value="Failed">Failed</option>
+                      <option value="Swap Day">Swap Day</option>
+                    </select>
+                    <span class="hero-stat-lbl">Today's Status</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 4: WEEKLY MATRIX FILTER PILLS -->
+          <section class="flat-section exercise-week-filter-section">
+            <div class="week-pills-scroll" id="exercise-week-pills">
+              <!-- Rendered via JS -->
+            </div>
+          </section>
+
+          <!-- SECTION 5: DAILY WORKOUTS MATRIX LIST -->
+          <section class="flat-section exercise-matrix-section">
+            <div class="card-section-header">
+              <div>
+                <div class="section-title"><i class="fa-solid fa-list-check"></i> Training Schedule</div>
+                <div class="section-subtitle" id="exercise-matrix-subtitle">Showing all workouts</div>
+              </div>
+            </div>
+            <div class="exercise-workout-list" id="exercise-workout-list">
+              <!-- Rendered via JS -->
+            </div>
+          </section>
+
+          <!-- Floating Active Workout 2-Row Top Banner (Appears floating at top with same width as hero banner when hero leaves viewport) -->
+          <div class="exercise-floating-banner-card hidden-float" id="exercise-floating-banner-card" onclick="scrollToActiveWorkout()" title="Tap to scroll back to active workout">
+            <div class="floating-banner-row1"><i class="fa-solid fa-crosshair"></i> TODAY'S WORKOUT TARGET</div>
+            <div class="floating-banner-row2" id="exercise-floating-banner-title">Interval : 8x200m</div>
+          </div>
+
+          <!-- Floating Exercise Dynamic Pill Button (Appears floating above bottom navbar) -->
+          <button class="exercise-floating-settings-btn" id="exercise-floating-settings-btn" onclick="handleExerciseFloatingBtnClick(event)">
+            <i class="fa-solid fa-sliders"></i> Exercise Settings
+          </button>
+        </div>
+
       </main>
 
       <!-- UNIFIED PILL NAVIGATION BAR -->
@@ -422,6 +528,9 @@
         </a>
         <a href="#nofap" class="pill-nav-item" data-tab="nofap" title="Streak Tracker">
           <i class="fa-solid fa-fire-flame-curved"></i>
+        </a>
+        <a href="#exercise" class="pill-nav-item" data-tab="exercise" title="Exercise & Training">
+          <i class="fa-solid fa-dumbbell"></i>
         </a>
       </nav>
 
@@ -443,6 +552,13 @@
       <!-- Main Floating Cloud Button -->
       <button class="fab-cloud-btn" id="fab-cloud-btn" title="Cloud Sync Options">
         <i class="fa-solid fa-cloud"></i>
+      </button>
+    </div>
+
+    <!-- FLOATING ADD WORKOUT FAB BUTTON (Bottom Left Corner, Mirroring Cloud Sync FAB) -->
+    <div class="fab-add-workout-wrapper hidden-fab" id="fab-add-workout-wrapper">
+      <button class="fab-add-workout-btn" id="fab-add-workout-btn" onclick="openAddWorkoutModal()" title="Add Custom Workout">
+        <i class="fa-solid fa-plus"></i>
       </button>
     </div>
   </div>
@@ -673,11 +789,149 @@
     </div>
   </div>
 
+  <!-- MODAL: GEMINI AI IMPORT / PROMPT -->
+  <div class="modal-overlay hidden" id="exercise-gemini-modal">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Gemini AI Program Generator</h3>
+        <button class="btn-close" id="close-exercise-gemini-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="gemini-info-box">
+          <p><strong>How to create a custom workout plan with Gemini AI:</strong></p>
+          <ol>
+            <li>Click <strong>Copy Gemini Prompt</strong> below to copy a pre-formatted prompt tailored for Gemini.</li>
+            <li>Paste it into <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini AI</a> to generate your schedule.</li>
+            <li>Paste Gemini's JSON response in the box below and tap <strong>Apply Plan</strong>!</li>
+          </ol>
+        </div>
+        <div class="form-group">
+          <label for="gemini-json-input">Paste Gemini JSON Response Here</label>
+          <textarea id="gemini-json-input" class="form-control code-textarea" rows="8" placeholder='[&#10;  {&#10;    "week": 1,&#10;    "day": "Monday",&#10;    "date": "2025-12-08",&#10;    "category": "Interval",&#10;    "menu": "Interval : 8x200, Pace : RPE 8 - 9",&#10;    "status": "Pending",&#10;    "note": ""&#10;  }&#10;]'></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="cancel-exercise-gemini-btn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirm-exercise-gemini-btn">
+          <i class="fa-solid fa-check"></i> Apply Plan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT / ADD WORKOUT ENTRY -->
+  <div class="modal-overlay hidden" id="exercise-edit-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-exercise-edit-title"><i class="fa-solid fa-pen-to-square"></i> Edit Workout Entry</h3>
+        <button class="btn-close" id="close-exercise-edit-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="exercise-edit-form">
+        <input type="hidden" id="exercise-edit-id">
+        <input type="hidden" id="exercise-edit-is-new" value="false">
+        <div class="form-group">
+          <label for="exercise-edit-date">Workout Date & Day</label>
+          <input type="text" id="exercise-edit-date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="exercise-edit-category">Category</label>
+          <select id="exercise-edit-category" class="form-control">
+            <option value="Interval">Interval</option>
+            <option value="Strength">Strength (Push/Pull)</option>
+            <option value="Easy Run">Easy Run</option>
+            <option value="LSD Run">LSD (Long Slow Distance)</option>
+            <option value="Tempo">Tempo Run</option>
+            <option value="Rest">Rest & Recovery</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="exercise-edit-menu">Training Menu Details</label>
+          <textarea id="exercise-edit-menu" class="form-control" rows="4" placeholder="Enter training menu details, pace targets, reps & sets..." required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="cancel-exercise-edit-btn">Cancel</button>
+          <button type="submit" class="btn btn-success" id="confirm-exercise-edit-btn">
+            <i class="fa-solid fa-floppy-disk"></i> Save Workout
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT WORKOUT NOTE -->
+  <div class="modal-overlay hidden" id="exercise-note-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-note-sticky"></i> Performance & Reflection Note</h3>
+        <button class="btn-close" id="close-exercise-note-modal" onclick="closeExerciseNoteModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="exercise-note-form" onsubmit="handleSaveExerciseNote(event)">
+        <input type="hidden" id="exercise-note-id">
+        <div class="form-group">
+          <label for="exercise-note-text">Reflection / Performance Note</label>
+          <textarea id="exercise-note-text" class="form-control" rows="3" placeholder="e.g. 13.5K @7:45, Finish Strong, Hujan..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeExerciseNoteModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-exercise-note-btn">
+            <i class="fa-solid fa-floppy-disk"></i> Save Note
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EXERCISE SETTINGS -->
+  <div class="modal-overlay hidden" id="exercise-settings-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-sliders"></i> Exercise Settings</h3>
+        <button class="btn-close" id="close-exercise-settings-modal" onclick="closeExerciseSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Program Customization -->
+        <div class="form-group">
+          <label for="exercise-settings-program-title">Program Title</label>
+          <input type="text" id="exercise-settings-program-title" class="form-control" placeholder="e.g. Road to Pelari Kalcer">
+        </div>
+
+        <div class="form-group" style="margin-top: 16px;">
+          <label>Gemini AI Plan Tools</label>
+          <p class="section-subtitle" style="margin-bottom: 10px;">Copy prompt or import generated JSON schedule from Gemini AI.</p>
+          <div class="exercise-settings-actions">
+            <button class="btn btn-primary-sm" id="modal-btn-copy-gemini-prompt" onclick="copyGeminiPrompt()" style="width: 100%; justify-content: center; margin-bottom: 8px;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Copy Gemini Prompt
+            </button>
+            <button class="btn btn-outline-sm" id="modal-btn-import-gemini-json" onclick="openGeminiImportModal()" style="width: 100%; justify-content: center;">
+              <i class="fa-solid fa-file-import"></i> Import Gemini JSON
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
+          <label>Reset Program Schedule</label>
+          <p class="section-subtitle" style="margin-bottom: 10px;">Reset workout plan to default 12-Week program.</p>
+          <button class="btn btn-ghost-sm" id="modal-btn-reset-exercise-plan" onclick="resetExercisePlan()" style="width: 100%; justify-content: center; color: var(--c-crimson); border-color: rgba(154, 3, 30, 0.4) !important;">
+            <i class="fa-solid fa-rotate-left"></i> Reset to Default Program
+          </button>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeExerciseSettingsModal()">Cancel</button>
+        <button type="button" class="btn btn-success" onclick="saveExerciseSettings()">
+          <i class="fa-solid fa-check"></i> Save Settings
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
   <!-- App Core JS -->
-  <script src="app.js"></script>
+  <script src="app.js?v=20260819_3"></script>
 </body>
 
 </html>
