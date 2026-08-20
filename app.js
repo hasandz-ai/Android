@@ -4183,10 +4183,12 @@ function triggerPinErrorAnimation() {
   }
 }
 
+const BIOMETRIC_CRED_KEY = 'personal_app_biometric_cred_id';
+
 async function triggerBiometricUnlock(isAuto = false) {
   if (!isAppLocked) return;
 
-  if (!window.PublicKeyCredential) {
+  if (!window.PublicKeyCredential || !navigator.credentials) {
     if (!isAuto) showToast('Biometrics not supported on this browser/protocol.', 'warning');
     return;
   }
@@ -4198,28 +4200,93 @@ async function triggerBiometricUnlock(isAuto = false) {
       return;
     }
 
+    const savedCredId = localStorage.getItem(BIOMETRIC_CRED_KEY);
+
+    // Case 1: First-time fingerprint enrollment / registration on this origin
+    if (!savedCredId) {
+      if (isAuto) return; // Wait for explicit button tap or PIN entry for first-time registration
+
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      const userId = new Uint8Array([1, 9, 1, 9, 1, 9]);
+
+      const createOptions = {
+        publicKey: {
+          challenge: challenge,
+          rp: {
+            name: "Personal App",
+            id: window.location.hostname
+          },
+          user: {
+            id: userId,
+            name: "personal_user",
+            displayName: "Personal App User"
+          },
+          pubKeyCredParams: [
+            { alg: -7, type: "public-key" },  // ES256
+            { alg: -257, type: "public-key" } // RS256
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform", // strictly device biometric (fingerprint/face)
+            userVerification: "required",
+            residentKey: "preferred"
+          },
+          timeout: 60000
+        }
+      };
+
+      const newCred = await navigator.credentials.create(createOptions);
+      if (newCred && newCred.rawId) {
+        const rawIdBase64 = btoa(String.fromCharCode(...new Uint8Array(newCred.rawId)));
+        localStorage.setItem(BIOMETRIC_CRED_KEY, rawIdBase64);
+        triggerHaptic('success');
+        showToast('Fingerprint registered & unlocked!', 'success');
+        hideLockScreen();
+        return;
+      }
+    }
+
+    // Case 2: Verification of existing registered fingerprint / passkey
     const challenge = new Uint8Array(32);
     window.crypto.getRandomValues(challenge);
 
-    const authOptions = {
+    let allowCredList = [];
+    if (savedCredId) {
+      try {
+        const binStr = atob(savedCredId);
+        const credBytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) credBytes[i] = binStr.charCodeAt(i);
+        allowCredList.push({
+          id: credBytes.buffer,
+          type: 'public-key'
+        });
+      } catch (e) {}
+    }
+
+    const getOptions = {
       publicKey: {
         challenge: challenge,
         timeout: 60000,
-        userVerification: 'preferred',
-        rpId: window.location.hostname || 'localhost',
-        allowCredentials: []
+        userVerification: 'required',
+        rpId: window.location.hostname,
+        allowCredentials: allowCredList
       }
     };
 
-    const credential = await navigator.credentials.get(authOptions);
-    if (credential) {
+    const assertion = await navigator.credentials.get(getOptions);
+    if (assertion) {
       triggerHaptic('success');
       showToast('Biometric authentication verified!', 'success');
       hideLockScreen();
     }
   } catch (err) {
-    if (!isAuto && err.name !== 'NotAllowedError') {
-      console.log('Biometric authentication note:', err.message);
+    if (err.name === 'NotAllowedError') {
+      // User cancelled prompt
+      if (!isAuto) console.log('Biometric prompt cancelled by user.');
+    } else {
+      console.log('Biometric auth note:', err.message);
+      // Reset invalid credential ID so next user click re-enrolls cleanly
+      localStorage.removeItem(BIOMETRIC_CRED_KEY);
     }
   }
 }
